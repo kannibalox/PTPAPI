@@ -17,6 +17,7 @@ class PTPAPI:
         self.__cookieJar = cookielib.CookieJar()
 
     def login(self, username=None, password=None, passkey=None):
+        """Log into PTP using credentials from a config file"""
         config = ConfigParser.ConfigParser()
         config.read('creds.ini')
         username = config.get('PTP', 'username')
@@ -32,16 +33,22 @@ class PTPAPI:
         self.loggedIn = True
 
     def logout(self):
+        """Logs out the session.
+
+        Not necessary, but keeps your session list clean"""
         if self.loggedIn:
             authkey = self.__jsonRequest('/torrents.php?json=noredirect')['AuthKey']
             self.__request(self.baseURL + '/logout.php?auth=%s' % authkey)
+            self.loggedIn = False
 
     def search(self, search_args):
+        """Search for torrents by arbitrary fields"""
         search_string = '&'.join([ "%s=%s" % (key, value) for (key, value) in search_args.items() ])
         json = self.__jsonRequest("/torrents.php?%s" % (search_string + "&json=noredirect"))
         return json
 
     def threadPage(self, threadID, page=None):
+        """Gets the specified page for a thread (the last page by default)"""
         if not page or page <= 0:
             soup = self.__httpRequest("/forums.php?action=viewthread&threadid=%s" % (threadID))
             page = re.search(r"page=(\d+)", soup.find("a", class_="pagination__link pagination__link--last")['href']).group(1)
@@ -49,10 +56,12 @@ class PTPAPI:
         return soup
 
     def unreadPostsInThread(self, threadID):
+        """Returns a list of unread posts as divs"""
         soup = self.threadPage(threadID)
         return BeautifulSoup(soup.find_all("div", class_="forum-post--unread"))
 
     def siteStats(self):
+        """Get the stats for the entire site"""
         stats = {}
         soup = self.__httpRequest("/index.php")
         statdiv = soup.find("div", {'id': 'commstats'})
@@ -77,6 +86,7 @@ class PTPAPI:
         return stats
 
     def userStats(self, userID):
+        """Get all available stats for a user"""
         soup = self.__httpRequest("/user.php?id=%s" % (userID))
         userData = {}
         statList = soup.find(text="Stats").parent.parent.next_sibling.next_sibling.find("ul")
@@ -93,6 +103,7 @@ class PTPAPI:
         print userData
 
     def findTorrentLinks(self, soup):
+        "Given a soup, scrape all links to torrents (not movies)"
         IDs = []
         for anchor in soup.find_all('a'):
             match = re.search(r"torrentid=(\d+)", anchor['href'])
@@ -101,6 +112,7 @@ class PTPAPI:
         return IDs
 
     def movieInformation(self, movieID=None, torrentID=None):
+        """Get information about a movie, either by group ID or torrent ID"""
         if not movieID and not torrentID:
             raise PTPAPIException("Must include either movieID or torrentID")
         if movieID:
@@ -122,6 +134,7 @@ class PTPAPI:
         return data
 
     def torrentInformation(self, torrentID):
+        """Get all information about a specific torrent by ID"""
         data = {}
         data['Filelist'] = {}
         soup = self.__httpRequest("/torrents.php?torrentid=%s" % torrentID)
@@ -135,6 +148,9 @@ class PTPAPI:
         return data
 
     def downloadTorrent(self, tID):
+        """Download the actual torrent file
+
+        Returns a tuple of the filename, and the file socket"""
         t = self.__request(self.baseURL + "/torrents.php?action=download&id=%i" % int(tID))
         if t.info().has_key('Content-Disposition'):
             localName = t.info()['Content-Disposition'].split('filename=')[1]
@@ -143,6 +159,9 @@ class PTPAPI:
         return (localName, t)
 
     def __httpRequest(self, url, data=None):
+        """Internal function to make an http request
+        
+        Returns a bs4 soup"""
         if not self.loggedIn:
             print "Not logged in"
             return None
@@ -151,11 +170,15 @@ class PTPAPI:
         return soup
 
     def __request(self, url, data=None):
+        """Returns a socket file"""
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.__cookieJar))
         request = urllib2.Request(url, data, headers=self.HttpHeader)
         return opener.open(request)
 
     def __jsonRequest(self, url, data=None):
+        """Internal function to make an json request
+
+        Returns a dictionary"""
         if not self.loggedIn:
             print "Not logged in"
             return None
