@@ -1,3 +1,4 @@
+#!/bin/env python
 from StringIO import StringIO
 from bs4 import BeautifulSoup
 import re
@@ -89,18 +90,30 @@ class PTPAPI:
         """Get all available stats for a user"""
         soup = self.__httpRequest("/user.php?id=%s" % (userID))
         userData = {}
-        statList = soup.find(text="Stats").parent.parent.next_sibling.next_sibling.find("ul")
-        for stat in statList.find_all("li"):
-            print str(stat)
-            if stat.find("span", _class="time"):
-                name = stat.text.split(':')[0]
-                value = stat.span.title
-            else:
-                name, value = stat.text.split(':')[0:2]
-            name = name.strip(' ')
-            value = value.strip('\n').replace("[View]", "").strip()
-            userData[name] = value
-        print userData
+        panels = ['Stats', 'Community', 'Personal']
+        for p in panels:
+            statList = soup.find(text=p).parent.parent.next_sibling.next_sibling.find("ul")
+            for stat in statList.find_all("li"):
+                name, value = self.__parseStat(stat)
+                userData[name] = value
+        # Never show these
+        del userData['Email']
+        del userData['Clients']
+        del userData['Passkey']
+        return userData
+
+    def __parseStat(self, listElement):
+        """Takes a <li> soup element and returns a tuple of the key and the value"""
+        if listElement.find("span", class_="time"):
+            name = listElement.text.split(':')[0]
+            value = listElement.find("span")['title']
+        else:
+            name, value = listElement.text.split(':')[0:2]
+        name = name.strip().title().replace(' ', '')
+        value = value.strip('\n').replace("[View]", "").replace("[Download]", "").strip()
+        if re.search(r'^[0-9,]*$', str(value)):
+            value = value.replace(',', '')
+        return (name, value)
 
     def findTorrentLinks(self, soup):
         "Given a soup, scrape all links to torrents (not movies)"
@@ -124,7 +137,6 @@ class PTPAPI:
         data = {}
         soup = self.__httpRequest("/torrents.php?id=%s" % movieID)
         data = self.__jsonRequest("/torrents.php?id=%s&json=1" % movieID)
-        print data
         for index, t in enumerate(data['Torrents']):
             data['Torrents'][index]['Filelist'] = {}
             fileDiv = soup.find("div", id="files_%s" % t['Id'])
@@ -193,5 +205,5 @@ if __name__ == '__main__':
     parser.parse_args()
     ptp = PTPAPI()
     ptp.login()
-    print ptp.siteStats()
+    print ptp.userStats('50898')
     ptp.logout()
