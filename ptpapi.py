@@ -1,4 +1,3 @@
-#!/usr/bin/python
 from StringIO import StringIO
 from bs4 import BeautifulSoup
 import re
@@ -13,9 +12,9 @@ class PTPAPI:
     HttpHeader = { "User-Agent": "Wget/1.13.4" }
 
     def __init__(self):
+        self.loggedIn = False
         self.baseURL = "https://tls.passthepopcorn.me"
         self.__cookieJar = cookielib.CookieJar()
-        self.loggedIn = False
 
     def login(self, username=None, password=None, passkey=None):
         config = ConfigParser.ConfigParser()
@@ -31,6 +30,11 @@ class PTPAPI:
         if jsonResponse["Result"] != "Ok":
             raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % jsonResponse)
         self.loggedIn = True
+
+    def logout(self):
+        if self.loggedIn:
+            authkey = self.__jsonRequest('/torrents.php?json=noredirect')['AuthKey']
+            self.__request(self.baseURL + '/logout.php?auth=%s' % authkey)
 
     def search(self, search_args):
         search_string = '&'.join([ "%s=%s" % (key, value) for (key, value) in search_args.items() ])
@@ -96,11 +100,39 @@ class PTPAPI:
                 IDs.append(match.group(1))
         return IDs
 
+    def movieInformation(self, movieID=None, torrentID=None):
+        if not movieID and not torrentID:
+            raise PTPAPIException("Must include either movieID or torrentID")
+        if movieID:
+            pass
+        elif torrentID:
+            url = "/torrents.php?torrentid=%s" % torrentID
+            self.__request(self.baseURL + url).get(url)
+            movieID = re.search(r'(\d+)$', args.url).group(1)
+        data = {}
+        soup = self.__httpRequest("/torrents.php?id=%s" % movieID)
+        data = self.__jsonRequest("/torrents.php?id=%s&json=1" % movieID)
+        print data
+        for index, t in enumerate(data['Torrents']):
+            data['Torrents'][index]['Filelist'] = {}
+            fileDiv = soup.find("div", id="files_%s" % t['Id'])
+            for e in fileDiv.find("tbody").find_all("tr"):
+                bytesize = e("td")[1]("span")[0]['title'].replace(",","").replace(' bytes', '')
+                data['Torrents'][index]['Filelist'][e("td")[0].string] = bytesize
+        return data
+
     def torrentInformation(self, torrentID):
         data = {}
-        soup = self.__htmlRequest("%s/torrents.php?torrentid=%s")
+        data['Filelist'] = {}
+        soup = self.__httpRequest("/torrents.php?torrentid=%s" % torrentID)
+        fileDiv = soup.find("div", id="files_%s" % torrentID)
+        print fileDiv.find("tbody")
+        for e in fileDiv.find("tbody").find_all("tr"):
+            bytesize = e("td")[1]("span")[0]['title'].replace(",","").replace(' bytes', '')
+            data['Filelist'][e("td")[0].string] = bytesize
+        print fileDiv.find_all('tbody>tr')
         soup.find_all("tr", id="group_torrent_header_%s" % torrentID)[0]
-        
+        return data
 
     def downloadTorrent(self, tID):
         t = self.__request(self.baseURL + "/torrents.php?action=download&id=%i" % int(tID))
@@ -127,10 +159,7 @@ class PTPAPI:
         if not self.loggedIn:
             print "Not logged in"
             return None
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.__cookieJar))
-        request = urllib2.Request(self.baseURL + url, data, headers=self.HttpHeader)
-        response = opener.open(request).read()
-        return json.loads(response)
+        return json.loads(self.__request(self.baseURL + url, data).read())
 
 class PTPAPIException(Exception):
     pass
@@ -141,4 +170,5 @@ if __name__ == '__main__':
     parser.parse_args()
     ptp = PTPAPI()
     ptp.login()
-    print ptp.search({'searchstr': 'tt0111512'})
+    print ptp.siteStats()
+    ptp.logout()
