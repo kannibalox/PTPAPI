@@ -29,6 +29,8 @@ path = args.path
 tID = None
 if args.url:
     tID = re.search(r'(\d+)$', args.url).group(1)
+    if not path and args.file:
+        path = os.path.dirname(os.path.abspath(args.file))
 else:
     if args.file:
         basename = os.path.basename(os.path.abspath(args.file))
@@ -37,32 +39,50 @@ else:
             for t in m['Torrents']:
                 # Exact match or match with out file extension
                 if t['ReleaseName'] == basename or t['ReleaseName'] == os.path.splitext(basename)[0]:
-                    print "Found strong match by name at", t['Id']
+                    print "Found strong match by release name at", t['Id']
                     tID = t['Id']
                     path = os.path.dirname(os.path.abspath(args.file))
                     break
                 elif t['ReleaseName'] in basename:
                     print "Found weak match by name at", t['Id']
             if not tID:
-                print "Movie found but no match"
+                print "Movie found but no match by release name, going through filelists"
+                movieInfo = ptp.movieInformation(m['GroupId'])
+                for t in movieInfo['Torrents']:
+                    # Only single files under a directory are matched currently
+                    # e.g. Movie.Name.Year.mkv -> Move Name (Year)/Movie.Name.Year.mkv
+                    print t['ReleaseName'], t['Filelist']
+                    if len(t['Filelist']) == 1 and t['Filelist'].keys()[0] == basename:
+                        print "Found strong match by filename at", t['Id'], ": making new structure"
+                        tID  = t['Id']
+                        path = os.path.join(os.path.dirname(os.path.abspath(args.file)), t['ReleaseName'])
+                        os.mkdir(path)
+                        os.link(os.path.abspath(args.file),
+                                os.path.join(os.path.dirname(os.path.abspath(args.file)),
+                                             t['ReleaseName'],
+                                             os.path.basename(os.path.abspath(args.file))))
+                        break
     else:
         raise Exception
 
 if args.dry_run:
+    ptp.logout()
     exit()
 # Make sure we have the minimum information required
 if not tID or not path:
     print "Torrent ID or path missing, cannot reseed"
+    ptp.logout()
     exit()
 
 (name, data) = ptp.downloadTorrent(tID)
+ptp.logout()
 with open(name, 'wb') as fh:
     fh.write(data.read())
 torrent = metafile.Metafile(name)
 data = bencode.bread(name)
 thash = metafile.info_hash(data)
 try:
-    proxy.d.hash(thash)
+    proxy.d.hash(thash, fail_silently=True)
     print "Hash already exists in rtorrent, cannot load."
     exit()
 except xmlrpclib.Fault:
@@ -75,11 +95,11 @@ while True:
         break
     except xmlrpclib.Fault:
         pass
+print "Torrent loaded"
 proxy.d.ignore_commands.set(thash, 1)
 proxy.d.directory_base.set(thash, path)
 proxy.d.check_hash(thash)
 
 # Cleanup
-ptp.logout()
 os.remove(name)
 print "Exiting..."

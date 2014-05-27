@@ -205,5 +205,5 @@ if __name__ == '__main__':
     parser.parse_args()
     ptp = PTPAPI()
     ptp.login()
-    print ptp.userStats('50898')
+    print ptp.movieInformation('47466')
     ptp.logout()
