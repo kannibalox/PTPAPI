@@ -5,6 +5,7 @@ import os
 import os.path
 import xmlrpclib
 import argparse
+import ConfigParser
 
 from pyrobase import bencode
 from pyrocore import config
@@ -23,6 +24,11 @@ path = args.path
 tID = None
 
 # Load APIs
+config = ConfigParser.ConfigParser()
+config.read('creds.ini')
+username = config.get('PTP', 'username')
+password = config.get('PTP', 'password')
+passkey = config.get('PTP', 'passkey')
 ptp = PTPAPI()
 ptp.login()
 load_config.ConfigLoader().load()
