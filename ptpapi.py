@@ -18,7 +18,7 @@ class PTPAPI:
         self.__cookieJar = cookielib.CookieJar()
 
     def login(self, username, password, passkey):
-        """Log into PTP using credentials from a config file"""
+        """Log into PTP"""
         data = urllib.urlencode({ "username": username, "password": password, "passkey": passkey })
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.__cookieJar))
         request = urllib2.Request(self.baseURL + '/ajax.php?action=login', data, PTPAPI.HttpHeader)
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     username = config.get('PTP', 'username')
     password = config.get('PTP', 'password')
     passkey = config.get('PTP', 'passkey')
-    ptp = PTPAPI(username, password, passkey)
-    ptp.login()
+    ptp = PTPAPI()
+    ptp.login(username, password, passkey)
     print ptp.movieInformation('47466')
     ptp.logout()
