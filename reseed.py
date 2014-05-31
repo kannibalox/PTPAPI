@@ -24,13 +24,14 @@ path = args.path
 tID = None
 
 # Load APIs
-config = ConfigParser.ConfigParser()
-config.read('creds.ini')
-username = config.get('PTP', 'username')
-password = config.get('PTP', 'password')
-passkey = config.get('PTP', 'passkey')
+configFile = ConfigParser.ConfigParser()
+configFile.read('creds.ini')
+username = configFile.get('PTP', 'username')
+password = configFile.get('PTP', 'password')
+passkey = configFile.get('PTP', 'passkey')
 ptp = PTPAPI()
-ptp.login()
+ptp.login(username, password, passkey)
+
 load_config.ConfigLoader().load()
 proxy = config.engine.open()
 
