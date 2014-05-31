@@ -17,16 +17,17 @@ parser.add_argument('-p', '--path', help='Base directory of the file')
 parser.add_argument('-f', '--file', help='Path directly to file/directory')
 parser.add_argument('-n', '--dry-run', help='Don\'t actually log in or load any torrents', action="store_true")
 
+# Process flags
+args = parser.parse_args()
+path = args.path
+tID = None
+
 # Load APIs
 ptp = PTPAPI()
 ptp.login()
 load_config.ConfigLoader().load()
 proxy = config.engine.open()
 
-# Process flags
-args = parser.parse_args()
-path = args.path
-tID = None
 if args.url:
     tID = re.search(r'(\d+)$', args.url).group(1)
     if not path and args.file:
