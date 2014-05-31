@@ -17,13 +17,8 @@ class PTPAPI:
         self.baseURL = "https://tls.passthepopcorn.me"
         self.__cookieJar = cookielib.CookieJar()
 
-    def login(self, username=None, password=None, passkey=None):
+    def login(self, username, password, passkey):
         """Log into PTP using credentials from a config file"""
-        config = ConfigParser.ConfigParser()
-        config.read('creds.ini')
-        username = config.get('PTP', 'username')
-        password = config.get('PTP', 'password')
-        passkey = config.get('PTP', 'passkey')
         data = urllib.urlencode({ "username": username, "password": password, "passkey": passkey })
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.__cookieJar))
         request = urllib2.Request(self.baseURL + '/ajax.php?action=login', data, PTPAPI.HttpHeader)
@@ -203,7 +198,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", '--config', help="The configuration file to use")
     parser.parse_args()
-    ptp = PTPAPI()
+    config = ConfigParser.ConfigParser()
+    config.read('creds.ini')
+    username = config.get('PTP', 'username')
+    password = config.get('PTP', 'password')
+    passkey = config.get('PTP', 'passkey')
+    ptp = PTPAPI(username, password, passkey)
     ptp.login()
     print ptp.movieInformation('47466')
     ptp.logout()
