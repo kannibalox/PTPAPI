@@ -39,7 +39,7 @@ class PTPAPI:
 
     def search(self, search_args):
         """Search for torrents by arbitrary fields"""
-        search_string = '&'.join([ "%s=%s" % (key, value) for (key, value) in search_args.items() ])
+        search_string = urllib.urlencode(search_args.items())
         json = self.__jsonRequest("/torrents.php?%s" % (search_string + "&json=noredirect"))
         return json
 
