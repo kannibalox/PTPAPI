@@ -202,17 +202,3 @@ class PTPAPI:
 
 class PTPAPIException(Exception):
     pass
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", '--config', help="The configuration file to use")
-    parser.parse_args()
-    config = ConfigParser.ConfigParser()
-    config.read('creds.ini')
-    username = config.get('PTP', 'username')
-    password = config.get('PTP', 'password')
-    passkey = config.get('PTP', 'passkey')
-    ptp = PTPAPI()
-    ptp.login(username, password, passkey)
-    print ptp.movieInformation('47466')
-    ptp.logout()
