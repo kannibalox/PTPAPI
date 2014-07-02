@@ -16,6 +16,7 @@ parser = argparse.ArgumentParser(description='Attempt to find and reseed torrent
 parser.add_argument('-u', '--url', help='Permalink to the torrent page')
 parser.add_argument('-p', '--path', help='Base directory of the file')
 parser.add_argument('-f', '--file', help='Path directly to file/directory')
+parser.add_argument('-c', '--cred', help='Credential file', default="creds.ini")
 parser.add_argument('-n', '--dry-run', help='Don\'t actually log in or load any torrents', action="store_true")
 
 # Process flags
@@ -25,7 +26,7 @@ tID = None
 
 # Load APIs
 configFile = ConfigParser.ConfigParser()
-configFile.read('creds.ini')
+configFile.read(args.cred)
 username = configFile.get('PTP', 'username')
 password = configFile.get('PTP', 'password')
 passkey = configFile.get('PTP', 'passkey')
