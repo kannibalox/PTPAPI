@@ -60,8 +60,11 @@ class PTPAPI:
         """Get the stats for the entire site"""
         stats = {}
         soup = self.__httpRequest("/index.php")
+        # Massage each of the stat sections, there's probably a cleaner way to do this
         statdiv = soup.find("div", {'id': 'commstats'})
         remove_re = re.compile(r"[\(\[].*[\)\]]")
+        # There is a lot of cleaning going on here, which should probably
+        ## be broken out into something cleaner
         for li in statdiv("li"):
             stat = li.get_text(strip=True)
             key = remove_re.sub('', stat.split(':')[0].replace(' ', ''))
@@ -87,11 +90,12 @@ class PTPAPI:
         userData = {}
         panels = ['Stats', 'Community', 'Personal']
         for p in panels:
+            # Find each unordered list of stats
             statList = soup.find(text=p).parent.parent.next_sibling.next_sibling.find("ul")
             for stat in statList.find_all("li"):
                 name, value = self.__parseStat(stat)
                 userData[name] = value
-        # Never show these
+        # Make sure these don't get exposed by accident
         del userData['Email']
         del userData['Clients']
         del userData['Passkey']
@@ -99,19 +103,22 @@ class PTPAPI:
 
     def __parseStat(self, listElement):
         """Takes a <li> soup element and returns a tuple of the key and the value"""
+        # Use the absolute date instead of the relative one
         if listElement.find("span", class_="time"):
             name = listElement.text.split(':')[0]
             value = listElement.find("span")['title']
         else:
             name, value = listElement.text.split(':')[0:2]
+        # Strip out unneeded text
         name = name.strip().title().replace(' ', '')
         value = value.strip('\n').replace("[View]", "").replace("[Download]", "").strip()
+        # If it's a number, remove all thousands separators
         if re.search(r'^[0-9,]*$', str(value)):
             value = value.replace(',', '')
         return (name, value)
 
     def findTorrentLinks(self, soup):
-        "Given a soup, scrape all links to torrents (not movies)"
+        "Given a soup, scrape all links to torrents (not torrent information)"
         IDs = []
         for anchor in soup.find_all('a'):
             match = re.search(r"torrentid=(\d+)", anchor['href'])
@@ -123,13 +130,15 @@ class PTPAPI:
         """Get information about a movie, either by group ID or torrent ID"""
         if not movieID and not torrentID:
             raise PTPAPIException("Must include either movieID or torrentID")
-        if movieID:
-            pass
-        elif torrentID:
+        # The torrent ID is really only used to get the movie ID
+        # It uses an extra http call, but that shouldn't be a big deal
+        if torrentID and not movieID:
             url = "/torrents.php?torrentid=%s" % torrentID
             self.__request(self.baseURL + url).get(url)
+            # The args variable is set by the __request call
             movieID = re.search(r'(\d+)$', args.url).group(1)
         data = {}
+        # We only need the http request to get the byte size right now
         soup = self.__httpRequest("/torrents.php?id=%s" % movieID)
         data = self.__jsonRequest("/torrents.php?id=%s&json=1" % movieID)
         for index, t in enumerate(data['Torrents']):
