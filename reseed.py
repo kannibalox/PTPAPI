@@ -51,7 +51,7 @@ else:
                     print "Found weak match by name at", t.ID
             if not tID:
                 print "Movie found but no match by release name, going through filelists"
-                m.load_info(basic=False)
+                m.load_data(basic=False)
                 for t in m.torrents:
                     # Only single files under a directory are matched currently
                     # e.g. Movie.Name.Year.mkv -> Move Name (Year)/Movie.Name.Year.mkv
