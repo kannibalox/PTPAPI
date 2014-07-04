@@ -2,6 +2,7 @@
 from bs4 import BeautifulSoup as bs4
 import requests
 import ConfigParser
+import re
 
 session = requests.Session()
 session.headers.update({"User-Agent": "Wget/1.13.4"})
@@ -12,25 +13,32 @@ class PTPAPIException(Exception):
 
 class Movie:
     def __init__(self, ID=None, data=None):
+        # Expects either a groupd ID to load data from, or for the data to already be present
         self.torrents = []
         if data:
             self.data = data
             self.ID = data['GroupId']
         elif ID:
             self.ID = ID
+            self.data = {}
             self.load_data()
+        else:
+            raise PTPAPIException("Could not load necessary data for Movie class")
         if self.data['Torrents']:
             for t in self.data['Torrents']:
                 self.torrents.append(Torrent(data=t))
 
-    def load_info(self, basic=True):
-        self.info = session.get(baseURL + "torrents.php",
+    def load_data(self, basic=True, overwrite=False):
+        # Check to see if data has already been set
+        if not 'GroupId' in self.data or not overwrite:
+            self.data = session.get(baseURL + "torrents.php",
                                     params={'id': self.ID,
                                             'json': '1'}).json()
-        if self.data['Torrents']:
-            for t in self.data['Torrents']:
-                self.torrents.append(Torrent(data=t))
-        if not basic:
+            if self.data['Torrents']:
+                for t in self.data['Torrents']:
+                    self.torrents.append(Torrent(data=t))
+        # Don't make two http calls unless told to
+        if not basic and not overwrite:
             soup = bs4(session.get(baseURL + "torrents.php", params={'id':self.ID}).text)
             for t in self.torrents:
                 # Get file list
@@ -47,13 +55,23 @@ class Torrent:
             self.ID = data['Id']
         elif ID:
             self.ID = ID
+            self.load_data()
+        else:
+            raise PTPAPIException("Not enough information to intialize torrent")
 
-    def download():
+    def load_data(self):
+        # This has no 'basic' parameter, because it takes two calls to get the basic info anyway
+        movieID = re.search(r'\?id=(\d+)', session.get(baseURL + 'torrents.php', params={'torrentid': self.ID}).url).group(1)
+        self.data = session.get(baseURL + 'torrents.php',
+                                params={'torrentid': self.ID,
+                                        'id': movieID,
+                                        'json':'1'})
+
+    def download(self):
         r = session.get(baseURL + "torrents.php",
                         params={'action': 'download',
                                 'id': self.ID})
         return r
-
 
 class User:
     pass
