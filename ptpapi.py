@@ -71,10 +71,19 @@ class Torrent:
         r = session.get(baseURL + "torrents.php",
                         params={'action': 'download',
                                 'id': self.ID})
+        self.downloadName = re.search(r'filename="(.*)"', d.headers['Content-Disposition']).group(1)
         return r
 
 class User:
-    pass
+    def __init__(self, ID):
+        # Requires an ID, as searching by name isn't exact on PTP
+        self.ID = ID
+
+    def load_data(self):
+        pass
+
+    def bookmarks(self, filters=None):
+        pass
 
 class API:
     def __init__(self):
