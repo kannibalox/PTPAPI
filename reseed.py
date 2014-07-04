@@ -10,7 +10,7 @@ import ConfigParser
 from pyrobase import bencode
 from pyrocore import config
 from pyrocore.util import load_config, metafile
-from ptpapi import PTPAPI
+import ptpapi
 
 parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
 parser.add_argument('-u', '--url', help='Permalink to the torrent page')
@@ -25,13 +25,8 @@ path = args.path
 tID = None
 
 # Load APIs
-configFile = ConfigParser.ConfigParser()
-configFile.read(args.cred)
-username = configFile.get('PTP', 'username')
-password = configFile.get('PTP', 'password')
-passkey = configFile.get('PTP', 'passkey')
-ptp = PTPAPI()
-ptp.login(username, password, passkey)
+ptp = ptpapi.API()
+ptp.login(conf=args.cred)
 
 load_config.ConfigLoader().load()
 proxy = config.engine.open()
@@ -43,32 +38,32 @@ if args.url:
 else:
     if args.file:
         basename = os.path.basename(os.path.abspath(args.file))
-        for m in ptp.search({'filelist':basename})['Movies']:
-            print "Movie %s: %s - %s/torrents.php?id=%s" % (m['GroupId'], m['Title'], ptp.baseURL, m['GroupId'])
-            for t in m['Torrents']:
+        for m in ptp.search({'filelist':basename}):
+            print "Movie %s: %s - %storrents.php?id=%s" % (m.ID, m.data['Title'], ptpapi.baseURL, m.ID)
+            for t in m.torrents:
                 # Exact match or match with out file extension
-                if t['ReleaseName'] == basename or t['ReleaseName'] == os.path.splitext(basename)[0]:
-                    print "Found strong match by release name at", t['Id']
-                    tID = t['Id']
+                if t.data['ReleaseName'] == basename or t.data['ReleaseName'] == os.path.splitext(basename)[0]:
+                    print "Found strong match by release name at", t.ID
+                    tID = t.ID
                     path = os.path.dirname(os.path.abspath(args.file))
                     break
-                elif t['ReleaseName'] in basename:
-                    print "Found weak match by name at", t['Id']
+                elif t.data['ReleaseName'] in basename:
+                    print "Found weak match by name at", t.ID
             if not tID:
                 print "Movie found but no match by release name, going through filelists"
-                movieInfo = ptp.movieInformation(m['GroupId'])
-                for t in movieInfo['Torrents']:
+                m.load_info(basic=False)
+                for t in m.torrents:
                     # Only single files under a directory are matched currently
                     # e.g. Movie.Name.Year.mkv -> Move Name (Year)/Movie.Name.Year.mkv
-                    print t['ReleaseName'], t['Filelist']
-                    if len(t['Filelist']) == 1 and t['Filelist'].keys()[0] == basename:
-                        print "Found strong match by filename at", t['Id'], ": making new structure"
-                        tID  = t['Id']
-                        path = os.path.join(os.path.dirname(os.path.abspath(args.file)), t['ReleaseName'])
+                    print t.data['ReleaseName'], t.data['Filelist']
+                    if len(t.data['Filelist']) == 1 and t.data['Filelist'].keys()[0] == basename:
+                        print "Found strong match by filename at", t.ID, ": making new structure"
+                        tID  = t.ID
+                        path = os.path.join(os.path.dirname(os.path.abspath(args.file)), t.data['ReleaseName'])
                         os.mkdir(path)
                         os.link(os.path.abspath(args.file),
                                 os.path.join(os.path.dirname(os.path.abspath(args.file)),
-                                             t['ReleaseName'],
+                                             t.data['ReleaseName'],
                                              os.path.basename(os.path.abspath(args.file))))
                         break
     else:
