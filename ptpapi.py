@@ -83,7 +83,7 @@ class User:
         pass
 
     def bookmarks(self, filters=None):
-        pass
+        r = session.get(baseULR + 'bookmarks.php', params={'id': self.ID})
 
 class API:
     def __init__(self):
@@ -98,18 +98,23 @@ class API:
             passkey = config.get('PTP', 'passkey')
         elif not password or not passkey or not username:
             raise PTPAPIException("Not enough info provided to log in.")
-        r = session.post(baseURL + 'ajax.php?action=login',
+        j = session.post(baseURL + 'ajax.php?action=login',
                          data={"username": username,
                                "password": password,
-                               "passkey": passkey })
-        if r.json()["Result"] != "Ok":
-            raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % r.json())
-        return r.json()
+                               "passkey": passkey }).json()
+        if j["Result"] != "Ok":
+            raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % j)
+        # Get some information that will be useful for later
+        r = session.get(baseURL + 'index.php')
+        self.current_user_id = re.search(r'user.php\?id=(\d+)', r.text).group(1)
+        self.auth_key = re.search(r'auth=([0-9a-f]{32})', r.text).group(1)
+        return j
 
     def logout(self):
-        # This shouldn't require two calls
-        authkey = session.get(baseURL + 'torrents.php?json=noredirect').json()['AuthKey']
-        return session.get(baseURL + 'logout.php', params={'auth': authkey})
+        return session.get(baseURL + 'logout.php', params={'auth': self.auth_key})
+
+    def current_user(self):
+        return User(self.current_user_id)
         
     def search(self, filters):
         if 'name' in filters:
