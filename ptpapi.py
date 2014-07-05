@@ -96,9 +96,7 @@ class API:
             username = config.get('PTP', 'username')
             password = config.get('PTP', 'password')
             passkey = config.get('PTP', 'passkey')
-        elif password and passkey and username:
-            pass
-        else:
+        elif not password or not passkey or not username:
             raise PTPAPIException("Not enough info provided to log in.")
         r = session.post(baseURL + 'ajax.php?action=login',
                          data={"username": username,
