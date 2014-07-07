@@ -133,10 +133,13 @@ class API:
             passkey = config.get('PTP', 'passkey')
         if not password or not passkey or not username:
             raise PTPAPIException("Not enough info provided to log in.")
-        j = session.post(baseURL + 'ajax.php?action=login',
-                         data={"username": username,
-                               "password": password,
-                               "passkey": passkey }).json()
+        try:
+                j = session.post(baseURL + 'ajax.php?action=login',
+                                 data={"username": username,
+                                       "password": password,
+                                       "passkey": passkey }).json()
+        except ValueError as e:
+                raise PTPAPIException("Could not parse returned json data.")
         if j["Result"] != "Ok":
             raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % j)
         # Get some information that will be useful for later
