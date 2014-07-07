@@ -1,10 +1,17 @@
 #!/bin/env python
-from bs4 import BeautifulSoup as bs4
-import requests
 import ConfigParser
 import re
+import os
+
+from bs4 import BeautifulSoup as bs4
+import requests
+
+import util
 
 session = requests.Session()
+def print_callback(r, *args, **kwargs):
+        print(r.url)
+session.hooks.update({'response': print_callback})
 session.headers.update({"User-Agent": "Wget/1.13.4"})
 baseURL = 'https://tls.passthepopcorn.me/'
 
@@ -30,11 +37,12 @@ class Movie:
 
     def load_data(self, basic=True, overwrite=False):
         # Check to see if data has already been set
-        if not 'GroupId' in self.data or not overwrite:
+        if not 'GroupId' in self.data or overwrite:
             self.data = session.get(baseURL + "torrents.php",
                                     params={'id': self.ID,
                                             'json': '1'}).json()
             if self.data['Torrents']:
+                self.torrents = []
                 for t in self.data['Torrents']:
                     self.torrents.append(Torrent(data=t))
         # Don't make two http calls unless told to
@@ -52,7 +60,12 @@ class Torrent:
     def __init__(self, ID=None, data=None):
         if data:
             self.data = data
-            self.ID = data['Id']
+            if 'Id' in data:
+                self.ID = data['Id']
+            elif 'TorrentId' in data:
+                self.ID = data['TorrentId']
+            else:
+                raise PTPAPIException("Could not find torrent ID in data")
         elif ID:
             self.ID = ID
             self.load_data()
@@ -71,8 +84,21 @@ class Torrent:
         r = session.get(baseURL + "torrents.php",
                         params={'action': 'download',
                                 'id': self.ID})
-        self.downloadName = re.search(r'filename="(.*)"', d.headers['Content-Disposition']).group(1)
-        return r
+        self.downloadName = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
+        return r.content
+
+    def download_to_file(self, dest=None, name=None):
+        r = session.get(baseURL + "torrents.php",
+                        params={'action': 'download',
+                                'id': self.ID})
+        if not dest:
+            dest = os.getcwd()
+        if not name:
+            name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
+        with open(os.path.join(dest, name), 'wb') as fh:
+            print os.path.join(dest, name)
+            fh.write(r.content)
+        
 
 class User:
     def __init__(self, ID):
@@ -83,8 +109,17 @@ class User:
         pass
 
     def bookmarks(self, filters=None):
-        r = session.get(baseULR + 'bookmarks.php', params={'id': self.ID})
+        r = session.get(baseURL + 'bookmarks.php', params={'id': self.ID})
+        movies = []
+        for m in util.snarf_cover_view_data(r.text):
+            m['Torrents'] = []
+            for g in m['GroupingQualities']:
+                m['Torrents'].extend(g['Torrents'])
+            movies.append(Movie(data=m))
+        return movies
 
+    
+        
 class API:
     def __init__(self):
         pass
@@ -121,3 +156,15 @@ class API:
             filters.update({'searchstr': filters['name']})
         filters.update({'json': 'noredirect'})
         return [Movie(data=m) for m in session.get(baseURL + 'torrents.php', params=filters).json()['Movies']]
+
+def best_match(movie, profile, allow_dead=False, allow_trumpable=True):
+    # We could either get complicated and implement a word parser, or we can just define profiles in a
+    # consitent pattern that could possibly be parsed
+    ret = None
+    profile = profile.lower()
+    if profile == 'smallest gp':
+        matches = [t for t in movie.torrents if t.data['GoldenPopcorn']]
+        if len(matches) == 1:
+            ret = matches[0]
+    return ret
+    
