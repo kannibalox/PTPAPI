@@ -2,6 +2,7 @@
 import ConfigParser
 import re
 import os
+from datetime import datetime
 
 from bs4 import BeautifulSoup as bs4
 import requests
@@ -10,7 +11,7 @@ import util
 
 session = requests.Session()
 def print_callback(r, *args, **kwargs):
-        print(r.url)
+    print(r.url)
 session.hooks.update({'response': print_callback})
 session.headers.update({"User-Agent": "Wget/1.13.4"})
 baseURL = 'https://tls.passthepopcorn.me/'
@@ -98,7 +99,14 @@ class Torrent:
         with open(os.path.join(dest, name), 'wb') as fh:
             print os.path.join(dest, name)
             fh.write(r.content)
-        
+
+    def is_HD(self):
+        if t['Resolution'] in ['1080p', '1080i', '720p', '4K']:
+            return True
+        return False
+
+    def is_HD(self):
+        return not self.is_HD()
 
 class User:
     def __init__(self, ID):
@@ -118,8 +126,6 @@ class User:
             movies.append(Movie(data=m))
         return movies
 
-    
-        
 class API:
     def __init__(self):
         pass
@@ -134,10 +140,10 @@ class API:
         if not password or not passkey or not username:
             raise PTPAPIException("Not enough info provided to log in.")
         try:
-                j = session.post(baseURL + 'ajax.php?action=login',
-                                 data={"username": username,
-                                       "password": password,
-                                       "passkey": passkey }).json()
+            j = session.post(baseURL + 'ajax.php?action=login',
+                             data={"username": username,
+                                   "password": password,
+                                   "passkey": passkey }).json()
         except ValueError as e:
                 raise PTPAPIException("Could not parse returned json data.")
         if j["Result"] != "Ok":
@@ -160,14 +166,39 @@ class API:
         filters.update({'json': 'noredirect'})
         return [Movie(data=m) for m in session.get(baseURL + 'torrents.php', params=filters).json()['Movies']]
 
-def best_match(movie, profile, allow_dead=False, allow_trumpable=True):
-    # We could either get complicated and implement a word parser, or we can just define profiles in a
-    # consitent pattern that could possibly be parsed
-    ret = None
-    profile = profile.lower()
-    if profile == 'smallest gp':
-        matches = [t for t in movie.torrents if t.data['GoldenPopcorn']]
+def best_match(movie, profile, allow_dead=False):
+    # We're going to emulate what.cd's collector option
+    profiles = profile.lower().split(',')
+    matches = movie.torrents
+    current_sort = None
+    for p in profiles:
+        filter_dict = {
+            'gp': (lambda t: t.data['GoldenPopcorn']),
+            'scene': (lambda t: t.data['Scene']),
+            '576p': (lambda t: t.data['Resolution'] == '576p'),
+            '480p': (lambda t: t.data['Resolution'] == '480p'),
+            '720p': (lambda t: t.data['Resolution'] == '720p'),
+            '1080p': (lambda t: t.data['Resolution'] == '1080p'),
+            'HD': (lambda t: t.is_HD()),
+            'SD': (lambda t: t.is_SD()),
+            'Remux': (lambda t: 'remux' in t.data['RemasterTitle'])
+        }
+        for (name, func) in filter_dict.items():
+            if name.lower() in p:
+                matches = [t for t in matches if func(t)]
+        sort_dict = {
+            'most recent': (True, (lambda t: datetime.strptime(t.data['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
+            'smallest': (True, (lambda t: t.data['Size'])),
+            'seeded': (True, (lambda t: t.data['Seeders'])),
+            'largest': (False, (lambda t: t.data['Size'])),
+        }
+        for name, (rev, sort) in sort_dict.items():
+            if name in p:
+                current_sort = name
         if len(matches) == 1:
-            ret = matches[0]
-    return ret
+            return matches[0]
+        elif len(matches) > 1 and current_sort:
+            (rev, sort) = sort_dict[current_sort]
+            return sorted(matches, key=sort, reverse=rev)[0]
+    return None
     
