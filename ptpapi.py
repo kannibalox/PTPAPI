@@ -2,6 +2,7 @@
 import ConfigParser
 import re
 import os
+import pickle
 from datetime import datetime
 
 from bs4 import BeautifulSoup as bs4
@@ -14,7 +15,9 @@ def print_callback(r, *args, **kwargs):
     print(r.url)
 session.hooks.update({'response': print_callback})
 session.headers.update({"User-Agent": "Wget/1.13.4"})
+
 baseURL = 'https://tls.passthepopcorn.me/'
+cookiesFile = 'cookies.txt'
 
 class PTPAPIException(Exception):
     pass
@@ -122,23 +125,29 @@ class API:
         pass
 
     def login(self, conf=None, username=None, password=None, passkey=None):
-        if conf:
-            config = ConfigParser.ConfigParser()
-            config.read(conf)
-            username = config.get('PTP', 'username')
-            password = config.get('PTP', 'password')
-            passkey = config.get('PTP', 'passkey')
-        if not password or not passkey or not username:
-            raise PTPAPIException("Not enough info provided to log in.")
-        try:
-            j = session.post(baseURL + 'ajax.php?action=login',
-                             data={"username": username,
-                                   "password": password,
-                                   "passkey": passkey }).json()
-        except ValueError as e:
+        j = None
+        if os.path.isfile(cookiesFile):
+            self.load_cookies()
+        else:
+            if conf:
+                config = ConfigParser.ConfigParser()
+                config.read(conf)
+                username = config.get('PTP', 'username')
+                password = config.get('PTP', 'password')
+                passkey = config.get('PTP', 'passkey')
+            if not password or not passkey or not username:
+                raise PTPAPIException("Not enough info provided to log in.")
+            try:
+                j = session.post(baseURL + 'ajax.php?action=login',
+                                 data={"username": username,
+                                       "password": password,
+                                       "passkey": passkey }).json()
+            except ValueError as e:
                 raise PTPAPIException("Could not parse returned json data.")
-        if j["Result"] != "Ok":
-            raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % j)
+            if j["Result"] != "Ok":
+                raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % j)
+            else:
+                self.save_cookie()
         # Get some information that will be useful for later
         r = session.get(baseURL + 'index.php')
         self.current_user_id = re.search(r'user.php\?id=(\d+)', r.text).group(1)
@@ -147,6 +156,14 @@ class API:
 
     def logout(self):
         return session.get(baseURL + 'logout.php', params={'auth': self.auth_key})
+
+    def save_cookie(self):
+        with open(cookiesFile, 'w') as fh:
+            pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fh)
+
+    def load_cookies(self):
+        with open(cookiesFile) as fh:
+            session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fh))
 
     def current_user(self):
         return User(self.current_user_id)
