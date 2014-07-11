@@ -206,9 +206,9 @@ def best_match(movie, profile, allow_dead=False):
                 matches = [t for t in matches if func(t)]
         sort_dict = {
             'most recent': (True, (lambda t: datetime.strptime(t.data['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
-            'smallest': (True, (lambda t: t.data['Size'])),
+            'smallest': (False, (lambda t: t.data['Size'])),
             'seeded': (True, (lambda t: t.data['Seeders'])),
-            'largest': (False, (lambda t: t.data['Size'])),
+            'largest': (True, (lambda t: t.data['Size'])),
         }
         for name, (rev, sort) in sort_dict.items():
             if name in p:
