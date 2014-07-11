@@ -97,16 +97,7 @@ class Torrent:
         if not name:
             name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
         with open(os.path.join(dest, name), 'wb') as fh:
-            print os.path.join(dest, name)
             fh.write(r.content)
-
-    def is_HD(self):
-        if t['Resolution'] in ['1080p', '1080i', '720p', '4K']:
-            return True
-        return False
-
-    def is_HD(self):
-        return not self.is_HD()
 
 class User:
     def __init__(self, ID):
@@ -166,12 +157,21 @@ class API:
         filters.update({'json': 'noredirect'})
         return [Movie(data=m) for m in session.get(baseURL + 'torrents.php', params=filters).json()['Movies']]
 
+    def remove_snatched_bookmarks(self):
+        session.post(baseURL + "bookmarks.php", data={'action': 'remove_snatched'})
+
+    def remove_seen_bookmarks(self):
+        session.post(baseURL + "bookmarks.php", data={'action': 'remove_snatched'})
+
+    def remove_uploaded_bookmarks(self):
+        session.post(baseURL + "bookmarks.php", data={'action': 'remove_snatched'})
+
 def best_match(movie, profile, allow_dead=False):
     # We're going to emulate what.cd's collector option
     profiles = profile.lower().split(',')
-    matches = movie.torrents
     current_sort = None
     for p in profiles:
+        matches = movie.torrents
         filter_dict = {
             'gp': (lambda t: t.data['GoldenPopcorn']),
             'scene': (lambda t: t.data['Scene']),
@@ -179,9 +179,10 @@ def best_match(movie, profile, allow_dead=False):
             '480p': (lambda t: t.data['Resolution'] == '480p'),
             '720p': (lambda t: t.data['Resolution'] == '720p'),
             '1080p': (lambda t: t.data['Resolution'] == '1080p'),
-            'HD': (lambda t: t.is_HD()),
-            'SD': (lambda t: t.is_SD()),
-            'Remux': (lambda t: 'remux' in t.data['RemasterTitle'])
+            'HD': (lambda t: t.data['Quality'] == 'High Definition'),
+            'SD': (lambda t: t.data['Quality'] == 'Standard Definition'),
+            'Remux': (lambda t: 'remux' in t.data['RemasterTitle'].lower()),
+            'x264': (lambda t: t.data['Codec'] == 'x264')
         }
         for (name, func) in filter_dict.items():
             if name.lower() in p:
