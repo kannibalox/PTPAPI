@@ -125,10 +125,18 @@ class API:
         pass
 
     def login(self, conf=None, username=None, password=None, passkey=None):
+        global session
         j = None
         if os.path.isfile(cookiesFile):
             self.load_cookies()
-        else:
+            session.max_redirects = 1
+            try:
+                r = session.get(baseURL + 'torrents.php')
+            except requests.exceptions.TooManyRedirects:
+                os.remove(cookiesFile)
+                session.cookies = None
+            session.max_redirects = 3
+        if not os.path.isfile(cookiesFile):
             if conf:
                 config = ConfigParser.ConfigParser()
                 config.read(conf)
@@ -146,22 +154,24 @@ class API:
                 raise PTPAPIException("Could not parse returned json data.")
             if j["Result"] != "Ok":
                 raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % j)
-            else:
-                self.save_cookie()
-        # Get some information that will be useful for later
-        r = session.get(baseURL + 'index.php')
+            self.save_cookie()
+            # Get some information that will be useful for later
+            r = session.get(baseURL + 'index.php')
         self.current_user_id = re.search(r'user.php\?id=(\d+)', r.text).group(1)
         self.auth_key = re.search(r'auth=([0-9a-f]{32})', r.text).group(1)
         return j
 
     def logout(self):
+        os.remove(cookiesFile)
         return session.get(baseURL + 'logout.php', params={'auth': self.auth_key})
 
     def save_cookie(self):
-        with open(cookiesFile, 'w') as fh:
-            pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fh)
+        if session.cookies:
+            with open(cookiesFile, 'w') as fh:
+                pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fh)
 
     def load_cookies(self):
+        global session
         with open(cookiesFile) as fh:
             session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fh))
 
