@@ -134,7 +134,7 @@ class API:
                 r = session.get(baseURL + 'torrents.php')
             except requests.exceptions.TooManyRedirects:
                 os.remove(cookiesFile)
-                session.cookies = None
+                session.cookies = requests.cookies.RequestsCookieJar()
             session.max_redirects = 3
         if not os.path.isfile(cookiesFile):
             if conf:
@@ -166,8 +166,7 @@ class API:
         return session.get(baseURL + 'logout.php', params={'auth': self.auth_key})
 
     def save_cookie(self):
-        if session.cookies:
-            with open(cookiesFile, 'w') as fh:
+        with open(cookiesFile, 'w') as fh:
                 pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fh)
 
     def load_cookies(self):
