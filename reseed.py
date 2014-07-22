@@ -78,7 +78,8 @@ if not tID or not path:
     ptp.logout()
     exit()
 
-(name, data) = ptp.downloadTorrent(tID)
+torrent = ptpapi.Torrent(ID=tID)
+(name, data) = torrent.download()
 ptp.logout()
 with open(name, 'wb') as fh:
     fh.write(data.read())
