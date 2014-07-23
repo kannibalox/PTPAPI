@@ -13,8 +13,7 @@ def main():
 
     args = parser.parse_args()
 
-    api = ptpapi.API()
-    api.login(conf='creds.ini')
+    api = ptpapi.login(conf='creds.ini')
     try:
         ptpapi.session.cookies
         api.remove_snatched_bookmarks()

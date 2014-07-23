@@ -25,8 +25,7 @@ path = args.path
 tID = None
 
 # Load APIs
-ptp = ptpapi.API()
-ptp.login(conf=args.cred)
+ptp = ptpapi.login(conf=args.cred)
 
 load_config.ConfigLoader().load()
 proxy = config.engine.open()

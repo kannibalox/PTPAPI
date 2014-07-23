@@ -8,8 +8,7 @@ parser.add_argument('-o', '--output', help='Directory to place the file in.')
 parser.add_argument('url', help='The URL to get the torrent ID from.', default=os.getcwd())
 args = parser.parse_args()
 
-ptp = ptpapi.API()
-ptp.login(conf='creds.ini')
+ptp = ptpapi.login(conf='creds.ini')
 match = re.search(r'torrentid=(\d+)', args.url)
 if match:
     t = ptpapi.Torrent(ID=match.group(1), load=False)

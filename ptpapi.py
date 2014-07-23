@@ -19,6 +19,9 @@ session.headers.update({"User-Agent": "Wget/1.13.4"})
 baseURL = 'https://tls.passthepopcorn.me/'
 cookiesFile = 'cookies.txt'
 
+def login(**kwargs):
+    return API(**kwargs)
+
 class PTPAPIException(Exception):
     pass
 
@@ -151,10 +154,7 @@ class User:
         return movies
 
 class API:
-    def __init__(self):
-        pass
-
-    def login(self, conf=None, username=None, password=None, passkey=None):
+    def __init__(self, conf=None, username=None, password=None, passkey=None):
         global session
         j = None
         if os.path.isfile(cookiesFile):
@@ -189,7 +189,6 @@ class API:
             r = session.get(baseURL + 'index.php')
         self.current_user_id = re.search(r'user.php\?id=(\d+)', r.text).group(1)
         self.auth_key = re.search(r'auth=([0-9a-f]{32})', r.text).group(1)
-        return j
 
     def logout(self):
         os.remove(cookiesFile)
