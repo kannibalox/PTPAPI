@@ -61,7 +61,7 @@ class Movie:
                     t.data['Filelist'][e("td")[0].string] = bytesize
 
 class Torrent:
-    def __init__(self, ID=None, data=None):
+    def __init__(self, ID=None, data=None, load=True):
         if data:
             self.data = data
             if 'Id' in data:
@@ -72,7 +72,8 @@ class Torrent:
                 raise PTPAPIException("Could not find torrent ID in data")
         elif ID:
             self.ID = ID
-            self.load_data()
+            if load:
+                self.load_data()
         else:
             raise PTPAPIException("Not enough information to intialize torrent")
 
