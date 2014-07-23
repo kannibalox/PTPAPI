@@ -221,6 +221,10 @@ class API:
     def remove_uploaded_bookmarks(self):
         session.post(baseURL + "bookmarks.php", data={'action': 'remove_snatched'})
 
+    def need_for_seed(self):
+        data = util.snarf_cover_view_data(session.get(baseURL + "needforseed.php").content)
+        return [t['GroupingQualities'][0]['Torrents'][0] for t in data]
+
 def best_match(movie, profile, allow_dead=False):
     # We're going to emulate what.cd's collector option
     profiles = profile.lower().split(',')
@@ -257,4 +261,3 @@ def best_match(movie, profile, allow_dead=False):
             (rev, sort) = sort_dict[current_sort]
             return sorted(matches, key=sort, reverse=rev)[0]
     return None
-    
