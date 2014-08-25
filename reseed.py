@@ -78,10 +78,8 @@ if not tID or not path:
     exit()
 
 torrent = ptpapi.Torrent(ID=tID)
-(name, data) = torrent.download()
+name = torrent.download_to_file()
 ptp.logout()
-with open(name, 'wb') as fh:
-    fh.write(data.read())
 torrent = metafile.Metafile(name)
 data = bencode.bread(name)
 thash = metafile.info_hash(data)
