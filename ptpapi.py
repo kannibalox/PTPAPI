@@ -134,6 +134,7 @@ class Torrent:
             name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
         with open(os.path.join(dest, name), 'wb') as fh:
             fh.write(r.content)
+        return os.path.join(dest, name))
 
 class User:
     def __init__(self, ID):
