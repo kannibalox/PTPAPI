@@ -217,10 +217,10 @@ class API:
         session.post(baseURL + "bookmarks.php", data={'action': 'remove_snatched'})
 
     def remove_seen_bookmarks(self):
-        session.post(baseURL + "bookmarks.php", data={'action': 'remove_snatched'})
+        session.post(baseURL + "bookmarks.php", data={'action': 'remove_seen'})
 
     def remove_uploaded_bookmarks(self):
-        session.post(baseURL + "bookmarks.php", data={'action': 'remove_snatched'})
+        session.post(baseURL + "bookmarks.php", data={'action': 'remove_uploaded'})
 
     def need_for_seed(self):
         data = util.snarf_cover_view_data(session.get(baseURL + "needforseed.php").content)
