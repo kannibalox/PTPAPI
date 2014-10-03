@@ -15,16 +15,14 @@ def main():
 
     api = ptpapi.login(conf='creds.ini')
     try:
-        ptpapi.session.cookies
         api.remove_snatched_bookmarks()
         bmks = api.current_user().bookmarks()
         for b in bmks[0:args.number]:
-            b.load_data(overwrite=True)
             best = ptpapi.best_match(b, args.filters)
             if best:
                 best.download_to_file(dest=args.destination)
     finally:
-        pass
+        api.logout()
                 
 
 if __name__ == '__main__':

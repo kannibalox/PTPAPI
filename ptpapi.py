@@ -78,9 +78,9 @@ class Movie:
         return self.data[name]
 
     def load_json_data(self, basic=True, overwrite=False):
-        self.data = session.get(baseURL + "torrents.php",
+        self.data.update(session.get(baseURL + "torrents.php",
                                 params={'id': self.ID,
-                                        'json': '1'}).json()
+                                        'json': '1'}).json())
         self.conv_json_torrents()
 
 
@@ -94,9 +94,11 @@ class Movie:
     def load_html_data(self, basic=True, overwrite=False):
         soup = bs4(session.get(baseURL + "torrents.php", params={'id':self.ID}).text)
         self.data['Cover'] = soup.find('img', class_='sidebar-cover-image')['src']
+        # Title and Year
         match = re.match(r'(.*) \[(\d{4})\]', soup.find('h2', class_='page__title').encode_contents())
         self.data['Title'] = match.group(1)
         self.data['Year'] = match.group(2)
+        # Genre tags
         self.data['Tags'] = []
         for tagbox in soup.find_all('div', class_="box_tags"):
             for t in tagbox.find_all("li"):
@@ -112,7 +114,7 @@ class Movie:
 
 class Torrent:
     def __init__(self, ID=None, data=None):
-        self.movieJsonKeys = ['Quality', 'Source', 'Container', 'UploadTime', 'Codec', 'Leechers', 'Seeders', 'Snatched', 'ReleaseName', 'GoldenPopcorn', 'Checked', 'RemasterTitle', 'GroupId', 'Scene']
+        self.movieJsonKeys = ['Quality', 'Source', 'Container', 'UploadTime', 'Codec', 'Leechers', 'Seeders', 'Snatched', 'ReleaseName', 'GoldenPopcorn', 'Checked', 'RemasterTitle', 'GroupId', 'Scene', 'Resolution']
         self.torrentJsonKeys = ['Description', 'Nfo']
         if data:
             self.data = data
@@ -134,8 +136,11 @@ class Torrent:
     def __str__(self):
         return "<ptpapi.Torrent ID %s>" % self.ID
 
+    def __nonzero__(self):
+        return self.ID is not None
+        
     def __getattr__(self, name):
-        if name not in self.data:
+        if name not in self.data or not self.data[name]:
             if name in self.movieJsonKeys:
                 self.load_movie_json_data()
         return self.data[name]
@@ -149,7 +154,7 @@ class Torrent:
                                         'id': self.data['GroupId'],
                                         'json':'1'}).json()
         for t in movieData['Torrents']:
-            if t['Id'] == self.ID:
+            if int(t['Id']) == int(self.ID):
                 self.data.update(t)
                 break
 
@@ -276,27 +281,27 @@ def best_match(movie, profile, allow_dead=False):
     profiles = profile.lower().split(',')
     current_sort = None
     for p in profiles:
-        matches = movie.torrents
+        matches = movie.Torrents
         filter_dict = {
-            'gp': (lambda t: t.data['GoldenPopcorn']),
-            'scene': (lambda t: t.data['Scene']),
-            '576p': (lambda t: t.data['Resolution'] == '576p'),
-            '480p': (lambda t: t.data['Resolution'] == '480p'),
-            '720p': (lambda t: t.data['Resolution'] == '720p'),
-            '1080p': (lambda t: t.data['Resolution'] == '1080p'),
-            'HD': (lambda t: t.data['Quality'] == 'High Definition'),
-            'SD': (lambda t: t.data['Quality'] == 'Standard Definition'),
-            'Remux': (lambda t: 'remux' in t.data['RemasterTitle'].lower()),
-            'x264': (lambda t: t.data['Codec'] == 'x264')
+            'gp': (lambda t: t.GoldenPopcorn),
+            'scene': (lambda t: t.Scene),
+            '576p': (lambda t: t.Resolution == '576p'),
+            '480p': (lambda t: t.Resolution == '480p'),
+            '720p': (lambda t: t.Resolution == '720p'),
+            '1080p': (lambda t: t.Resolution == '1080p'),
+            'HD': (lambda t: t.Quality == 'High Definition'),
+            'SD': (lambda t: t.Quality == 'Standard Definition'),
+            'Remux': (lambda t: 'remux' in t.RemasterTitle.lower()),
+            'x264': (lambda t: tCodec == 'x264')
         }
         for (name, func) in filter_dict.items():
             if name.lower() in p:
                 matches = [t for t in matches if func(t)]
         sort_dict = {
-            'most recent': (True, (lambda t: datetime.strptime(t.data['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
-            'smallest': (False, (lambda t: t.data['Size'])),
-            'seeded': (True, (lambda t: t.data['Seeders'])),
-            'largest': (True, (lambda t: t.data['Size'])),
+            'most recent': (True, (lambda t: datetime.strptime(t.UploadTime, "%Y-%m-%d %H:%M:%S"))),
+            'smallest': (False, (lambda t: t.Size)),
+            'seeded': (True, (lambda t: t.Seeders)),
+            'largest': (True, (lambda t: t.Size)),
         }
         for name, (rev, sort) in sort_dict.items():
             if name in p:
