@@ -38,42 +38,42 @@ else:
     if args.file:
         basename = os.path.basename(os.path.abspath(args.file))
         for m in ptp.search({'filelist':basename}):
-            print "Movie %s: %s - %storrents.php?id=%s" % (m.ID, m.data['Title'], ptpapi.baseURL, m.ID)
-            for t in m.torrents:
-                # Exact match or match with out file extension
-                if t.data['ReleaseName'] == basename or t.data['ReleaseName'] == os.path.splitext(basename)[0]:
+            print "Movie %s: %s - %storrents.php?id=%s" % (m.ID, m.Title, ptpapi.baseURL, m.ID)
+            for t in m.Torrents:
+                print t
+                # Exact match or match without file extension
+                if t.ReleaseName == basename or t.ReleaseName == os.path.splitext(basename)[0]:
                     print "Found strong match by release name at", t.ID
                     tID = t.ID
                     path = os.path.dirname(os.path.abspath(args.file))
                     break
-                elif t.data['ReleaseName'] in basename:
+                elif t.ReleaseName in basename:
                     print "Found weak match by name at", t.ID
             if not tID:
                 print "Movie found but no match by release name, going through filelists"
-                m.load_data(basic=False)
-                for t in m.torrents:
+                for t in m.Torrents:
                     # Only single files under a directory are matched currently
                     # e.g. Movie.Name.Year.mkv -> Move Name (Year)/Movie.Name.Year.mkv
-                    print t.data['ReleaseName'], t.data['Filelist']
-                    if len(t.data['Filelist']) == 1 and t.data['Filelist'].keys()[0] == basename:
+                    print t.ReleaseName, t.Filelist
+                    if len(t.Filelist) == 1 and t.Filelist.keys()[0] == basename:
                         print "Found strong match by filename at", t.ID, ": making new structure"
                         tID  = t.ID
-                        path = os.path.join(os.path.dirname(os.path.abspath(args.file)), t.data['ReleaseName'])
+                        path = os.path.join(os.path.dirname(os.path.abspath(args.file)), t.ReleaseName)
                         os.mkdir(path)
                         os.link(os.path.abspath(args.file),
                                 os.path.join(os.path.dirname(os.path.abspath(args.file)),
-                                             t.data['ReleaseName'],
+                                             t.ReleaseName,
                                              os.path.basename(os.path.abspath(args.file))))
                         break
     else:
-        raise Exception
+        raise Exception("No file specified")
 
-if args.dry_run:
-    ptp.logout()
-    exit()
 # Make sure we have the minimum information required
 if not tID or not path:
     print "Torrent ID or path missing, cannot reseed"
+    ptp.logout()
+    exit()
+if args.dry_run:
     ptp.logout()
     exit()
 

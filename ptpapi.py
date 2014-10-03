@@ -61,6 +61,7 @@ class Movie:
         self.htmlKeys = ['Title', 'Year', 'Cover', 'Tags']
         if data:
             self.data = data
+            self.conv_json_torrents()
             self.ID = data['GroupId']
         elif ID:
             self.ID = ID
@@ -80,10 +81,15 @@ class Movie:
         self.data = session.get(baseURL + "torrents.php",
                                 params={'id': self.ID,
                                         'json': '1'}).json()
-        torrents = self.data['Torrents']
-        self.data['Torrents'] = []
-        for t in torrents:
-            self.data['Torrents'].append(Torrent(data=t))
+        self.conv_json_torrents()
+
+
+    def conv_json_torrents(self):
+        if self.data['Torrents']:
+            torrents = self.data['Torrents']
+            self.data['Torrents'] = []
+            for t in torrents:
+                self.data['Torrents'].append(Torrent(data=t))
 
     def load_html_data(self, basic=True, overwrite=False):
         soup = bs4(session.get(baseURL + "torrents.php", params={'id':self.ID}).text)
@@ -123,6 +129,9 @@ class Torrent:
             raise PTPAPIException("Not enough information to intialize torrent")
 
     def __repr__(self):
+        return "<ptpapi.Torrent ID %s>" % self.ID
+
+    def __str__(self):
         return "<ptpapi.Torrent ID %s>" % self.ID
 
     def __getattr__(self, name):
