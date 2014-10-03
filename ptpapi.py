@@ -56,44 +56,58 @@ class TokenBucket(object):
     
 class Movie:
     def __init__(self, ID=None, data=None):
-        # Expects either a groupd ID to load data from, or for the data to already be present
         self.torrents = []
+        self.jsonKeys = ['ImdbId', 'ImdbRating', 'ImdbVoteCount', 'Torrents']
+        self.htmlKeys = ['Title', 'Year', 'Cover', 'Tags']
         if data:
             self.data = data
             self.ID = data['GroupId']
         elif ID:
             self.ID = ID
             self.data = {}
-            self.load_data()
         else:
             raise PTPAPIException("Could not load necessary data for Movie class")
-        if self.data['Torrents']:
-            for t in self.data['Torrents']:
-                self.torrents.append(Torrent(data=t))
 
-    def load_data(self, basic=True, overwrite=False):
-        # Check to see if data has already been set
-        if not 'GroupId' in self.data or overwrite:
-            self.data = session.get(baseURL + "torrents.php",
-                                    params={'id': self.ID,
-                                            'json': '1'}).json()
-            if self.data['Torrents']:
-                self.torrents = []
-                for t in self.data['Torrents']:
-                    self.torrents.append(Torrent(data=t))
-        # Don't make two http calls unless told to
-        if not basic and not overwrite:
-            soup = bs4(session.get(baseURL + "torrents.php", params={'id':self.ID}).text)
-            for t in self.torrents:
-                # Get file list
-                filediv = soup.find("div", id="files_%s" % t.ID)
-                t.data['Filelist'] = {}
-                for e in filediv.find("tbody").find_all("tr"):
-                    bytesize = e("td")[1]("span")[0]['title'].replace(",","").replace(' bytes', '')
-                    t.data['Filelist'][e("td")[0].string] = bytesize
+    def __getattr__(self, name):
+        if name not in self.data:
+            if name in self.jsonKeys:
+                self.load_json_data()
+            elif name in self.htmlKeys:
+                self.load_html_data()
+        return self.data[name]
+
+    def load_json_data(self, basic=True, overwrite=False):
+        self.data = session.get(baseURL + "torrents.php",
+                                params={'id': self.ID,
+                                        'json': '1'}).json()
+        torrents = self.data['Torrents']
+        self.data['Torrents'] = []
+        for t in torrents:
+            self.data['Torrents'].append(Torrent(data=t))
+
+    def load_html_data(self, basic=True, overwrite=False):
+        soup = bs4(session.get(baseURL + "torrents.php", params={'id':self.ID}).text)
+        self.data['Cover'] = soup.find('img', class_='sidebar-cover-image')['src']
+        match = re.match(r'(.*) \[(\d{4})\]', soup.find('h2', class_='page__title').encode_contents())
+        self.data['Title'] = match.group(1)
+        self.data['Year'] = match.group(2)
+        self.data['Tags'] = []
+        for tagbox in soup.find_all('div', class_="box_tags"):
+            for t in tagbox.find_all("li"):
+                self.data['Tags'].append(t.find('a').string)
+        return 
+        for t in self.torrents:
+            # Get file list
+            filediv = soup.find("div", id="files_%s" % t.ID)
+            t.data['Filelist'] = {}
+            for e in filediv.find("tbody").find_all("tr"):
+                bytesize = e("td")[1]("span")[0]['title'].replace(",","").replace(' bytes', '')
+                t.data['Filelist'][e("td")[0].string] = bytesize
 
 class Torrent:
-    def __init__(self, ID=None, data=None, load=True):
+    def __init__(self, ID=None, data=None):
+        self.movieJsonKeys = ['Quality', 'Source', 'Container', 'UploadTime', 'Codec', 'Leechers', 'Seeders', 'Snatched', 'ReleaseName', 'GoldenPopcorn', 'Checked', 'RemasterTitle', 'GroupId', 'Scene']
+        self.torrentJsonKeys = ['Description', 'Nfo']
         if data:
             self.data = data
             if 'Id' in data:
@@ -104,18 +118,40 @@ class Torrent:
                 raise PTPAPIException("Could not find torrent ID in data")
         elif ID:
             self.ID = ID
-            if load:
-                self.load_data()
+            self.data = {'Id': ID}
         else:
             raise PTPAPIException("Not enough information to intialize torrent")
 
-    def load_data(self):
-        # This has no 'basic' parameter, because it takes two calls to get the basic info anyway
-        movieID = re.search(r'\?id=(\d+)', session.get(baseURL + 'torrents.php', params={'torrentid': self.ID}).url).group(1)
-        self.data = session.get(baseURL + 'torrents.php',
+    def __repr__(self):
+        return "<ptpapi.Torrent ID %s>" % self.ID
+
+    def __getattr__(self, name):
+        if name not in self.data:
+            if name in self.movieJsonKeys:
+                self.load_movie_json_data()
+        return self.data[name]
+
+    def load_movie_json_data(self):
+        if 'GroupId' not in self.data or not self.data['GroupId']:
+            movie_url = session.get(baseURL + 'torrents.php', params={'torrentid': self.ID}).url
+            self.data['GroupId'] = re.search(r'\?id=(\d+)', movie_url).group(1)
+        movieData = session.get(baseURL + 'torrents.php',
                                 params={'torrentid': self.ID,
-                                        'id': movieID,
-                                        'json':'1'})
+                                        'id': self.data['GroupId'],
+                                        'json':'1'}).json()
+        for t in movieData['Torrents']:
+            if t['Id'] == self.ID:
+                self.data.update(t)
+                break
+
+    def load_torrent_json_data(self):
+        if 'GroupId' not in self.data or not self.data['GroupId']:
+            movie_url = session.get(baseURL + 'torrents.php', params={'torrentid': self.ID}).url
+            self.data['GroupId'] = re.search(r'\?id=(\d+)', movie_url).group(1)
+        self.data.update(session.get(baseURL + 'torrents.php',
+                                     params = {'action': 'description',
+                                               'id': self.data['GroupId'],
+                                               'torrentid': self.ID }).json())
 
     def download(self):
         r = session.get(baseURL + "torrents.php",
