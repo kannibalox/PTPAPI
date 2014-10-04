@@ -268,8 +268,8 @@ class API:
         
     def search(self, filters):
         if 'name' in filters:
-            filters.update({'searchstr': filters['name']})
-        filters.update({'json': 'noredirect'})
+            filters['searchstr'] = filters['name']
+        filters['json'] = 'noredirect'
         return [Movie(data=m) for m in session.get(baseURL + 'torrents.php', params=filters).json()['Movies']]
 
     def remove_snatched_bookmarks(self):
@@ -284,6 +284,10 @@ class API:
     def need_for_seed(self):
         data = util.snarf_cover_view_data(session.get(baseURL + "needforseed.php").content)
         return [t['GroupingQualities'][0]['Torrents'][0] for t in data]
+
+class Collection(object):
+    def __init__(self, ID):
+        self.ID = ID
 
 def best_match(movie, profile, allow_dead=False):
     # We're going to emulate what.cd's collector option
