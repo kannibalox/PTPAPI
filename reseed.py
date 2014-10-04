@@ -17,7 +17,7 @@ parser.add_argument('-u', '--url', help='Permalink to the torrent page')
 parser.add_argument('-p', '--path', help='Base directory of the file')
 parser.add_argument('-f', '--file', help='Path directly to file/directory')
 parser.add_argument('-c', '--cred', help='Credential file', default="creds.ini")
-parser.add_argument('-n', '--dry-run', help='Don\'t actually log in or load any torrents', action="store_true")
+parser.add_argument('-n', '--dry-run', help="Don't actually load any torrents", action="store_true")
 
 # Process flags
 args = parser.parse_args()
@@ -37,6 +37,7 @@ if args.url:
 else:
     if args.file:
         basename = os.path.basename(os.path.abspath(args.file))
+        dirname = os.path.dirname(os.path.abspath(args.file))
         for m in ptp.search({'filelist':basename}):
             print "Movie %s: %s - %storrents.php?id=%s" % (m.ID, m.Title, ptpapi.baseURL, m.ID)
             for t in m.Torrents:
@@ -45,7 +46,7 @@ else:
                 if t.ReleaseName == basename or t.ReleaseName == os.path.splitext(basename)[0]:
                     print "Found strong match by release name at", t.ID
                     tID = t.ID
-                    path = os.path.dirname(os.path.abspath(args.file))
+                    path = dirname
                     break
                 elif t.ReleaseName in basename:
                     print "Found weak match by name at", t.ID
@@ -58,12 +59,12 @@ else:
                     if len(t.Filelist) == 1 and t.Filelist.keys()[0] == basename:
                         print "Found strong match by filename at", t.ID, ": making new structure"
                         tID  = t.ID
-                        path = os.path.join(os.path.dirname(os.path.abspath(args.file)), t.ReleaseName)
+                        path = os.path.join(dirname, t.ReleaseName)
                         os.mkdir(path)
                         os.link(os.path.abspath(args.file),
-                                os.path.join(os.path.dirname(os.path.abspath(args.file)),
+                                os.path.join(dirname,
                                              t.ReleaseName,
-                                             os.path.basename(os.path.abspath(args.file))))
+                                             basename)
                         break
     else:
         raise Exception("No file specified")

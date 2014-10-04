@@ -2,14 +2,13 @@
 import ConfigParser
 import re
 import os
+import json
 import pickle
 from datetime import datetime
 from time import sleep, time
 
 from bs4 import BeautifulSoup as bs4
 import requests
-
-import util
 
 class TokenSession(requests.Session):
     def __init__(self, tokens, fill_rate):
@@ -32,9 +31,7 @@ class TokenSession(requests.Session):
         return True
 
     def request(self, *args, **kwargs):
-        print "Current tokens: %i" % self.tokens
         while not self.consume(1):
-            print "Sleeping"
             sleep(1)
         return super(TokenSession, self).request(*args, **kwargs)
 
@@ -325,3 +322,12 @@ def best_match(movie, profile, allow_dead=False):
             (rev, sort) = sort_dict[current_sort]
             return sorted(matches, key=sort, reverse=rev)[0]
     return None
+
+class util(object):
+    @staticmethod
+    def snarf_cover_view_data(text):
+        data = []
+        for d in re.finditer(r'coverViewJsonData\[\s*\d+\s*\]\s*=\s*({.*});', text):
+            data.extend(json.loads(d.group(1))['Movies'])
+        return data 
+
