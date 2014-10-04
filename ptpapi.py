@@ -143,6 +143,8 @@ class Torrent:
         if name not in self.data or not self.data[name]:
             if name in self.movieJsonKeys:
                 self.load_movie_json_data()
+            if name in self.torrentJsonKeys:
+                self.load_torrent_json_data()
         return self.data[name]
 
     def load_movie_json_data(self):
@@ -190,9 +192,6 @@ class User:
     def __init__(self, ID):
         # Requires an ID, as searching by name isn't exact on PTP
         self.ID = ID
-
-    def load_data(self):
-        pass
 
     def bookmarks(self, filters=None):
         r = session.get(baseURL + 'bookmarks.php', params={'id': self.ID})
