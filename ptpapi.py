@@ -4,31 +4,18 @@ import re
 import os
 import pickle
 from datetime import datetime
+from time import sleep, time
 
 from bs4 import BeautifulSoup as bs4
 import requests
 
 import util
 
-session = requests.Session()
-def print_callback(r, *args, **kwargs):
-    print(r.url)
-session.hooks.update({'response': print_callback})
-session.headers.update({"User-Agent": "Wget/1.13.4"})
-
-baseURL = 'https://tls.passthepopcorn.me/'
-cookiesFile = 'cookies.txt'
-
-def login(**kwargs):
-    return API(**kwargs)
-
-class PTPAPIException(Exception):
-    pass
-
-class TokenBucket(object):
+class TokenSession(requests.Session):
     def __init__(self, tokens, fill_rate):
         """tokens is the total tokens in the bucket. fill_rate is the
         rate in tokens/second that the bucket will be refilled."""
+        super(TokenSession, self).__init__()
         self.capacity = float(tokens)
         self._tokens = float(tokens)
         self.fill_rate = float(fill_rate)
@@ -44,6 +31,13 @@ class TokenBucket(object):
             return False
         return True
 
+    def request(self, *args, **kwargs):
+        print "Current tokens: %i" % self.tokens
+        while not self.consume(1):
+            print "Sleeping"
+            sleep(1)
+        return super(TokenSession, self).request(*args, **kwargs)
+
     def get_tokens(self):
         if self._tokens < self.capacity:
             now = time()
@@ -53,6 +47,22 @@ class TokenBucket(object):
         return self._tokens
         
     tokens = property(get_tokens)
+
+# If you change this and get in trouble, don't blame me
+session = TokenSession(3, 1)
+def print_callback(r, *args, **kwargs):
+    print(r.url)
+session.hooks.update({'response': print_callback})
+session.headers.update({"User-Agent": "Wget/1.13.4"})
+
+baseURL = 'https://tls.passthepopcorn.me/'
+cookiesFile = 'cookies.txt'
+
+def login(**kwargs):
+    return API(**kwargs)
+
+class PTPAPIException(Exception):
+    pass
     
 class Movie:
     def __init__(self, ID=None, data=None):
