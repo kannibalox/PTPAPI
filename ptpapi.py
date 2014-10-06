@@ -46,7 +46,7 @@ class TokenSession(requests.Session):
     tokens = property(get_tokens)
 
 # If you change this and get in trouble, don't blame me
-session = TokenSession(3, 1)
+session = TokenSession(3, 0.5)
 def print_callback(r, *args, **kwargs):
     print(r.url)
 session.hooks.update({'response': print_callback})
@@ -56,9 +56,11 @@ baseURL = 'https://tls.passthepopcorn.me/'
 cookiesFile = 'cookies.txt'
 
 def login(**kwargs):
+    """Simple helper function"""
     return API(**kwargs)
 
 class PTPAPIException(Exception):
+    """A generic exception to designate module-specific errors"""
     pass
     
 class Movie:
@@ -224,12 +226,6 @@ class API:
                 session.cookies = requests.cookies.RequestsCookieJar()
             session.max_redirects = 3
         if not os.path.isfile(cookiesFile):
-            if conf:
-                config = ConfigParser.ConfigParser()
-                config.read(conf)
-                username = config.get('PTP', 'username')
-                password = config.get('PTP', 'password')
-                passkey = config.get('PTP', 'passkey')
             if not password or not passkey or not username:
                 raise PTPAPIException("Not enough info provided to log in.")
             try:
@@ -331,3 +327,12 @@ class util(object):
             data.extend(json.loads(d.group(1))['Movies'])
         return data 
 
+    @staticmethod
+    def creds_from_conf(filename):
+        config = ConfigParser.ConfigParser()
+        config.read(filename)
+        return { 'username': config.get('PTP', 'username'),
+                 'password': config.get('PTP', 'password'),
+                 'passkey': config.get('PTP', 'passkey') }
+                 
+                

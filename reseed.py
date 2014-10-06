@@ -25,7 +25,7 @@ path = args.path
 tID = None
 
 # Load APIs
-ptp = ptpapi.login(conf=args.cred)
+ptp = ptpapi.login(**ptpapi.util.creds_from_conf(args.cred))
 
 load_config.ConfigLoader().load()
 proxy = config.engine.open()
@@ -64,7 +64,7 @@ else:
                         os.link(os.path.abspath(args.file),
                                 os.path.join(dirname,
                                              t.ReleaseName,
-                                             basename)
+                                             basename))
                         break
     else:
         raise Exception("No file specified")
