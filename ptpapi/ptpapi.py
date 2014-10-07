@@ -10,7 +10,11 @@ from time import sleep, time
 from bs4 import BeautifulSoup as bs4
 import requests
 
+baseURL = 'https://tls.passthepopcorn.me/'
+cookiesFile = 'cookies.txt'
+
 class TokenSession(requests.Session):
+    """Allows rate-limiting requests to the site"""
     def __init__(self, tokens, fill_rate):
         """tokens is the total tokens in the bucket. fill_rate is the
         rate in tokens/second that the bucket will be refilled."""
@@ -52,9 +56,6 @@ def print_callback(r, *args, **kwargs):
 session.hooks.update({'response': print_callback})
 session.headers.update({"User-Agent": "Wget/1.13.4"})
 
-baseURL = 'https://tls.passthepopcorn.me/'
-cookiesFile = 'cookies.txt'
-
 def login(**kwargs):
     """Simple helper function"""
     return API(**kwargs)
@@ -64,6 +65,7 @@ class PTPAPIException(Exception):
     pass
     
 class Movie:
+    """A class representing a movie"""
     def __init__(self, ID=None, data=None):
         self.torrents = []
         self.jsonKeys = ['ImdbId', 'ImdbRating', 'ImdbVoteCount', 'Torrents']
@@ -198,11 +200,12 @@ class Torrent:
         return os.path.join(dest, name)
 
 class User:
+    """A primitive class to represent a user"""
     def __init__(self, ID):
         # Requires an ID, as searching by name isn't exact on PTP
         self.ID = ID
 
-    def bookmarks(self, filters=None):
+    def bookmarks(self):
         r = session.get(baseURL + 'bookmarks.php', params={'id': self.ID})
         movies = []
         for m in util.snarf_cover_view_data(r.text):
@@ -283,6 +286,13 @@ class Collection(object):
         self.ID = ID
 
 def best_match(movie, profile, allow_dead=False):
+    """A function to pull the best match of a movie, based on a human-readable filter
+
+    :param movie: a :py:class:`Movie` object
+    :param profile: a filter string
+    :param allow_dead: Allow dead torrents to be returned
+    :type allow_dead: Boolean
+    :rtype: The best matching movie, or None"""
     # We're going to emulate what.cd's collector option
     profiles = profile.lower().split(',')
     current_sort = None
@@ -320,8 +330,13 @@ def best_match(movie, profile, allow_dead=False):
     return None
 
 class util(object):
+    """A class for misc. utilities"""
     @staticmethod
     def snarf_cover_view_data(text):
+        """Grab cover view data directly from an html source
+
+        :param text: a raw html string
+        :rtype: a dictionary of movie data"""
         data = []
         for d in re.finditer(r'coverViewJsonData\[\s*\d+\s*\]\s*=\s*({.*});', text):
             data.extend(json.loads(d.group(1))['Movies'])
@@ -329,6 +344,10 @@ class util(object):
 
     @staticmethod
     def creds_from_conf(filename):
+        """Pull user, password, and passkey information from a file
+
+        :param fielname: an absolute filename
+        :rtype: a diction of the username, password and passkey"""
         config = ConfigParser.ConfigParser()
         config.read(filename)
         return { 'username': config.get('PTP', 'username'),
