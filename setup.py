@@ -10,7 +10,6 @@ setup(
     ],
     packages=[
         'ptpapi',
-        'ptpapi.cgapi',
     ],
     scripts=[
         'scripts/download.py',

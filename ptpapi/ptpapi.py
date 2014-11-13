@@ -206,6 +206,9 @@ class User:
         self.ID = ID
 
     def bookmarks(self):
+        """Fetch a list of movies the user has bookmarked
+
+        :rtype: array of Movies"""
         r = session.get(baseURL + 'bookmarks.php', params={'id': self.ID})
         movies = []
         for m in util.snarf_cover_view_data(r.text):
@@ -220,7 +223,8 @@ class API:
         global session
         j = None
         if os.path.isfile(cookiesFile):
-            self.load_cookies()
+            self.__load_cookies()
+            # A really crude test to see if we're logged in
             session.max_redirects = 1
             try:
                 r = session.get(baseURL + 'torrents.php')
@@ -240,21 +244,22 @@ class API:
                 raise PTPAPIException("Could not parse returned json data.")
             if j["Result"] != "Ok":
                 raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % j)
-            self.save_cookie()
+            self.__save_cookie()
             # Get some information that will be useful for later
             r = session.get(baseURL + 'index.php')
         self.current_user_id = re.search(r'user.php\?id=(\d+)', r.text).group(1)
         self.auth_key = re.search(r'auth=([0-9a-f]{32})', r.text).group(1)
 
     def logout(self):
+        """Forces a logout."""
         os.remove(cookiesFile)
         return session.get(baseURL + 'logout.php', params={'auth': self.auth_key})
 
-    def save_cookie(self):
+    def __save_cookie(self):
         with open(cookiesFile, 'w') as fh:
                 pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fh)
 
-    def load_cookies(self):
+    def __load_cookies(self):
         global session
         with open(cookiesFile) as fh:
             session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fh))
@@ -346,7 +351,7 @@ class util(object):
     def creds_from_conf(filename):
         """Pull user, password, and passkey information from a file
 
-        :param fielname: an absolute filename
+        :param filename: an absolute filename
         :rtype: a diction of the username, password and passkey"""
         config = ConfigParser.ConfigParser()
         config.read(filename)

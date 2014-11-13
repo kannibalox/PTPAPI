@@ -3,7 +3,7 @@
 import argparse
 import os
 
-import ptpapi
+from ptpapi import ptpapi
 
 def main():
     parser = argparse.ArgumentParser(description="Download a number of bookmarks")
