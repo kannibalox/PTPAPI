@@ -19,6 +19,7 @@ def main():
         api.remove_snatched_bookmarks()
         bmks = api.current_user().bookmarks()
         for b in bmks[0:args.number]:
+            b.load_json_data()
             best = ptpapi.best_match(b, args.filters)
             if best:
                 best.download_to_file(dest=args.destination)
