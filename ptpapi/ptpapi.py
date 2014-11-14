@@ -218,6 +218,20 @@ class User:
             movies.append(Movie(data=m))
         return movies
 
+    def ratings(self):
+        """Fetch a list of rated movies
+
+        :rtype: array of tuples with a Movie and a rating out of 100"""
+        soup = bs4(session.get(baseURL + 'user.php', params={'id': self.ID, 'action': 'ratings'}).text)
+        ratings = []
+        for row in soup.find(id='ratings_table').tbody.find_all('tr'):
+            movieID = re.search(r'id=(\d+)', row.find(class_='l_movie')['href']).group(1)
+            print movieID
+            r = row.find(id='user_rating_%s' % movieID).text.rstrip('%')
+            ratings.append((movieID, r))
+        return ratings
+    
+
 class API:
     def __init__(self, conf=None, username=None, password=None, passkey=None):
         global session
