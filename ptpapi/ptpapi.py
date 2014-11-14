@@ -125,7 +125,7 @@ class Movie:
 
 class Torrent:
     def __init__(self, ID=None, data=None):
-        self.movieJsonKeys = ['Quality', 'Source', 'Container', 'UploadTime', 'Codec', 'Leechers', 'Seeders', 'Snatched', 'ReleaseName', 'GoldenPopcorn', 'Checked', 'RemasterTitle', 'GroupId', 'Scene', 'Resolution']
+        self.movieJsonKeys = ['Quality', 'Source', 'Container', 'UploadTime', 'Codec', 'Leechers', 'Seeders', 'Snatched', 'ReleaseName', 'GoldenPopcorn', 'Checked', 'RemasterTitle', 'GroupId', 'Scene', 'Resolution', 'Size']
         self.torrentJsonKeys = ['Description', 'Nfo']
         if data:
             self.data = data
@@ -151,7 +151,7 @@ class Torrent:
         return self.ID is not None
         
     def __getattr__(self, name):
-        if name not in self.data or not self.data[name]:
+        if name not in self.data or self.data[name] is None:
             if name in self.movieJsonKeys:
                 self.load_movie_json_data()
             if name in self.torrentJsonKeys:
@@ -313,7 +313,7 @@ def best_match(movie, profile, allow_dead=False):
             'HD': (lambda t: t.Quality == 'High Definition'),
             'SD': (lambda t: t.Quality == 'Standard Definition'),
             'Remux': (lambda t: 'remux' in t.RemasterTitle.lower()),
-            'x264': (lambda t: tCodec == 'x264')
+            'x264': (lambda t: t.Codec == 'x264')
         }
         for (name, func) in filter_dict.items():
             if name.lower() in p:
