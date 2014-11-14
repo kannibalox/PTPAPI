@@ -80,6 +80,12 @@ class Movie:
         else:
             raise PTPAPIException("Could not load necessary data for Movie class")
 
+    def __repr__(self):
+        return "<ptpapi.Movie ID %s>" % self.ID
+
+    def __str__(self):
+        return "<ptpapi.Movie ID %s>" % self.ID
+
     def __getattr__(self, name):
         if name not in self.data:
             if name in self.jsonKeys:
@@ -204,6 +210,12 @@ class User:
     def __init__(self, ID):
         # Requires an ID, as searching by name isn't exact on PTP
         self.ID = ID
+
+    def __repr__(self):
+        return "<ptpapi.User ID %s>" % self.ID
+
+    def __str__(self):
+        return "<ptpapi.User ID %s>" % self.ID
 
     def bookmarks(self):
         """Fetch a list of movies the user has bookmarked
