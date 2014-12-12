@@ -4,6 +4,7 @@ import re
 import os
 import json
 import pickle
+import logging
 from datetime import datetime
 from time import sleep, time
 
@@ -12,6 +13,8 @@ import requests
 
 baseURL = 'https://tls.passthepopcorn.me/'
 cookiesFile = 'cookies.txt'
+
+logger = logging.getLogger(__name__)
 
 class TokenSession(requests.Session):
     """Allows rate-limiting requests to the site"""
@@ -30,12 +33,14 @@ class TokenSession(requests.Session):
         self.get_tokens()
         if tokens <= self.tokens:
             self._tokens -= tokens
+            logger.debug("Consuming %i token(s)." % tokens)
         else:
             return False
         return True
 
     def request(self, *args, **kwargs):
         while not self.consume(1):
+            logger.debug("Waiting for token bucket to refill...")
             sleep(1)
         return super(TokenSession, self).request(*args, **kwargs)
 
@@ -50,10 +55,8 @@ class TokenSession(requests.Session):
     tokens = property(get_tokens)
 
 # If you change this and get in trouble, don't blame me
+logger.debug("Initializing token session")
 session = TokenSession(3, 0.5)
-def print_callback(r, *args, **kwargs):
-    print(r.url)
-session.hooks.update({'response': print_callback})
 session.headers.update({"User-Agent": "Wget/1.13.4"})
 
 def login(**kwargs):
@@ -165,6 +168,7 @@ class Torrent:
         return self.data[name]
 
     def load_movie_json_data(self):
+        logger.debug("Loading Torrent data from movie JSON page.")
         if 'GroupId' not in self.data or not self.data['GroupId']:
             movie_url = session.get(baseURL + 'torrents.php', params={'torrentid': self.ID}).url
             self.data['GroupId'] = re.search(r'\?id=(\d+)', movie_url).group(1)
@@ -178,6 +182,7 @@ class Torrent:
                 break
 
     def load_torrent_json_data(self):
+        logger.debug("Loading Torrent data from torrent JSON page.")
         if 'GroupId' not in self.data or not self.data['GroupId']:
             movie_url = session.get(baseURL + 'torrents.php', params={'torrentid': self.ID}).url
             self.data['GroupId'] = re.search(r'\?id=(\d+)', movie_url).group(1)
@@ -248,6 +253,7 @@ class API:
     def __init__(self, conf=None, username=None, password=None, passkey=None):
         global session
         j = None
+        logger.info("Initiating login sequence.")
         if os.path.isfile(cookiesFile):
             self.__load_cookies()
             # A really crude test to see if we're logged in
@@ -273,6 +279,7 @@ class API:
             self.__save_cookie()
             # Get some information that will be useful for later
             r = session.get(baseURL + 'index.php')
+        logger.info("Login successful.")
         self.current_user_id = re.search(r'user.php\?id=(\d+)', r.text).group(1)
         self.auth_key = re.search(r'auth=([0-9a-f]{32})', r.text).group(1)
 
@@ -283,15 +290,20 @@ class API:
 
     def __save_cookie(self):
         with open(cookiesFile, 'w') as fh:
-                pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fh)
+            logger.debug("Pickling HTTP cookies to %s" % cookiesFile)
+            pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fh)
 
     def __load_cookies(self):
         global session
         with open(cookiesFile) as fh:
+            logger.debug("Unpickling HTTP cookies from file %s" % cookiesFile)
             session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fh))
 
     def current_user(self):
         return User(self.current_user_id)
+
+    def hnr_zip(self):
+        return session.get(baseURL + 'snatchlist.php', params={'action':'hnrzip'})
         
     def search(self, filters):
         if 'name' in filters:
@@ -328,6 +340,7 @@ def best_match(movie, profile, allow_dead=False):
     profiles = profile.lower().split(',')
     current_sort = None
     for p in profiles:
+        logger.debug("Attempting to match movie to profile: %s" % p)
         matches = movie.Torrents
         filter_dict = {
             'gp': (lambda t: t.GoldenPopcorn),
@@ -343,6 +356,7 @@ def best_match(movie, profile, allow_dead=False):
         }
         for (name, func) in filter_dict.items():
             if name.lower() in p:
+                logger.debug("Filtering movies by parameter %s" % name)
                 matches = [t for t in matches if func(t)]
         sort_dict = {
             'most recent': (True, (lambda t: datetime.strptime(t.UploadTime, "%Y-%m-%d %H:%M:%S"))),
@@ -352,12 +366,15 @@ def best_match(movie, profile, allow_dead=False):
         }
         for name, (rev, sort) in sort_dict.items():
             if name in p:
+                logger.debug("Sorting by parameter %s" % name)
                 current_sort = name
         if len(matches) == 1:
             return matches[0]
         elif len(matches) > 1 and current_sort:
             (rev, sort) = sort_dict[current_sort]
             return sorted(matches, key=sort, reverse=rev)[0]
+        logger.debug("Could not find match for profile: %s" % p)
+    logger.info("Could not find best match for movie %s" % movie.ID)
     return None
 
 class util(object):

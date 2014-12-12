@@ -2,6 +2,7 @@
 # Downloads a number of bookmarks to a specified directory
 import argparse
 import os
+import logging
 
 from ptpapi import ptpapi
 
@@ -11,8 +12,12 @@ def main():
     parser.add_argument('-n','--number', help='Number of torrents to download', default=1, type=int)
     parser.add_argument('-f', '--filters', help='A string filter of the torrents to download', required=True)
     parser.add_argument('-c', '--cred', help='Credential file', default="creds.ini")
+    parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
+    parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
 
     args = parser.parse_args()
+
+    logging.basicConfig(level=args.loglevel)
 
     api = ptpapi.login(**ptpapi.util.creds_from_conf(args.cred))
     try:

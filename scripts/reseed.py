@@ -10,7 +10,7 @@ import ConfigParser
 from pyrobase import bencode
 from pyrocore import config
 from pyrocore.util import load_config, metafile
-import ptpapi
+from ptpapi import ptpapi
 
 parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
 parser.add_argument('-u', '--url', help='Permalink to the torrent page')
