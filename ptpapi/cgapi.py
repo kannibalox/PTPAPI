@@ -1,4 +1,3 @@
-from bs4 import BeautifulSoup
 import re
 import urllib
 import urllib2
@@ -6,7 +5,12 @@ import cookielib
 import argparse
 import json
 import ConfigParser
-import lxml
+
+import requests
+from bs4 import BeautifulSoup
+
+session = requests.Session()
+session.headers.update({"User-Agent": "Wget/1.13.4"})
 
 class CGAPI:
     HttpHeader = { "User-Agent": "Wget/1.13.4" }
@@ -24,7 +28,9 @@ class CGAPI:
         data = urllib.urlencode({ "username": username, "password": password})
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.__cookieJar))
         request = urllib2.Request( self.baseURL + "/takelogin.php", data )
-        response = opener.open( request ).read()
+        response = session.post(self.baseURL + "/takelogin.php",
+                                data = {"username": username,
+                                        "password": password}).text
         if response.find( 'action="takelogin.php"' ) != -1:
             print response
             raise CGAPIException("Failed to log in")
@@ -57,16 +63,13 @@ class CGAPI:
     def __request(self, url, data=None):
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.__cookieJar))
         request = urllib2.Request(url, data, headers=self.HttpHeader)
-        return opener.open(request)
+        return session.get(url, data=data).text
 
     def __jsonRequest(self, url, data=None):
         if not self.loggedIn:
             print "Not logged in"
             return None
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.__cookieJar))
-        request = urllib2.Request(self.baseURL + url, data, headers=self.HttpHeader)
-        response = opener.open(request).read()
-        return json.loads(response)
+        return session.get(url, data=data).json()
 
 class CGAPIException(Exception):
     pass
