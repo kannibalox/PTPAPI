@@ -6,6 +6,7 @@ import os.path
 import xmlrpclib
 import argparse
 import ConfigParser
+import logging
 
 from pyrobase import bencode
 from pyrocore import config
@@ -18,9 +19,12 @@ parser.add_argument('-p', '--path', help='Base directory of the file')
 parser.add_argument('-f', '--file', help='Path directly to file/directory')
 parser.add_argument('-c', '--cred', help='Credential file', default="creds.ini")
 parser.add_argument('-n', '--dry-run', help="Don't actually load any torrents", action="store_true")
+parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
+parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
 
-# Process flags
 args = parser.parse_args()
+
+logging.basicConfig(level=args.loglevel)
 path = args.path
 tID = None
 
