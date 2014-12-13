@@ -32,6 +32,9 @@ class API:
         j = None
         cookiesFile = config.get('Main', 'cookiesFile')
         logger.info("Initiating login sequence.")
+        password = (password or config.get('PTP', 'password'))
+        username = (username or config.get('PTP', 'username'))
+        passkey = (passkey or config.get('PTP', 'passkey'))
         if os.path.isfile(cookiesFile):
             self.__load_cookies(cookiesFile)
             # A really crude test to see if we're logged in
@@ -46,7 +49,7 @@ class API:
             if not password or not passkey or not username:
                 raise PTPAPIException("Not enough info provided to log in.")
             try:
-                j = session.post(baseURL + 'ajax.php?action=login',
+                j = session.base_post('ajax.php?action=login',
                                  data={"username": username,
                                        "password": password,
                                        "passkey": passkey }).json()
@@ -87,7 +90,14 @@ class API:
         if 'name' in filters:
             filters['searchstr'] = filters['name']
         filters['json'] = 'noredirect'
-        return [Movie(data=m) for m in session.base_get('torrents.php', params=filters).json()['Movies']]
+        ret_array = []
+        for m in session.base_get('torrents.php', params=filters).json()['Movies']:
+            if 'Directors' not in m:
+                m['Directors'] = []
+            if 'ImdbId' not in m:
+                m['ImdbId'] = '0'
+            ret_array.append(Movie(data=m))
+        return ret_array
 
     def remove_snatched_bookmarks(self):
         session.base_post("bookmarks.php", data={'action': 'remove_snatched'})
