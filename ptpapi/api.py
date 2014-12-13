@@ -17,10 +17,7 @@ from movie import Movie
 from user import User
 from torrent import Torrent
 
-baseURL = 'https://tls.passthepopcorn.me/'
-
 logger = logging.getLogger(__name__)
-
 
 def login(**kwargs):
     """Simple helper function"""
@@ -34,14 +31,13 @@ class API:
     def __init__(self, username=None, password=None, passkey=None):
         j = None
         cookiesFile = config.get('Main', 'cookiesFile')
-        baseURL = config.get('Main', 'baseURL')
         logger.info("Initiating login sequence.")
         if os.path.isfile(cookiesFile):
             self.__load_cookies(cookiesFile)
             # A really crude test to see if we're logged in
             session.max_redirects = 1
             try:
-                r = session.get(baseURL + 'torrents.php')
+                r = session.base_get('torrents.php')
             except requests.exceptions.TooManyRedirects:
                 os.remove(cookiesFile)
                 session.cookies = requests.cookies.RequestsCookieJar()
@@ -60,7 +56,7 @@ class API:
                 raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % j)
             self.__save_cookie(cookiesFile)
             # Get some information that will be useful for later
-            r = session.get(baseURL + 'index.php')
+            r = session.base_get('index.php')
         logger.info("Login successful.")
         self.current_user_id = re.search(r'user.php\?id=(\d+)', r.text).group(1)
         self.auth_key = re.search(r'auth=([0-9a-f]{32})', r.text).group(1)
@@ -69,7 +65,7 @@ class API:
         """Forces a logout."""
         cookiesFile = config.get('Main', 'cookiesFile')
         os.remove(cookiesFile)
-        return session.get(baseURL + 'logout.php', params={'auth': self.auth_key})
+        return session.base_get('logout.php', params={'auth': self.auth_key})
 
     def __save_cookie(self, cfile):        
         with open(cfile, 'w') as fh:
@@ -85,25 +81,25 @@ class API:
         return User(self.current_user_id)
 
     def hnr_zip(self):
-        return session.get(baseURL + 'snatchlist.php', params={'action':'hnrzip'})
+        return session.base_get('snatchlist.php', params={'action':'hnrzip'})
         
     def search(self, filters):
         if 'name' in filters:
             filters['searchstr'] = filters['name']
         filters['json'] = 'noredirect'
-        return [Movie(data=m) for m in session.get(baseURL + 'torrents.php', params=filters).json()['Movies']]
+        return [Movie(data=m) for m in session.base_get('torrents.php', params=filters).json()['Movies']]
 
     def remove_snatched_bookmarks(self):
-        session.post(baseURL + "bookmarks.php", data={'action': 'remove_snatched'})
+        session.base_post("bookmarks.php", data={'action': 'remove_snatched'})
 
     def remove_seen_bookmarks(self):
-        session.post(baseURL + "bookmarks.php", data={'action': 'remove_seen'})
+        session.base_post("bookmarks.php", data={'action': 'remove_seen'})
 
     def remove_uploaded_bookmarks(self):
-        session.post(baseURL + "bookmarks.php", data={'action': 'remove_uploaded'})
+        session.base_post("bookmarks.php", data={'action': 'remove_uploaded'})
 
     def need_for_seed(self):
-        data = util.snarf_cover_view_data(session.get(baseURL + "needforseed.php").content)
+        data = util.snarf_cover_view_data(session.base_get("needforseed.php").content)
         return [t['GroupingQualities'][0]['Torrents'][0] for t in data]
 
 class Collection(object):

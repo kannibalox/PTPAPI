@@ -1,3 +1,4 @@
+from session import session
 from torrent import Torrent
 
 class Movie:
@@ -31,7 +32,7 @@ class Movie:
         return self.data[name]
 
     def load_json_data(self, basic=True, overwrite=False):
-        self.data.update(session.get(baseURL + "torrents.php",
+        self.data.update(session.base_get("torrents.php",
                                 params={'id': self.ID,
                                         'json': '1'}).json())
         self.conv_json_torrents()
@@ -44,7 +45,7 @@ class Movie:
                 self.data['Torrents'].append(Torrent(data=t))
 
     def load_html_data(self, basic=True, overwrite=False):
-        soup = bs4(session.get(baseURL + "torrents.php", params={'id':self.ID}).text)
+        soup = bs4(session.base_get("torrents.php", params={'id':self.ID}).text)
         self.data['Cover'] = soup.find('img', class_='sidebar-cover-image')['src']
         # Title and Year
         match = re.match(r'(.*) \[(\d{4})\]', soup.find('h2', class_='page__title').encode_contents())

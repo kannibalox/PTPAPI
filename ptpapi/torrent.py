@@ -56,12 +56,12 @@ class Torrent:
     def load_movie_json_data(self):
         logger.debug("Loading Torrent data from movie JSON page.")
         if 'GroupId' not in self.data or not self.data['GroupId']:
-            movie_url = session.get(baseURL + 'torrents.php', params={'torrentid': self.ID}).url
+            movie_url = session.base_get('torrents.php', params={'torrentid': self.ID}).url
             self.data['GroupId'] = re.search(r'\?id=(\d+)', movie_url).group(1)
-        movieData = session.get(baseURL + 'torrents.php',
-                                params={'torrentid': self.ID,
-                                        'id': self.data['GroupId'],
-                                        'json':'1'}).json()
+        movieData = session.base_get('torrents.php',
+                                     params={'torrentid': self.ID,
+                                             'id': self.data['GroupId'],
+                                             'json':'1'}).json()
         for t in movieData['Torrents']:
             if int(t['Id']) == int(self.ID):
                 self.data.update(t)
@@ -70,22 +70,22 @@ class Torrent:
     def load_torrent_json_data(self):
         logger.debug("Loading Torrent data from torrent JSON page.")
         if 'GroupId' not in self.data or not self.data['GroupId']:
-            movie_url = session.get(baseURL + 'torrents.php', params={'torrentid': self.ID}).url
+            movie_url = session.base_get('torrents.php', params={'torrentid': self.ID}).url
             self.data['GroupId'] = re.search(r'\?id=(\d+)', movie_url).group(1)
-        self.data.update(session.get(baseURL + 'torrents.php',
-                                     params = {'action': 'description',
-                                               'id': self.data['GroupId'],
-                                               'torrentid': self.ID }).json())
+        self.data.update(session.base_get('torrents.php',
+                                          params = {'action': 'description',
+                                                    'id': self.data['GroupId'],
+                                                    'torrentid': self.ID }).json())
 
     def download(self):
-        r = session.get(baseURL + "torrents.php",
-                        params={'action': 'download',
-                                'id': self.ID})
+        r = session.base_get("torrents.php",
+                             params={'action': 'download',
+                                     'id': self.ID})
         self.downloadName = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
         return r.content
 
     def download_to_file(self, dest=None, name=None):
-        r = session.get(baseURL + "torrents.php",
+        r = session.base_get("torrents.php",
                         params={'action': 'download',
                                 'id': self.ID})
         if not dest:

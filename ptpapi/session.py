@@ -1,5 +1,5 @@
 import logging
-from time import time
+from time import time, sleep
 
 import requests
 
@@ -47,6 +47,9 @@ class TokenSession(requests.Session):
 
     def base_get(self, url_path, *args, **kwargs):
         return self.get(config.get('Main', 'baseURL') + url_path, *args, **kwargs)
+
+    def base_post(self, url_path, *args, **kwargs):
+        return self.post(config.get('Main', 'baseURL') + url_path, *args, **kwargs)
 
 # If you change this and get in trouble, don't blame me
 logger.debug("Initializing token session")

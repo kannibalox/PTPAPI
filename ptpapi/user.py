@@ -14,7 +14,7 @@ class User:
         """Fetch a list of movies the user has bookmarked
 
         :rtype: array of Movies"""
-        r = session.get(baseURL + 'bookmarks.php', params={'id': self.ID})
+        r = session.base_get('bookmarks.php', params={'id': self.ID})
         movies = []
         for m in util.snarf_cover_view_data(r.text):
             m['Torrents'] = []
@@ -27,7 +27,7 @@ class User:
         """Fetch a list of rated movies
 
         :rtype: array of tuples with a Movie and a rating out of 100"""
-        soup = bs4(session.get(baseURL + 'user.php', params={'id': self.ID, 'action': 'ratings'}).text)
+        soup = bs4(session.base_get('user.php', params={'id': self.ID, 'action': 'ratings'}).text)
         ratings = []
         for row in soup.find(id='ratings_table').tbody.find_all('tr'):
             movieID = re.search(r'id=(\d+)', row.find(class_='l_movie')['href']).group(1)
