@@ -1,3 +1,7 @@
+import re
+
+from bs4 import BeautifulSoup as bs4
+
 from session import session
 from torrent import Torrent
 
@@ -57,7 +61,7 @@ class Movie:
             for t in tagbox.find_all("li"):
                 self.data['Tags'].append(t.find('a').string)
         # File list
-        for t in self.torrents:
+        for t in self.Torrents:
             # Get file list
             filediv = soup.find("div", id="files_%s" % t.ID)
             t.data['Filelist'] = {}
