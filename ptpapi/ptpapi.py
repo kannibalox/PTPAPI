@@ -123,7 +123,7 @@ class Movie:
         for tagbox in soup.find_all('div', class_="box_tags"):
             for t in tagbox.find_all("li"):
                 self.data['Tags'].append(t.find('a').string)
-        return 
+        # File list
         for t in self.torrents:
             # Get file list
             filediv = soup.find("div", id="files_%s" % t.ID)
@@ -136,6 +136,7 @@ class Torrent:
     def __init__(self, ID=None, data=None):
         self.movieJsonKeys = ['Quality', 'Source', 'Container', 'UploadTime', 'Codec', 'Leechers', 'Seeders', 'Snatched', 'ReleaseName', 'GoldenPopcorn', 'Checked', 'RemasterTitle', 'GroupId', 'Scene', 'Resolution', 'Size']
         self.torrentJsonKeys = ['Description', 'Nfo']
+        self.movieHtmlKeys = ['Filelist']
         if data:
             self.data = data
             if 'Id' in data:
@@ -165,7 +166,20 @@ class Torrent:
                 self.load_movie_json_data()
             if name in self.torrentJsonKeys:
                 self.load_torrent_json_data()
+            if name in self.movieHtmlKeys:
+                self.load_movie_html_data()
         return self.data[name]
+
+    def load_movie_html_data(self):
+        if 'GroupId' not in self.data or not self.data['GroupId']:
+            movie_url = session.get(baseURL + 'torrents.php', params={'torrentid': self.ID}).url
+            self.data['GroupId'] = re.search(r'\?id=(\d+)', movie_url).group(1)
+        soup = bs4(session.get(baseURL + 'torrents.php', params={'id': self.GroupId}).content)
+        filediv = soup.find("div", id="files_%s" % self.ID)
+        self.data['Filelist'] = {}
+        for e in filediv.find("tbody").find_all("tr"):
+            bytesize = e("td")[1]("span")[0]['title'].replace(",","").replace(' bytes', '')
+            self.data['Filelist'][e("td")[0].string] = bytesize
 
     def load_movie_json_data(self):
         logger.debug("Loading Torrent data from movie JSON page.")
