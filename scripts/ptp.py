@@ -4,7 +4,7 @@ from pprint import pprint
 
 import argparse
 
-from ptpapi import ptpapi
+import ptpapi
 
 def do_search(args):
     terms = {}
@@ -14,9 +14,11 @@ def do_search(args):
             terms['searchstr'] = term[0]
         else:
             terms[term[0]] = term[2]
-    api = ptpapi.login(**ptpapi.util.creds_from_conf(args.cred))
-    
-    
+    api = ptpapi.login()
+    for m in api.search(terms):
+        print "%s (%s) - %s - [%s] - [PTP %s, IMDB %s]" % (m.Title, m.Year, ', '.join([d['Name'] for d in m.Directors]), '/'.join(m.Tags), m.GroupId, (m.ImdbId or '0'))
+        for t in m.Torrents:
+            print "- %s - %s/%s/%s/%s - %s/%s/%s" % (t.ReleaseName, t.Codec, t.Container, t.Source, t.Resolution, t.Snatched, t.Seeders, t.Leechers)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extensible command line utility for PTP')

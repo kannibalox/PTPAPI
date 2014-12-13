@@ -11,7 +11,8 @@ import logging
 from pyrobase import bencode
 from pyrocore import config
 from pyrocore.util import load_config, metafile
-from ptpapi import ptpapi
+
+import ptpapi
 
 parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
 parser.add_argument('-u', '--url', help='Permalink to the torrent page')
@@ -25,11 +26,12 @@ parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", 
 args = parser.parse_args()
 
 logging.basicConfig(level=args.loglevel)
+logger = logging.getLogger(__name__)
 path = args.path
 tID = None
 
 # Load APIs
-ptp = ptpapi.login(**ptpapi.util.creds_from_conf(args.cred))
+ptp = ptpapi.login()
 
 load_config.ConfigLoader().load()
 proxy = config.engine.open()
@@ -43,28 +45,29 @@ else:
         basename = os.path.basename(os.path.abspath(args.file))
         dirname = os.path.dirname(os.path.abspath(args.file))
         for m in ptp.search({'filelist':basename}):
-            print "Movie %s: %s - %storrents.php?id=%s" % (m.ID, m.Title, ptpapi.baseURL, m.ID)
+            logger.debug("Found movie %s: %s" % (m.ID, m.Title))
             for t in m.Torrents:
-                print t
+                logger.debug("Found torrent %s under movie %s" % (t.ID, m.ID))
                 # Exact match or match without file extension
                 if t.ReleaseName == basename or t.ReleaseName == os.path.splitext(basename)[0]:
-                    print "Found strong match by release name at", t.ID
+                    logger.info("Found strong match by release name at", t.ID)
                     tID = t.ID
                     path = dirname
                     break
                 elif t.ReleaseName in basename:
-                    print "Found weak match by name at", t.ID
+                    logger.debug("Found weak match by name at", t.ID)
             if not tID:
-                print "Movie found but no match by release name, going through filelists"
+                logger.debug("Movie found but no match by release name, going through filelists")
                 for t in m.Torrents:
                     # Only single files under a directory are matched currently
                     # e.g. Movie.Name.Year.mkv -> Move Name (Year)/Movie.Name.Year.mkv
                     print t.ReleaseName, t.Filelist
                     if len(t.Filelist) == 1 and t.Filelist.keys()[0] == basename:
-                        print "Found strong match by filename at", t.ID, ": making new structure"
+                        logger.info("Found strong match by filename at torrent %s, creating new folder struction" % t.ID)
                         tID  = t.ID
                         path = os.path.join(dirname, t.ReleaseName)
-                        os.mkdir(path)
+                        if not os.path.exists(path):
+                            os.mkdir(path)
                         os.link(os.path.abspath(args.file),
                                 os.path.join(dirname,
                                              t.ReleaseName,
@@ -75,7 +78,7 @@ else:
 
 # Make sure we have the minimum information required
 if not tID or not path:
-    print "Torrent ID or path missing, cannot reseed"
+    logger.error("Torrent ID or path missing, cannot reseed")
     ptp.logout()
     exit()
 if args.dry_run:
@@ -90,7 +93,7 @@ data = bencode.bread(name)
 thash = metafile.info_hash(data)
 try:
     proxy.d.hash(thash, fail_silently=True)
-    print "Hash already exists in rtorrent, cannot load."
+    logger.error("Hash already exists in rtorrent, cannot load.")
     exit()
 except xmlrpclib.Fault:
     pass
@@ -102,11 +105,11 @@ while True:
         break
     except xmlrpclib.Fault:
         pass
-print "Torrent loaded"
+logger.info("Torrent loaded")
 proxy.d.ignore_commands.set(thash, 1)
 proxy.d.directory_base.set(thash, path)
 proxy.d.check_hash(thash)
 
 # Cleanup
 os.remove(name)
-print "Exiting..."
+logger.debug("Exiting...")
