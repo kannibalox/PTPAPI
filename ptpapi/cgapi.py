@@ -49,8 +49,14 @@ class CGAPI:
             data['Title'] = r.find('a', href=re.compile('details.php\?id=[0-9]+$'))['title']
             data['Size'] = r.find(text=re.compile('[0-9]+\.[0-9]+ [A-Z]B'))
             data['Seeders'] = re.match(r'([0-9]+)', r.find(title=re.compile('[0-9]+ seeders?'))['title']).group(1)
+            data['ID'] = re.match(r'details.php\?id=([0-9]+)$', r.find('a', href=re.compile('details.php\?id=[0-9]+$'))['href']).group(1)
             retArray.append(data)
         return retArray
+
+    def downloadTorrent(self, tID):
+        r = session.get(self.baseURL + '/download.php', params={'id': tID})
+        with open(str(tID) + '.torrent', 'wb') as fh:
+            fh.write(r.content)
 
     def __httpRequest(self, url, data=None):
         if not self.loggedIn:
@@ -61,8 +67,6 @@ class CGAPI:
         return soup
 
     def __request(self, url, data=None):
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.__cookieJar))
-        request = urllib2.Request(url, data, headers=self.HttpHeader)
         return session.get(url, data=data).text
 
     def __jsonRequest(self, url, data=None):
