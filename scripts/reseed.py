@@ -14,28 +14,59 @@ from pyrocore.util import load_config, metafile
 
 import ptpapi
 
+logger = logging.getLogger(__name__)
+
+def matchByTorrent(movie, path):
+    basename = os.path.basename(os.path.abspath(path))
+    dirname = os.path.dirname(os.path.abspath(path))
+    for t in movie.Torrents:
+        # Only single files under a directory are matched currently
+        # e.g. Movie.Name.Year.mkv -> Move Name (Year)/Movie.Name.Year.mkv
+        if len(t.Filelist) == 1 and t.Filelist.keys()[0] == basename:
+            logger.info("Found strong match by filename at torrent %s, creating new folder structure" % t.ID)
+            tID  = t.ID
+            newPath = os.path.join(dirname, t.ReleaseName)
+            if not os.path.exists(newPath):
+                logger.debug("Creating new directory %s" % newPath)
+                os.mkdir(newPath)
+            os.link(os.path.abspath(path),
+                    os.path.join(dirname,
+                                 t.ReleaseName,
+                                 basename))
+            return (t.ID, newPath)
+        # Attempt to match cases where the folder has been renamed, but all files are the same
+        fileList = {}
+        for root, subFolders, files in os.walk(path):
+            for real_file in files:
+                f = os.path.join(root, real_file)
+                fileList[real_file] = os.path.getsize(f)
+        found_all_files = True
+        for tfile in t.Filelist:
+            if tfile not in fileList:
+                found_all_files = False
+                break
+        if found_all_files:
+            logger.info("Found strong match by subfiles at torrent %s, using as base path")
+            return (t.ID, path)
+    return None
+
 def main():
     parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
     parser.add_argument('-u', '--url', help='Permalink to the torrent page')
     parser.add_argument('-p', '--path', help='Base directory of the file')
     parser.add_argument('-f', '--file', help='Path directly to file/directory')
-    parser.add_argument('-c', '--cred', help='Credential file', default="creds.ini")
     parser.add_argument('-n', '--dry-run', help="Don't actually load any torrents", action="store_true")
     parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
-
     args = parser.parse_args()
     
     logging.basicConfig(level=args.loglevel)
-    logger = logging.getLogger(__name__)
+
     path = args.path
     tID = None
 
-    # Load APIs
+    # Load PTP API
     ptp = ptpapi.login()
-
-    load_config.ConfigLoader().load()
-    proxy = config.engine.open()
 
     if args.url:
         tID = re.search(r'(\d+)$', args.url).group(1)
@@ -60,29 +91,9 @@ def main():
                 if not tID:
                     logger.debug("Movie found but no match by release name, attempting to match by filename")
                     m.load_html_data()
-                    for t in m.Torrents:
-                        # Only single files under a directory are matched currently
-                        # e.g. Movie.Name.Year.mkv -> Move Name (Year)/Movie.Name.Year.mkv
-                        if len(t.Filelist) == 1 and t.Filelist.keys()[0] == basename:
-                            logger.info("Found strong match by filename at torrent %s, creating new folder structure" % t.ID)
-                            tID  = t.ID
-                            path = os.path.join(dirname, t.ReleaseName)
-                            if not os.path.exists(path):
-                                os.mkdir(path)
-                            os.link(os.path.abspath(args.file),
-                                    os.path.join(dirname,
-                                                 t.ReleaseName,
-                                                 basename))
-                            break
-                        # Attempt to match cases where the folder has been renamed, but all files are the same
-                        fileList = {}
-                        for root, subFolders, files in os.walk(args.file):
-                            for real_file in files:
-                                f = os.path.join(root, real_file)
-                                fileList[real_file] = os.path.getsize(f)
-                                print real_file, os.path.getsize(f)
-                        for tfile in t.Filelist:
-                            if tfile not in fileList:
+                    ret_tuple = matchByTorrent(m, args.file)
+                    if ret_tuple:
+                        (tID, path) = ret_tuple
         else:
             raise Exception("No file specified")
 
@@ -94,6 +105,10 @@ def main():
     if args.dry_run:
         ptp.logout()
         exit()
+
+    # Load pyroscope
+    load_config.ConfigLoader().load()
+    proxy = config.engine.open()
 
     torrent = ptpapi.Torrent(ID=tID)
     name = torrent.download_to_file()
