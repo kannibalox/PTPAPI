@@ -53,6 +53,11 @@ class Torrent:
         for e in filediv.find("tbody").find_all("tr"):
             bytesize = e("td")[1]("span")[0]['title'].replace(",","").replace(' bytes', '')
             self.data['Filelist'][e("td")[0].string] = bytesize
+        # Check if trumpable
+        if soup.find("trumpable_%s" % self.ID):
+            self.data['Trumpable'] = [s.get_text() for s in soup.find("trumpable_%s" % self.ID).find('span')]
+        else:
+            self.data['Trumpable'] = []
 
     def load_movie_json_data(self):
         logger.debug("Loading Torrent data from movie JSON page.")

@@ -60,7 +60,7 @@ class Movie:
         for tagbox in soup.find_all('div', class_="box_tags"):
             for t in tagbox.find_all("li"):
                 self.data['Tags'].append(t.find('a').string)
-        # File list
+        # File list & trumpability
         for t in self.Torrents:
             # Get file list
             filediv = soup.find("div", id="files_%s" % t.ID)
@@ -68,6 +68,11 @@ class Movie:
             for e in filediv.find("tbody").find_all("tr"):
                 bytesize = e("td")[1]("span")[0]['title'].replace(",","").replace(' bytes', '')
                 t.data['Filelist'][e("td")[0].string] = bytesize
+            # Check if trumpable
+            if soup.find(id="trumpable_%s" % t.ID):
+                t.data['Trumpable'] = [s.get_text() for s in soup.find(id="trumpable_%s" % t.ID).find_all('span')]
+            else:
+                t.data['Trumpable'] = []
 
     def best_match(profile, allow_dead=False):
         """A function to pull the best match of a movie, based on a human-readable filter
