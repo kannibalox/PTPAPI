@@ -1,7 +1,4 @@
 import re
-import urllib
-import urllib2
-import cookielib
 import argparse
 import json
 import ConfigParser
@@ -9,25 +6,19 @@ import ConfigParser
 import requests
 from bs4 import BeautifulSoup
 
-session = requests.Session()
-session.headers.update({"User-Agent": "Wget/1.13.4"})
+from config import config
+from session import session
 
 class CGAPI:
     HttpHeader = { "User-Agent": "Wget/1.13.4" }
 
     def __init__(self):
         self.baseURL = "http://cinemageddon.net"
-        self.__cookieJar = cookielib.CookieJar()
         self.loggedIn = False
 
     def login(self, username=None, password=None, passkey=None):
-        config = ConfigParser.ConfigParser()
-        config.read('creds.ini')
-        username = config.get('CG', 'username')
-        password = config.get('CG', 'password')
-        data = urllib.urlencode({ "username": username, "password": password})
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.__cookieJar))
-        request = urllib2.Request( self.baseURL + "/takelogin.php", data )
+        password = (password or config.get('CG', 'password'))
+        username = (username or config.get('CG', 'username'))
         response = session.post(self.baseURL + "/takelogin.php",
                                 data = {"username": username,
                                         "password": password}).text
