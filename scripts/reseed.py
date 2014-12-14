@@ -62,7 +62,8 @@ def main():
     
     logging.basicConfig(level=args.loglevel)
 
-    path = args.path
+    path = unicode(args.path)
+    arg_file = args.file.decode('UTF-8')
     tID = None
 
     # Load PTP API
@@ -70,28 +71,31 @@ def main():
 
     if args.url:
         tID = re.search(r'(\d+)$', args.url).group(1)
-        if not path and args.file:
-            path = os.path.dirname(os.path.abspath(args.file))
+        if not path and arg_file:
+            path = unicode(os.path.dirname(os.path.abspath(arg_file)))
     else:
-        if args.file:
-            basename = os.path.basename(os.path.abspath(args.file))
-            dirname = os.path.dirname(os.path.abspath(args.file))
+        if arg_file:
+            basename = os.path.basename(os.path.abspath(arg_file))
+            dirname = os.path.dirname(os.path.abspath(arg_file))
             for m in ptp.search({'filelist':basename}):
                 logger.debug("Found movie %s: %s" % (m.ID, m.Title))
                 for t in m.Torrents:
                     logger.debug("Found torrent %s under movie %s" % (t.ID, m.ID))
                     # Exact match or match without file extension
                     if t.ReleaseName == basename or t.ReleaseName == os.path.splitext(basename)[0]:
-                        logger.info("Found strong match by release name at", t.ID)
+                        logger.info("Found strong match by release name at %s" % t.ID)
                         tID = t.ID
-                        path = dirname
+                        if os.path.isdir(arg_file):
+                            path = arg_file
+                        else:
+                            path = dirname
                         break
-                    elif t.ReleaseName in basename:
-                        logger.debug("Found weak match by name at", t.ID)
+                    elif t.ReleaseName in basename.decode('UTF-8'):
+                        logger.debug("Found weak match by name at %s" % t.ID)
                 if not tID:
                     logger.debug("Movie found but no match by release name, attempting to match by filename")
                     m.load_html_data()
-                    ret_tuple = matchByTorrent(m, args.file)
+                    ret_tuple = matchByTorrent(m, arg_file)
                     if ret_tuple:
                         (tID, path) = ret_tuple
         else:
@@ -102,6 +106,7 @@ def main():
         logger.error("Torrent ID or path missing, cannot reseed")
         ptp.logout()
         exit()
+    logger.info("Found match, now loading torrent %s to path %s" % (tID, path))
     if args.dry_run:
         ptp.logout()
         exit()
