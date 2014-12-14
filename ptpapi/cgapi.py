@@ -42,6 +42,8 @@ class CGAPI:
         return self.getTorrentListInfo(soup)
 
     def getTorrentListInfo(self, soup):
+        if not soup.find('table', class_='torrenttable'):
+            return []
         rows = soup.find('table', class_='torrenttable').find('tbody').find_all('tr')
         retArray = []
         for r in rows:
@@ -53,9 +55,11 @@ class CGAPI:
             retArray.append(data)
         return retArray
 
-    def downloadTorrent(self, tID):
+    def downloadTorrent(self, tID, name=None):
         r = session.get(self.baseURL + '/download.php', params={'id': tID})
-        with open(str(tID) + '.torrent', 'wb') as fh:
+        if not name:
+            name = str(tID) + '.torrent'
+        with open(name.replace('/', '_'), 'wb') as fh:
             fh.write(r.content)
 
     def __httpRequest(self, url, data=None):
