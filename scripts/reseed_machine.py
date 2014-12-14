@@ -1,6 +1,7 @@
 import sys
 import re
 import logging
+import readline
 
 import ptpapi
 from ptpapi import cgapi
@@ -14,11 +15,8 @@ def sizeof_fmt(num, suffix='B'):
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
-def main():
-    ptp_id = re.search(r'id=([0-9]*)', sys.argv[1]).group(1)
-    ptp = ptpapi.login()
-    cg = cgapi.CGAPI()
-    cg.login()
+def findByURL(cg, URL):
+    ptp_id = re.search(r'id=([0-9]*)', URL).group(1)
     m = ptpapi.Movie(ID=ptp_id)
     m.load_html_data()
     found_cg = cg.search({'search': 'tt'+str(m.ImdbId)})
@@ -29,6 +27,16 @@ def main():
                 if sizeof_fmt(int(t.Size)) == cg_t['Size'] and cg_t['Seeders'] != '0':
                     print "Found possible match at %s (%s) with %s seeders" % (cg_t['Title'], cg_t['Size'], cg_t['Seeders'])
                     cg.downloadTorrent(cg_t['ID'], name=cg_t['Title']+'.torrent')
+
+def main():
+    ptp = ptpapi.login()
+    cg = cgapi.CGAPI()
+    cg.login()
+    while True:
+        url = raw_input('url>>> ')
+        if url in ['q', 'quit', 'exit']:
+            break
+        findByURL(cg, url)
 
 if __name__ == '__main__':
     main()
