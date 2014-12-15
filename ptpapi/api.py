@@ -111,10 +111,10 @@ class API:
         return [t['GroupingQualities'][0]['Torrents'][0] for t in data]
 
     def contest_leaders(self):
+        logger.debug("Fetching contest leaderboard")
         soup = bs4(session.base_get("contestleaders.php").content)
         ret_array = []
         for cell in soup.find('table', class_='table--panel-like').find('tbody').find_all('tr'):
-            print cell
             ret_array.append((cell.find_all('td')[1].get_text(), cell.find_all('td')[2].get_text()))
         return ret_array
             
