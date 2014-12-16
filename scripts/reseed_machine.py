@@ -2,6 +2,7 @@ import sys
 import re
 import logging
 import readline
+from urlparse import urlparse, parse_qs
 
 import ptpapi
 from ptpapi import cgapi
@@ -16,7 +17,7 @@ def sizeof_fmt(num, suffix='B'):
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
 def findByURL(cg, URL):
-    ptp_id = re.search(r'id=([0-9]*)', URL).group(1)
+    ptp_id = parse_qs(urlparse(URL).query)['id'][0]
     m = ptpapi.Movie(ID=ptp_id)
     m.load_html_data()
     found_cg = cg.search({'search': 'tt'+str(m.ImdbId)})

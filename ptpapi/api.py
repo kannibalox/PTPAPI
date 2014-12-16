@@ -147,5 +147,3 @@ class util(object):
         return { 'username': config.get('PTP', 'username'),
                  'password': config.get('PTP', 'password'),
                  'passkey': config.get('PTP', 'passkey') }
-                 
-                

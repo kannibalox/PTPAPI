@@ -46,7 +46,7 @@ class Torrent:
     def load_movie_html_data(self):
         if 'GroupId' not in self.data or not self.data['GroupId']:
             movie_url = session.base_get('torrents.php', params={'torrentid': self.ID}).url
-            self.data['GroupId'] = re.search(r'\?id=(\d+)', movie_url).group(1)
+            self.data['GroupId'] = parse_qs(urlparse(movie_url).query)['id'][0]
         soup = bs4(session.base_get('torrents.php', params={'id': self.GroupId}).content)
         filediv = soup.find("div", id="files_%s" % self.ID)
         self.data['Filelist'] = {}
