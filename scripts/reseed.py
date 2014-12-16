@@ -8,6 +8,7 @@ import argparse
 import ConfigParser
 import logging
 import readline
+from time import sleep
 
 from pyrobase import bencode
 from pyrocore import config
@@ -90,12 +91,14 @@ def loadTorrent(ID, path):
     try:
         proxy.d.hash(thash, fail_silently=True)
         logger.error("Hash already exists in rtorrent, cannot load.")
-        exit()
+        os.remove(name)
+        return
     except xmlrpclib.Fault:
         pass
     proxy.load(os.path.abspath(name))
     # Wait until the torrent is loaded and available
     while True:
+        sleep(1)
         try:
             proxy.d.hash(thash, fail_silently=True)
             break
