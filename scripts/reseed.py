@@ -141,7 +141,7 @@ def main():
             match = findByFile(ptp, filepath)
             if match:
                 loadTorrent(*match)
-        exit()
+        return
 
     if args.url:
         tID = re.search(r'(\d+)$', args.url).group(1)
@@ -159,11 +159,11 @@ def main():
     if not tID or not path:
         logger.error("Torrent ID or path missing, cannot reseed")
         ptp.logout()
-        exit()
+        return
     logger.info("Found match, now loading torrent %s to path %s" % (tID, path))
     if args.dry_run:
         ptp.logout()
-        exit()
+        return
     loadTorrent(tID, path)
 
     ptp.logout()
