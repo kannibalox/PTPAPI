@@ -20,6 +20,8 @@ def findByURL(cg, URL):
     ptp_id = parse_qs(urlparse(URL).query)['id'][0]
     m = ptpapi.Movie(ID=ptp_id)
     m.load_html_data()
+    if 'ImdbId' not in m.data:
+        logger.error('Movie has no IMDB id, cannot lookup')
     found_cg = cg.search({'search': 'tt'+str(m.ImdbId)})
     for t in m.Torrents:
         if 'Dead (participating in the contest)' in t.Trumpable:
