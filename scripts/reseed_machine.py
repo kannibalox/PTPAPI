@@ -4,6 +4,7 @@ import logging
 import readline
 import pickle
 from urlparse import urlparse, parse_qs
+from time import sleep
 
 import ptpapi
 from ptpapi import cgapi
@@ -24,6 +25,7 @@ def findByURL(cg, URL):
     if 'ImdbId' not in m.data:
         logger.error('Movie has no IMDB id, cannot lookup')
         return None
+    logger.debug('Searching for IMDB ID %s (PTP #%s) on CG' % (m.ImdbId, ptp_id))
     found_cg = cg.search({'search': 'tt'+str(m.ImdbId)})
     for t in m.Torrents:
         if 'Dead (participating in the contest)' in t.Trumpable:
@@ -41,15 +43,16 @@ def main():
     seen = pickle.load( open( 'seen.p', 'rb'))
     with open(sys.argv[1], 'r') as fh:
         for url in fh:
-            ptp_id = parse_qs(urlparse(URL).query)['id'][0]
+            ptp_id = parse_qs(urlparse(url).query)['id'][0]
             if ptp_id in seen:
                 logger.error('Already seen movie %s' % ptp_id)
                 continue
             else:
                 findByURL(cg, url)                
                 seen.append(ptp_id)
-                sleep(20)
-    pickle.dump( seen,  open( "seen.p", "wb" ) )
+                pickle.dump( seen,  open( "seen.p", "wb" ) )
+                sleep(7)
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     main()
