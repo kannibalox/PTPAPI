@@ -68,7 +68,7 @@ def findByFile(ptp, filename):
                 else:
                     path = dirname
                 return (tID, path)
-            elif t.ReleaseName in basename.decode('UTF-8'):
+            elif t.ReleaseName in basename:
                 logger.debug("Found weak match by name at %s" % t.ID)
         if not tID:
             logger.debug("Movie found but no match by release name, attempting to match by filename")
