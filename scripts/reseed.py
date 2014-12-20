@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 import sys
 import re
 import os
@@ -78,19 +78,15 @@ def findByFile(ptp, filename):
                 return matches
     return None
 
-def loadTorrent(ID, path):
-    # Load pyroscope
-    load_config.ConfigLoader().load()
-    proxy = config.engine.open()
-
+def loadTorrent(proxy, ID, path):
     torrent = ptpapi.Torrent(ID=ID)
     name = torrent.download_to_file()
     torrent = metafile.Metafile(name)
     data = bencode.bread(name)
     thash = metafile.info_hash(data)
     try:
-        proxy.d.hash(thash, fail_silently=True)
-        logger.error("Hash already exists in rtorrent, cannot load.")
+        logger.debug("Testing for hash %s" % proxy.d.hash(thash, fail_silently=True))
+        logger.error("Hash %s already exists in rtorrent as %s, cannot load." % (thash, proxy.d.name(thash)))
         os.remove(name)
         return
     except xmlrpclib.Fault:
@@ -104,7 +100,7 @@ def loadTorrent(ID, path):
             break
         except xmlrpclib.Fault:
             pass
-    logger.info("Torrent loaded")
+    logger.info("Torrent loaded at %s" % path)
     proxy.d.ignore_commands.set(thash, 1)
     proxy.d.directory_base.set(thash, path)
     proxy.d.check_hash(thash)
@@ -119,6 +115,7 @@ def main():
     parser.add_argument('-f', '--file', help='Path directly to file/directory')
     parser.add_argument('-n', '--dry-run', help="Don't actually load any torrents", action="store_true")
     parser.add_argument('--file-loop', help="Run in loop mode to avoid rapid session creation", action="store_true")
+    parser.add_argument('--stdin', help='Take a list of file names on stdin', action="store_true")
     parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
     args = parser.parse_args()
@@ -130,8 +127,19 @@ def main():
         arg_file = args.file.decode('UTF-8')
     tID = None
 
+    # Load pyroscope
+    load_config.ConfigLoader().load()
+    proxy = config.engine.open()    
+
     # Load PTP API
     ptp = ptpapi.login()
+
+    if args.stdin:
+        for line in sys.stdin:
+            match = findByFile(ptp, line.decode('UTF-8'))
+            if match:
+                loadTorrent(proxy, *match)
+        return
 
     if args.file_loop:
         while True:
@@ -140,7 +148,8 @@ def main():
                 break
             match = findByFile(ptp, filepath)
             if match:
-                loadTorrent(*match)
+                (tID, path) = match
+                loadTorrent(proxy, tID, path)
         return
 
     if args.url:
@@ -164,7 +173,7 @@ def main():
     if args.dry_run:
         ptp.logout()
         return
-    loadTorrent(tID, path)
+    loadTorrent(proxy, tID, path)
 
     ptp.logout()
 
