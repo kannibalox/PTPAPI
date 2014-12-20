@@ -21,14 +21,17 @@ def sizeof_fmt(num, suffix='B'):
 def findByURL(cg, URL):
     ptp_id = parse_qs(urlparse(URL).query)['id'][0]
     m = ptpapi.Movie(ID=ptp_id)
-    m.load_html_data()
+    m.load_json_data()
     if 'ImdbId' not in m.data:
         logger.error('Movie has no IMDB id, cannot lookup')
         return None
-    logger.debug('Searching for IMDB ID %s (PTP #%s) on CG' % (m.ImdbId, ptp_id))
-    found_cg = cg.search({'search': 'tt'+str(m.ImdbId)})
+    m.load_html_data()
+    found_cg = None
     for t in m.Torrents:
         if 'Dead (participating in the contest)' in t.Trumpable:
+            if found_cg is None:
+                logger.debug('Searching for IMDB ID %s (PTP #%s) on CG' % (m.ImdbId, ptp_id))
+                found_cg = cg.search({'search': 'tt'+str(m.ImdbId)})
             logger.info("Found dead torrent for contest")
             for cg_t in found_cg:
                 if sizeof_fmt(int(t.Size)) == cg_t['Size'] and cg_t['Seeders'] != '0':
