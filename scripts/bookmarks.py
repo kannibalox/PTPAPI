@@ -4,7 +4,7 @@ import argparse
 import os
 import logging
 
-from ptpapi import ptpapi
+import ptpapi
 
 def main():
     parser = argparse.ArgumentParser(description="Download a number of bookmarks")
@@ -19,13 +19,13 @@ def main():
 
     logging.basicConfig(level=args.loglevel)
 
-    api = ptpapi.login(**ptpapi.util.creds_from_conf(args.cred))
+    api = ptpapi.login()
     try:
         api.remove_snatched_bookmarks()
         bmks = api.current_user().bookmarks()
         for b in bmks[0:args.number]:
             b.load_json_data()
-            best = ptpapi.best_match(b, args.filters)
+            best = b.best_match(args.filters)
             if best:
                 best.download_to_file(dest=args.destination)
     finally:

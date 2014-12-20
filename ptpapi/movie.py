@@ -1,9 +1,12 @@
 import re
+import logging
 
 from bs4 import BeautifulSoup as bs4
 
 from session import session
 from torrent import Torrent
+
+logger = logging.getLogger(__name__)
 
 class Movie:
     """A class representing a movie"""
@@ -74,7 +77,7 @@ class Movie:
             else:
                 t.data['Trumpable'] = []
 
-    def best_match(profile, allow_dead=False):
+    def best_match(self, profile, allow_dead=False):
         """A function to pull the best match of a movie, based on a human-readable filter
 
         :param movie: a :py:class:`Movie` object
@@ -120,5 +123,5 @@ class Movie:
                 (rev, sort) = sort_dict[current_sort]
                 return sorted(matches, key=sort, reverse=rev)[0]
             logger.debug("Could not find match for profile: %s" % p)
-        logger.info("Could not find best match for movie %s" % movie.ID)
+        logger.info("Could not find best match for movie %s" % self.ID)
         return None

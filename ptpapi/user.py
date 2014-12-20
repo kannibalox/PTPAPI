@@ -1,3 +1,7 @@
+import api
+from session import session
+from movie import Movie
+
 class User:
     """A primitive class to represent a user"""
     def __init__(self, ID):
@@ -16,7 +20,7 @@ class User:
         :rtype: array of Movies"""
         r = session.base_get('bookmarks.php', params={'id': self.ID})
         movies = []
-        for m in util.snarf_cover_view_data(r.text):
+        for m in api.util.snarf_cover_view_data(r.text):
             m['Torrents'] = []
             for g in m['GroupingQualities']:
                 m['Torrents'].extend(g['Torrents'])
