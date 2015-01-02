@@ -55,6 +55,9 @@ def findByFile(ptp, filename):
     basename = os.path.basename(os.path.abspath(filename))
     dirname = os.path.dirname(os.path.abspath(filename))
     tID = None
+    if not os.path.exists(os.path.abspath(filename)):
+        logger.error("File/directory %s does not exist" % os.path.abspath(filename))
+        return
     for m in ptp.search({'filelist':basename}):
         logger.debug("Found movie %s: %s" % (m.ID, m.Title))
         for t in m.Torrents:
@@ -166,7 +169,7 @@ def main():
 
     # Make sure we have the minimum information required
     if not tID or not path:
-        logger.error("Torrent ID or path missing, cannot reseed")
+        logger.error("Could not find an associated torrent, cannot reseed")
         ptp.logout()
         return
     logger.info("Found match, now loading torrent %s to path %s" % (tID, path))
