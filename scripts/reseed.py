@@ -121,6 +121,7 @@ def main():
     parser.add_argument('--stdin', help='Take a list of file names on stdin', action="store_true")
     parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
+    parser.add_argument('-q', '--quiet', help='Don\'t show any messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
     args = parser.parse_args()
     
     logging.basicConfig(level=args.loglevel)
