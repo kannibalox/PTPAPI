@@ -53,7 +53,7 @@ def matchByTorrent(movie, path):
     return None
 
 def findByFile(ptp, filename):
-    filename os.path.abspath(filename)
+    filename = os.path.abspath(filename)
     basename = os.path.basename(os.path.abspath(filename))
     dirname = os.path.dirname(os.path.abspath(filename))
     tID = None
