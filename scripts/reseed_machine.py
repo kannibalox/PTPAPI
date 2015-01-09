@@ -32,23 +32,24 @@ def findByURL(cg, kg, URL):
     for t in m.Torrents:
         if 'Dead (participating in the contest)' in t.Trumpable:
             logger.info("Found dead torrent for contest")
-            if found_kg is None:
-                logger.debug('Searching for IMDB ID %s (PTP #%s) on KG' % (m.ImdbId, ptp_id))
-                found_kg = kg.search({'search_type': 'imdb','search': str(m.ImdbId)})
-            for kg_t in found_kg:
-                print sizeof_fmt(int(t.Size)), kg_t['Size']
-                if sizeof_fmt(int(t.Size)).replace(" ","") == kg_t['Size'] and kg_t['Seeders'] != '0':
-                    print "Found possible match at %s (%s) with %s seeders" % (kg_t['Title'], kg_t['Size'], kg_t['Seeders'])
-                    kg.downloadTorrent(kg_t['ID'])
+
+            if found_cg is None:
+                logger.debug('Searching for IMDB ID %s (PTP #%s) on CG' % (m.ImdbId, ptp_id))
+                found_cg = cg.search({'search': 'tt'+str(m.ImdbId)})
+            for cg_t in found_cg:
+                if sizeof_fmt(int(t.Size)) == cg_t['Size'] and cg_t['Seeders'] != '0':
+                    print "Found possible match at %s (%s) with %s seeders" % (cg_t['Title'], cg_t['Size'], cg_t['Seeders'])
+                    cg.downloadTorrent(cg_t['ID'], name=cg_t['Title']+'.torrent')
                     break
             else:
-                if found_cg is None:
-                    logger.debug('Searching for IMDB ID %s (PTP #%s) on CG' % (m.ImdbId, ptp_id))
-                    found_cg = cg.search({'search': 'tt'+str(m.ImdbId)})
-                for cg_t in found_cg:
-                    if sizeof_fmt(int(t.Size)) == cg_t['Size'] and cg_t['Seeders'] != '0':
-                        print "Found possible match at %s (%s) with %s seeders" % (cg_t['Title'], cg_t['Size'], cg_t['Seeders'])
-                        cg.downloadTorrent(cg_t['ID'], name=cg_t['Title']+'.torrent')
+                if found_kg is None:
+                    logger.debug('Searching for IMDB ID %s (PTP #%s) on KG' % (m.ImdbId, ptp_id))
+                    found_kg = kg.search({'search_type': 'imdb','search': str(m.ImdbId)})
+                for kg_t in found_kg:
+                    print sizeof_fmt(int(t.Size)), kg_t['Size']
+                    if sizeof_fmt(int(t.Size)).replace(" ","") == kg_t['Size'] and kg_t['Seeders'] != '0':
+                        print "Found possible match at %s (%s) with %s seeders" % (kg_t['Title'], kg_t['Size'], kg_t['Seeders'])
+                        kg.downloadTorrent(kg_t['ID'])
 
 def main():
     ptp = ptpapi.login()

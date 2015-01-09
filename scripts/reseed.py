@@ -19,6 +19,7 @@ import ptpapi
 logger = logging.getLogger(__name__)
 
 def matchByTorrent(movie, path):
+    path = os.path.abspath(path)
     basename = os.path.basename(os.path.abspath(path))
     dirname = os.path.dirname(os.path.abspath(path))
     for t in movie.Torrents:
@@ -52,6 +53,7 @@ def matchByTorrent(movie, path):
     return None
 
 def findByFile(ptp, filename):
+    filename os.path.abspath(filename)
     basename = os.path.basename(os.path.abspath(filename))
     dirname = os.path.dirname(os.path.abspath(filename))
     tID = None
