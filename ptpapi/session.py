@@ -51,7 +51,7 @@ class TokenSession(requests.Session):
     def base_post(self, url_path, *args, **kwargs):
         return self.post(config.get('Main', 'baseURL') + url_path, *args, **kwargs)
 
-# If you change this and get in trouble, don't blame me
 logger.debug("Initializing token session")
+# If you change this and get in trouble, don't blame me
 session = TokenSession(3, 0.5)
 session.headers.update({"User-Agent": "Wget/1.13.4"})
