@@ -136,6 +136,8 @@ def main():
     # Load pyroscope
     load_config.ConfigLoader().load()
     proxy = config.engine.open()    
+    # Attempt to import our loglevel upon pyroscope
+    logging.basicConfig(level=args.loglevel)
 
     # Load PTP API
     ptp = ptpapi.login()
