@@ -52,13 +52,13 @@ def matchByTorrent(movie, path):
             return (t.ID, path)
     return None
 
-def findByFile(ptp, filename):
-    filename = os.path.abspath(filename)
+def findByFile(ptp, filepath):
+    filename = os.path.abspath(filepath)
     basename = os.path.basename(os.path.abspath(filename))
     dirname = os.path.dirname(os.path.abspath(filename))
     tID = None
-    if not os.path.exists(os.path.abspath(filename)):
-        logger.error("File/directory %s does not exist" % os.path.abspath(filename))
+    if not os.path.exists(filename):
+        logger.error("File/directory %s does not exist" % filename)
         return
     for m in ptp.search({'filelist':basename}):
         logger.debug("Found movie %s: %s" % (m.ID, m.Title))
@@ -138,13 +138,14 @@ def main():
     ptp = ptpapi.login()
 
     if args.batch:
-        for line in sys.batch:
-            match = findByFile(ptp, line.decode('UTF-8'))
+        logger.debug("Reading in file names from %s" % args.batch)
+        for line in args.batch:
+            match = findByFile(ptp, line.rstrip('\n').decode('UTF-8'))
             if match:
                 loadTorrent(proxy, *match)
         return
 
-    if args.file_loop:
+    if args.loop:
         while True:
             filepath = raw_input('file>>> ').decode('UTF-8')
             if filepath in ['q', 'quit', 'exit']:
@@ -178,6 +179,7 @@ def main():
         return
     logger.info("Found match, now loading torrent %s to path %s" % (tID, path))
     if args.dry_run:
+        logger.debug("Stopping before loading")
         ptp.logout()
         return
     loadTorrent(proxy, tID, path)
