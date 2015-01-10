@@ -117,33 +117,30 @@ def main():
     parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
     parser.add_argument('-u', '--url', help='Permalink to the torrent page')
     parser.add_argument('-p', '--path', help='Base directory of the file')
-    parser.add_argument('-f', '--file', help='Path directly to file/directory')
+    parser.add_argument('file', help='Path directly to file/directory', nargs='?')
     parser.add_argument('-n', '--dry-run', help="Don't actually load any torrents", action="store_true")
-    parser.add_argument('--file-loop', help="Run in loop mode to avoid rapid session creation", action="store_true")
-    parser.add_argument('--stdin', help='Take a list of file names on stdin', action="store_true")
+    parser.add_argument('--loop', help="Run in loop mode to avoid rapid session creation", action="store_true")
+    parser.add_argument('--batch', help='Take a list of file names to process, (stdin by default)', type=argparse.FileType('r'), nargs='?', const=sys.stdin, default=None)
     parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
     parser.add_argument('-q', '--quiet', help='Don\'t show any messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
     args = parser.parse_args()
+    print args
+    return
     
     logging.basicConfig(level=args.loglevel)
-
-    path = unicode(args.path)
-    if args.file:
-        arg_file = args.file.decode('UTF-8')
-    tID = None
 
     # Load pyroscope
     load_config.ConfigLoader().load()
     proxy = config.engine.open()    
-    # Attempt to import our loglevel upon pyroscope
+    # Attempt to impose our loglevel upon pyroscope
     logging.basicConfig(level=args.loglevel)
 
     # Load PTP API
     ptp = ptpapi.login()
 
-    if args.stdin:
-        for line in sys.stdin:
+    if args.batch:
+        for line in sys.batch:
             match = findByFile(ptp, line.decode('UTF-8'))
             if match:
                 loadTorrent(proxy, *match)
@@ -156,9 +153,13 @@ def main():
                 break
             match = findByFile(ptp, filepath)
             if match:
-                (tID, path) = match
-                loadTorrent(proxy, tID, path)
+                loadTorrent(proxy, *match)
         return
+
+    path = unicode(args.path)
+    if args.file:
+        arg_file = args.file.decode('UTF-8')
+    tID = None
 
     if args.url:
         tID = re.search(r'(\d+)$', args.url).group(1)
