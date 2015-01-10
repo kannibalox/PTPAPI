@@ -125,8 +125,6 @@ def main():
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
     parser.add_argument('-q', '--quiet', help='Don\'t show any messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
     args = parser.parse_args()
-    print args
-    return
     
     logging.basicConfig(level=args.loglevel)
 
