@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/env python
 # Search for torrents from other sites to reseed on ptp
 
 import argparse

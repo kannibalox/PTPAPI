@@ -1,3 +1,4 @@
+#!/bin/env python
 import sys
 import logging
 from pprint import pprint

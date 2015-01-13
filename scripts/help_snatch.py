@@ -1,3 +1,4 @@
+#!/bin/env python
 import ptpapi
 
 ptp = ptpapi.PTPAPI()

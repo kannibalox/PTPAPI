@@ -1,4 +1,4 @@
-#!/usr/env python
+#!/bin/env python
 # Downloads a number of bookmarks to a specified directory
 import argparse
 import os

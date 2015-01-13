@@ -1,3 +1,4 @@
+#!/bin/env python
 import os
 from ptpapi import PTPAPI
 from cgapi import CGAPI
