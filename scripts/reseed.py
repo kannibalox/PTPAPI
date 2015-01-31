@@ -141,8 +141,10 @@ def main():
         logger.debug("Reading in file names from %s" % args.batch)
         for line in args.batch:
             match = findByFile(ptp, line.rstrip('\n').decode('UTF-8'))
-            if match:
+            if match and not args.dry_run:
                 loadTorrent(proxy, *match)
+            else:
+                logger.error("Could not find match for file %s" % line.rstrip('\n').decode('UTF-8'))
         return
 
     if args.loop:
@@ -151,8 +153,10 @@ def main():
             if filepath in ['q', 'quit', 'exit']:
                 break
             match = findByFile(ptp, filepath)
-            if match:
+            if match and not args.dry_run:
                 loadTorrent(proxy, *match)
+            else:
+                logger.error("Could not find match for file %s" % line.rstrip('\n').decode('UTF-8'))
         return
 
     path = unicode(args.path)
