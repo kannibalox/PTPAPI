@@ -20,7 +20,7 @@ import ptpapi
 
 logger = logging.getLogger(__name__)
 
-def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
+def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
     logger.debug(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent.ReleaseName))
     
     path1 = os.path.abspath(filepath)
