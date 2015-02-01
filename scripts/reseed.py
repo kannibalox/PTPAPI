@@ -35,6 +35,10 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
 
     path2_files = dict((os.path.join(torrent.ReleaseName, f), int(s)) for f, s in torrent.Filelist.items())
 
+    if len(path1_files) < len(path2_files):
+        logger.debug("Too little files to match torrent ({0} locally, {1} in torrent)".format(len(path1_files), len(path2_files)))
+        return None
+
     matched_files = {}
     logger.debug("Looking for exact matches")
     for filename, size in path1_files.items():
@@ -95,13 +99,12 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
             origin_file = os.path.join(os.path.dirname(path1), origin_file)
             file_to_create = os.path.join(os.path.dirname(path1), matched_file)
             path_to_create = os.path.dirname(file_to_create)
-            if not os.path.exists(path_to_create):
-                try:
-                    logger.debug(u"Creating directory '{0}'".format(path_to_create))
-                    os.makedirs(path_to_create)
-                except OSError as e:
-                    if e.errno != 17:
-                        raise
+            try:
+                logger.debug(u"Creating directory '{0}'".format(path_to_create))
+                os.makedirs(path_to_create)
+            except OSError as e:
+                if e.errno != 17:
+                    raise
             if os.path.lexists(file_to_create):
                 logger.debug(u"File '{0}' already exists, skipping creation".format(file_to_create))
                 continue
