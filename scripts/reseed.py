@@ -21,7 +21,7 @@ import ptpapi
 logger = logging.getLogger(__name__)
 
 def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
-    logger.debug("Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent.ReleaseName.encode('UTF-8')))
+    logger.debug(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent.ReleaseName))
     
     path1 = os.path.abspath(filepath)
     path1_files = {}
@@ -97,15 +97,15 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
             path_to_create = os.path.dirname(file_to_create)
             if not os.path.exists(path_to_create):
                 try:
-                    logger.debug("Creating directory '{0}'".format(path_to_create))
+                    logger.debug(u"Creating directory '{0}'".format(path_to_create))
                     os.makedirs(path_to_create)
                 except OSError as e:
                     if e.errno != 17:
                         raise
             if os.path.lexists(file_to_create):
-                logger.debug("File '{0}' already exists, skipping creation".format(file_to_create.encode('UTF-8')))
+                logger.debug(u"File '{0}' already exists, skipping creation".format(file_to_create))
                 continue
-            logger.debug("Creating file '{0}' from '{1}' via action '{2}'".format(file_to_create.encode('UTF-8'), origin_file.encode('UTF-8'), action))
+            logger.debug(u"Creating file '{0}' from '{1}' via action '{2}'".format(file_to_create, origin_file, action))
             print os.path.relpath(origin_file, os.path.dirname(file_to_create))
             if action == 'soft':
                 os.symlink(os.path.relpath(origin_file, os.path.dirname(file_to_create)), file_to_create)
@@ -114,7 +114,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
     return os.path.join(os.path.dirname(path1), torrent.ReleaseName)
 
 def match_by_movie(movie, filename):
-    logger.debug("Attempting to match against movie {0} ({1})".format(movie.ID, movie.Title))
+    logger.debug(u"Attempting to match against movie {0} ({1})".format(movie.ID, movie.Title))
 
     movie.load_html_data()
     for t in movie.Torrents:
@@ -127,7 +127,7 @@ def find_by_file(ptp, filepath):
     filepath = os.path.abspath(filepath)
     tID = None
     if not os.path.exists(filepath):
-        logger.error("File/directory {0} does not exist".format(filepath))
+        logger.error(u"File/directory {0} does not exist".format(filepath))
         return
     logger.debug("Searching movies by file list")
     for m in ptp.search({'filelist':os.path.basename(filepath)}):
@@ -165,8 +165,8 @@ def load_torrent(proxy, ID, path):
     data = bencode.bdecode(torrent_data)
     thash = metafile.info_hash(data)
     try:
-        logger.debug("Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True)))
-        logger.error("Hash {0} already exists in rtorrent as {1}, cannot load.".format(thash, proxy.d.name(thash)))
+        logger.debug(u"Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True)))
+        logger.error(u"Hash {0} already exists in rtorrent as {1}, cannot load.".format(thash, proxy.d.name(thash)))
         return
     except xmlrpclib.Fault:
         pass
@@ -179,7 +179,7 @@ def load_torrent(proxy, ID, path):
             break
         except xmlrpclib.Fault:
             pass
-    logger.info("Torrent loaded at {0}".format(path))
+    logger.info(u"Torrent loaded at {0}".format(path))
     proxy.d.directory_base.set(thash, path)
     proxy.d.check_hash(thash)
 
@@ -217,7 +217,7 @@ def main():
                 if not args.dry_run:
                     load_torrent(proxy, *match)
             else:
-                logger.error("Could not find match for file {0}".format(line.rstrip('\n').decode('UTF-8')))
+                logger.error(u"Could not find match for file {0}".format(line.rstrip('\n').decode('UTF-8')))
         return
 
     if args.loop:
@@ -231,7 +231,7 @@ def main():
                 if not args.dry_run:
                     load_torrent(proxy, *match)
             else:
-                logger.error("Could not find match for file {0}".format(line.rstrip('\n').decode('UTF-8')))
+                logger.error(u"Could not find match for file {0}".format(filepath))
         return
 
     # These are the two variables absolutely required to load a torrent
@@ -264,7 +264,7 @@ def main():
         ptp.logout()
         return
 
-    logger.info("Found match, now loading torrent {0} to path {1}".format(tID, path.encode('UTF-8')))
+    logger.info(u"Found match, now loading torrent {0} to path {1}".format(tID, path))
     if args.dry_run:
         logger.debug("Stopping before loading")
         ptp.logout()
