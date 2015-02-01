@@ -42,10 +42,10 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
             matched_files[filename] = filename
             del path1_files[filename]
             del path2_files[filename]
-    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path1_files) + len(matched_files)))
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
     # If the match is 1:1, no need to go through with the rest of the rigmarole
-    if len(path1_files) == 0:
+    if len(path2_files) == 0:
         logger.debug("Found exact file match, returning early")
         return path1
 
@@ -59,7 +59,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
                 del path1_files[filename1]
                 del path2_files[filename2]
                 break
-    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path1_files) + len(matched_files)))
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
     logger.debug("Looking for matches with same base name and size")
     for filename1, size1 in path1_files.items():
@@ -70,7 +70,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
                     del path1_files[filename1]
                     del path2_files[filename2]
                     break
-    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path1_files) + len(matched_files)))
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
     logger.debug("Looking for matches by size only")
     for filename1, size1 in path1_files.items():
@@ -80,7 +80,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
                 del path1_files[filename1]
                 del path2_files[filename2]
                 break            
-    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path1_files) + len(matched_files)))
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
     if len(path2_files) > 0:
         logger.debug("Not all files could be matched, returning...")
