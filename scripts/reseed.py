@@ -8,6 +8,7 @@ import argparse
 import ConfigParser
 import logging
 import readline
+import htmlentitydefs
 from time import sleep
 from urlparse import urlparse, parse_qs
 
@@ -20,7 +21,7 @@ import ptpapi
 logger = logging.getLogger(__name__)
 
 def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
-    logger.debug("Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent.ReleaseName))
+    logger.debug("Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent.ReleaseName.encode('UTF-8')))
     
     path1 = os.path.abspath(filepath)
     path1_files = {}
@@ -180,6 +181,7 @@ def load_torrent(proxy, ID, path):
             pass
     logger.info("Torrent loaded at {0}".format(path))
     proxy.d.directory_base.set(thash, path)
+    proxy.d.check_hash(thash)
 
 def main():
     parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
@@ -262,7 +264,7 @@ def main():
         ptp.logout()
         return
 
-    logger.info("Found match, now loading torrent {0} to path {1}".format(tID, path))
+    logger.info("Found match, now loading torrent {0} to path {1}".format(tID, path.encode('UTF-8')))
     if args.dry_run:
         logger.debug("Stopping before loading")
         ptp.logout()
