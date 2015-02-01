@@ -43,7 +43,9 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
             del path2_files[filename]
     logger.debug("{0} of {1} files matched".format(len(matched_files), len(path1_files) + len(matched_files)))
 
+    # If the match is 1:1, no need to go through with the rest of the rigmarole
     if len(path1_files) == 0:
+        logger.debug("Found exact file match, returning early")
         return path1
 
     logger.debug("Looking for matches with same size and name but different root folder")
@@ -121,16 +123,14 @@ def match_by_movie(movie, filename):
     return None
 
 def find_by_file(ptp, filepath):
-    filename = os.path.abspath(filepath)
-    basename = os.path.basename(os.path.abspath(filename))
-    dirname = os.path.dirname(os.path.abspath(filename))
+    filepath = os.path.abspath(filepath)
     tID = None
-    if not os.path.exists(filename):
-        logger.error("File/directory {0} does not exist".format(filename))
+    if not os.path.exists(filepath):
+        logger.error("File/directory {0} does not exist".format(filepath))
         return
     logger.debug("Searching movies by file list")
-    for m in ptp.search({'filelist':basename}):
-        match = match_by_movie(m, filename)
+    for m in ptp.search({'filelist':os.path.basename(filepath)}):
+        match = match_by_movie(m, filepath)
         if match:
             return match
     match = guess_by_name(ptp, filepath)
@@ -139,41 +139,37 @@ def find_by_file(ptp, filepath):
     return None
 
 def guess_by_name(ptp, filepath, name=None):
-    filename = os.path.abspath(filepath)
-    basename = os.path.basename(os.path.abspath(filename))
-    dirname = os.path.dirname(os.path.abspath(filename))
+    filepath = os.path.abspath(filepath)
     try:
         import guessit
     except ImportError:
         logger.debug("Error importing 'guessit' module, skipping name guess")
-    logger.debug("Guessing name from filename with guessit")
-    filename = os.path.abspath(filepath)
+    logger.debug("Guessing name from filepath with guessit")
     if not name:
-        name = os.path.basename(os.path.abspath(filename))
+        name = os.path.basename(filepath)
     guess = guessit.guess_movie_info(name)
     if guess['title']:
         movies = ptp.search({'searchstr': guess['title']})
         if len(movies) == 0:
             movies = ptp.search({'searchstr': guess['title'], 'inallakas':'1'})
         for m in movies:
-            match = match_by_movie(m, filename)
+            match = match_by_movie(m, filepath)
             if match:
                 return match
 
 
 def load_torrent(proxy, ID, path):
     torrent = ptpapi.Torrent(ID=ID)
-    name = torrent.download_to_file()
-    data = bencode.bread(name)
+    torrent_data = torrent.download()
+    data = bencode.bdecode(torrent_data)
     thash = metafile.info_hash(data)
     try:
         logger.debug("Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True)))
         logger.error("Hash {0} already exists in rtorrent as {1}, cannot load.".format(thash, proxy.d.name(thash)))
-        os.remove(name)
         return
     except xmlrpclib.Fault:
         pass
-    proxy.load(os.path.abspath(name))
+    proxy.load_raw(xmlrpclib.Binary(torrent_data))
     # Wait until the torrent is loaded and available
     while True:
         sleep(1)
@@ -183,12 +179,7 @@ def load_torrent(proxy, ID, path):
         except xmlrpclib.Fault:
             pass
     logger.info("Torrent loaded at {0}".format(path))
-    proxy.d.ignore_commands.set(thash, 1)
     proxy.d.directory_base.set(thash, path)
-    proxy.d.check_hash(thash)
-
-    # Cleanup
-    os.remove(name)
 
 def main():
     parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
