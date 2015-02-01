@@ -109,7 +109,6 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
                 logger.debug(u"File '{0}' already exists, skipping creation".format(file_to_create))
                 continue
             logger.debug(u"Creating file '{0}' from '{1}' via action '{2}'".format(file_to_create, origin_file, action))
-            print os.path.relpath(origin_file, os.path.dirname(file_to_create))
             if action == 'soft':
                 os.symlink(os.path.relpath(origin_file, os.path.dirname(file_to_create)), file_to_create)
             elif action == 'hard':
