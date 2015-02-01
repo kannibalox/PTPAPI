@@ -9,6 +9,7 @@ import ConfigParser
 import logging
 import readline
 from time import sleep
+from urlparse import urlparse, parse_qs
 
 from pyrobase import bencode
 from pyrocore import config
@@ -18,39 +19,107 @@ import ptpapi
 
 logger = logging.getLogger(__name__)
 
-def matchByTorrent(movie, path):
-    path = os.path.abspath(path)
-    basename = os.path.basename(os.path.abspath(path))
-    dirname = os.path.dirname(os.path.abspath(path))
-    for t in movie.Torrents:
-        # Only single files under a directory are matched currently
-        # e.g. Movie.Name.Year.mkv -> Move Name (Year)/Movie.Name.Year.mkv
-        if len(t.Filelist) == 1 and t.Filelist.keys()[0] == basename:
-            logger.info("Found strong match by filename at torrent %s, creating new folder structure" % t.ID)
-            tID  = t.ID
-            newPath = os.path.join(dirname, t.ReleaseName)
-            if not os.path.exists(newPath):
-                logger.debug("Creating new directory %s" % newPath)
-                os.mkdir(newPath)
-            if not os.path.exists(os.path.join(dirname, t.ReleaseName, basename)):
-                os.link(os.path.abspath(path),
-                        os.path.join(dirname, t.ReleaseName, basename))
-            return (t.ID, newPath)
-        # Attempt to match cases where the folder has been renamed, but all files are the same
-        fileList = {}
-        for root, subFolders, files in os.walk(path):
-            for real_file in files:
-                f = os.path.join(root, real_file)
-                fileList[real_file] = os.path.getsize(f)
-        found_all_files = True
-        for tfile in t.Filelist:
-            if tfile not in fileList:
-                found_all_files = False
+def matchByTorrent(torrent, filepath, dry_run=False, action='soft'):
+    logger.debug("Attempting to match path to torrent %s (%s)" % (torrent.ID, torrent.ReleaseName))
+    
+    path1 = os.path.abspath(filepath)
+    path1_files = {}
+    if os.path.isdir(path1):
+        for root, directories, filenames in os.walk(path1):
+            for filename in filenames:
+                f = os.path.join(root, filename).replace(os.path.dirname(path1), '')
+                path1_files[f] = os.path.getsize(f)
+    elif os.path.isfile(path1):
+        path1_files[path1.replace(os.path.dirname(path1) + os.sep, '')] = os.path.getsize(path1)
+
+    path2_files = dict((os.path.join(torrent.ReleaseName, f), int(s)) for f, s in torrent.Filelist.items())
+
+    matched_files = {}
+    logger.debug("Looking for exact matches...")
+    for filename, size in path1_files.items():
+        if filename in path2_files.keys() and path2_files[filename] == size:
+            matched_files[filename] = filename
+            del path1_files[filename]
+            del path2_files[filename]
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path1_files) + len(matched_files)))
+
+    # Same file, same size, different root folder
+    logger.debug("Looking for matches with same size and name but different root folder")
+    for filename1, size1 in path1_files.items():
+        no_root1 = os.sep.join(os.path.normpath(filename1).split(os.sep)[1:])
+        for filename2, size2 in path2_files.items():
+            no_root2 = os.sep.join(os.path.normpath(filename2).split(os.sep)[1:])
+            if no_root1 == no_root2 and size1 == size2:
+                matched_files[filename1] = filename2
+                del path1_files[filename1]
+                del path2_files[filename2]
                 break
-        if found_all_files:
-            logger.info("Found strong match by subfiles at torrent %s, using as base path")
-            return (t.ID, path)
-    return None
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path1_files) + len(matched_files)))
+
+    # Same basename and size
+    logger.debug("Looking for matches with same base name and size")
+    for filename1, size1 in path1_files.items():
+        for filename2, size2 in path2_files.items():
+            if os.path.basename(filename1) == os.path.basename(filename2) and size1 == size2:
+                if os.path.basename(filename1) not in [os.path.basename(f) for f in path2_files.keys()]:
+                    matched_files[filename1] = filename2
+                    del path1_files[filename1]
+                    del path2_files[filename2]
+                    break
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path1_files) + len(matched_files)))
+
+    # Size only
+    logger.debug("Looking for matches by size only")
+    for filename1, size1 in path1_files.items():
+        for filename2, size2 in path2_files.items():
+            if size1 == size2 and path2_files.values().count(size2) == 1:
+                matched_files[filename1] = filename2
+                del path1_files[filename1]
+                del path2_files[filename2]
+                break            
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path1_files) + len(matched_files)))
+
+    if len(path2_files) > 0:
+        logger.debug("Not all files could be matched, returning...")
+        return None
+
+    if not dry_run: 
+        for matched_file in matched_files.values():
+            path_to_create = os.path.join(os.path.dirname(path1), os.path.dirname(matched_file))
+            if not os.path.exists(path_to_create):
+                try:
+                    logger.debug("Creating directory %s" % path_to_create)
+                    os.makedirs(path_to_create)
+                except OSError as e:
+                    if e.errno != 17:
+                        raise
+        
+
+def matchByMovie(movie, filename):
+    logger.debug("Attempting to match against movie %s (%s)" % (movie.ID, movie.Title))
+    filename = os.path.abspath(filename)
+    basename = os.path.basename(os.path.abspath(filename))
+    dirname = os.path.dirname(os.path.abspath(filename))
+    tID = None
+    for t in movie.Torrents:
+        # Exact match or match without file extension
+        if t.ReleaseName == basename or t.ReleaseName == os.path.splitext(basename)[0]:
+            logger.info("Found strong match by release name at %s" % t.ID)
+            tID = t.ID
+            if os.path.isdir(filename):
+                path = filename
+            else:
+                path = dirname
+            return (tID, path)
+        elif t.ReleaseName in basename:
+            logger.debug("Found weak match by name against torrent %s (%s)" % (t.ID, t.ReleaseName))
+    if not tID:
+        logger.debug("No match by release name, attempting to match to torrent files")
+        movie.load_html_data()
+        for t in movie.Torrents:
+            match = matchByTorrent(t, filename)
+            if match:
+                return match
 
 def findByFile(ptp, filepath):
     filename = os.path.abspath(filepath)
@@ -62,31 +131,31 @@ def findByFile(ptp, filepath):
         return
     for m in ptp.search({'filelist':basename}):
         logger.debug("Found movie %s: %s" % (m.ID, m.Title))
-        for t in m.Torrents:
-            logger.debug("Found torrent %s under movie %s" % (t.ID, m.ID))
-            # Exact match or match without file extension
-            if t.ReleaseName == basename or t.ReleaseName == os.path.splitext(basename)[0]:
-                logger.info("Found strong match by release name at %s" % t.ID)
-                tID = t.ID
-                if os.path.isdir(filename):
-                    path = filename
-                else:
-                    path = dirname
-                return (tID, path)
-            elif t.ReleaseName in basename:
-                logger.debug("Found weak match by name at %s" % t.ID)
-        if not tID:
-            logger.debug("Movie found but no match by release name, attempting to match by filename")
-            m.load_html_data()
-            matches = matchByTorrent(m, filename)
-            if matches:
-                return matches
+        match = matchByMovie(m, filename)
+        if match:
+            return match
     return None
+
+def guessByName(ptp, filepath, name=None):
+    filename = os.path.abspath(filepath)
+    basename = os.path.basename(os.path.abspath(filename))
+    dirname = os.path.dirname(os.path.abspath(filename))
+    try:
+        import guessit
+    except ImportError:
+        logger.debug("Error importing 'guessit' module, skipping name guess")
+    logger.debug("Guessing name from filename with guessit")
+    filename = os.path.abspath(filepath)
+    if not name:
+        name = os.path.basename(os.path.abspath(filename))
+    guess = guessit.guess_movie_info(name)
+    if guess['title']:
+        for m in ptp.search({'searchstr': guess['title']}):
+            matchByMovie(m, filename)
 
 def loadTorrent(proxy, ID, path):
     torrent = ptpapi.Torrent(ID=ID)
     name = torrent.download_to_file()
-    torrent = metafile.Metafile(name)
     data = bencode.bread(name)
     thash = metafile.info_hash(data)
     try:
@@ -137,6 +206,9 @@ def main():
     # Load PTP API
     ptp = ptpapi.login()
 
+    guessByName(ptp, sys.argv[1])
+    exit(1)
+
     if args.batch:
         logger.debug("Reading in file names from %s" % args.batch)
         for line in args.batch:
@@ -148,6 +220,7 @@ def main():
         return
 
     if args.loop:
+        logger.debug("Begin file read loop")
         while True:
             filepath = raw_input('file>>> ').decode('UTF-8')
             if filepath in ['q', 'quit', 'exit']:
@@ -165,7 +238,7 @@ def main():
     tID = None
 
     if args.url:
-        tID = re.search(r'(\d+)$', args.url).group(1)
+        tID = parse_qs(urlparse(args.url).query)['torrentid'][0]
         if not path and arg_file:
             path = unicode(os.path.dirname(os.path.abspath(arg_file)))
     else:
