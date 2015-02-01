@@ -27,8 +27,8 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
     if os.path.isdir(path1):
         for root, directories, filenames in os.walk(path1):
             for filename in filenames:
-                f = os.path.join(root, filename).replace(os.path.dirname(path1), '')
-                path1_files[f] = os.path.getsize(f)
+                f = os.path.join(root, filename).replace(os.path.dirname(path1) + os.sep, '')
+                path1_files[f] = os.path.getsize(os.path.join(root, filename))
     elif os.path.isfile(path1):
         path1_files[path1.replace(os.path.dirname(path1) + os.sep, '')] = os.path.getsize(path1)
 
@@ -42,6 +42,9 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='soft'):
             del path1_files[filename]
             del path2_files[filename]
     logger.debug("{0} of {1} files matched".format(len(matched_files), len(path1_files) + len(matched_files)))
+
+    if len(path1_files) == 0:
+        return path1
 
     logger.debug("Looking for matches with same size and name but different root folder")
     for filename1, size1 in path1_files.items():
@@ -149,10 +152,14 @@ def guess_by_name(ptp, filepath, name=None):
         name = os.path.basename(os.path.abspath(filename))
     guess = guessit.guess_movie_info(name)
     if guess['title']:
-        for m in ptp.search({'searchstr': guess['title']}):
+        movies = ptp.search({'searchstr': guess['title']})
+        if len(movies) == 0:
+            movies = ptp.search({'searchstr': guess['title'], 'inallakas':'1'})
+        for m in movies:
             match = match_by_movie(m, filename)
             if match:
                 return match
+
 
 def load_torrent(proxy, ID, path):
     torrent = ptpapi.Torrent(ID=ID)
@@ -250,9 +257,13 @@ def main():
             if path:
                 tID = parsed_url['torrentid'][0]
         elif 'id' in parsed_url:
-            (tID, path) = match_by_movie(ptpapi.Movie(ID=parsed_url['id'][0]), arg_file)
+            match = match_by_movie(ptpapi.Movie(ID=parsed_url['id'][0]), arg_file)
+            if match:
+                (tID, path) = match
     elif arg_file:
-        (tID, path) = find_by_file(ptp, arg_file)
+        match = find_by_file(ptp, arg_file)
+        if match:
+            (tID, path) = match
 
     # Make sure we have the minimum information required
     if not tID or not path:
