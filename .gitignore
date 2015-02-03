@@ -4,3 +4,5 @@ creds.ini
 test.py
 cookies.txt
 _build
+*.egg-info/
+*.egg
