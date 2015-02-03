@@ -47,12 +47,20 @@ class API:
             if not password or not passkey or not username:
                 raise PTPAPIException("Not enough info provided to log in.")
             try:
-                j = session.base_post('ajax.php?action=login',
+                r = session.base_post('ajax.php?action=login',
                                  data={"username": username,
                                        "password": password,
-                                       "passkey": passkey }).json()
+                                       "passkey": passkey })
+                j = r.json()
             except ValueError as e:
-                raise PTPAPIException("Could not parse returned json data.")
+                if r.status_code == 200:
+                    raise PTPAPIException("Could not parse returned json data.")
+                else:
+                    if r.status_code == 429:
+                        logger.critical(r.text.strip())
+                        r.raise_for_status()
+                    else:
+                        r.raise_for_status()
             if j["Result"] != "Ok":
                 raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % j)
             self.__save_cookie(cookiesFile)
