@@ -12,9 +12,9 @@ setup(
         'ptpapi',
     ],
     scripts=[
-        'scripts/ptp'
-        'scripts/ptp-reseed'
-        'scripts/ptp-bookmarks'
-        'scripts/ptp-hnrs'
+        'scripts/ptp',
+        'scripts/ptp-reseed',
+        'scripts/ptp-bookmarks',
+        'scripts/ptp-hnrs',
     ],
 )
