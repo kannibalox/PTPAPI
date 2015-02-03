@@ -1,0 +1,32 @@
+#!/bin/env python
+# Download hnr files to specified directory
+import os
+import argparse
+import logging
+
+import ptpapi
+
+logger = logging.getLogger(__name__)
+
+def main():
+    parser = argparse.ArgumentParser(description="Download HnR torrent files")
+    parser.add_argument('-d','--destination', help="The destination folder", default=os.getcwd())
+    parser.add_argument('-n','--no-unzip', help="Do not try to automatically unzip file", action="store_true")
+    parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
+
+    args = parser.parse_args()
+
+    api = ptpapi.login()
+    logging.basicConfig(level=args.loglevel)
+            
+    os.chdir(args.destination)
+    with open('hnr.zip', 'wb') as fh:
+        fh.write(api.hnr_zip().content)
+    if not args.no_unzip:
+        try:
+            subprocess.call(['unzip', 'hnr.zip'])
+        except OSError:
+            pass
+        os.remove('hnr.zip')
+                            
+main()
