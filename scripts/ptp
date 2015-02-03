@@ -2,10 +2,19 @@
 import sys
 import logging
 from pprint import pprint
+from urlparse import urlparse, parse_qs
 
 import argparse
 
 import ptpapi
+
+logger = logging.getLogger(__name__)
+
+def do_download(args):
+    api = ptpapi.login()
+    for arg in args:
+        t = ptpapi.Torrent(parse_qs(urlparse(arg).query)['torrentid'][0])
+        t.download_to_file()        
 
 def do_search(args):
     terms = {}
@@ -25,5 +34,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extensible command line utility for PTP')
     parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
-    parser.add_argument('-c', '--cred', help='Credential file', default="creds.ini")
+    parser.add_argument('other', nargs='*')
+
+    args = parser.parse_args()
+
+    logging.basicConfig(level=args.loglevel)
+
     globals()['do_' + sys.argv[1]](sys.argv[2:])
