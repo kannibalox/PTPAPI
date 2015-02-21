@@ -12,7 +12,7 @@ import requests
 from config import config
 from session import session
 from movie import Movie
-from user import User
+from user import User, CurrentUser
 from torrent import Torrent
 
 logger = logging.getLogger(__name__)
@@ -87,11 +87,8 @@ class API:
             session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fh))
 
     def current_user(self):
-        return User(self.current_user_id)
+        return CurrentUser(self.current_user_id)
 
-    def hnr_zip(self):
-        return session.base_get('snatchlist.php', params={'action':'hnrzip'})
-        
     def search(self, filters):
         if 'name' in filters:
             filters['searchstr'] = filters['name']
@@ -104,15 +101,6 @@ class API:
                 m['ImdbId'] = '0'
             ret_array.append(Movie(data=m))
         return ret_array
-
-    def remove_snatched_bookmarks(self):
-        session.base_post("bookmarks.php", data={'action': 'remove_snatched'})
-
-    def remove_seen_bookmarks(self):
-        session.base_post("bookmarks.php", data={'action': 'remove_seen'})
-
-    def remove_uploaded_bookmarks(self):
-        session.base_post("bookmarks.php", data={'action': 'remove_uploaded'})
 
     def need_for_seed(self):
         data = util.snarf_cover_view_data(session.base_get("needforseed.php").content)

@@ -1,3 +1,7 @@
+import re
+
+from bs4 import BeautifulSoup as bs4
+
 import api
 from session import session
 from movie import Movie
@@ -39,3 +43,25 @@ class User:
             r = row.find(id='user_rating_%s' % movieID).text.rstrip('%')
             ratings.append((movieID, r))
         return ratings
+
+"""Define some additional methods that only apply to the logged in user."""
+class CurrentUser(User):
+    def inbox(self):
+        soup = bs4(session.base_get('inbox.php').text)
+        for row in soup.find(id="messageformtable").tbody.find_all('tr'):
+            print {'Subject': row.find_all('td')[1].text.encode('UTF-8').strip(),
+                   'Sender': row.find_all('td')[2].text,
+                   'Date': row.find_all('td')[3].span['title'],
+                   'ID': re.search(r'id=(\d+)', row.find_all('td')[1].a['href']).group(1)}
+
+    def remove_snatched_bookmarks(self):
+        session.base_post("bookmarks.php", data={'action': 'remove_snatched'})
+
+    def remove_seen_bookmarks(self):
+        session.base_post("bookmarks.php", data={'action': 'remove_seen'})
+
+    def remove_uploaded_bookmarks(self):
+        session.base_post("bookmarks.php", data={'action': 'remove_uploaded'})
+
+    def hnr_zip(self):
+        return session.base_get('snatchlist.php', params={'action':'hnrzip'})
