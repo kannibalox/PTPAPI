@@ -47,9 +47,7 @@ class Movie:
     def conv_json_torrents(self):
         if self.data['Torrents']:
             torrents = self.data['Torrents']
-            self.data['Torrents'] = []
-            for t in torrents:
-                self.data['Torrents'].append(Torrent(data=t))
+            self.data['Torrents'] = [Torrent(data=t) for t in torrents]
 
     def load_html_data(self, basic=True, overwrite=False):
         soup = bs4(session.base_get("torrents.php", params={'id':self.ID}).text)
