@@ -147,6 +147,7 @@ def guess_by_name(ptp, filepath, name=None):
         import guessit
     except ImportError:
         logger.debug("Error importing 'guessit' module, skipping name guess")
+        return None
     logger.debug("Guessing name from filepath with guessit")
     if not name:
         name = os.path.basename(filepath)
