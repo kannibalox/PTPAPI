@@ -14,6 +14,7 @@ def main():
     parser.add_argument('-c', '--cred', help='Credential file', default="creds.ini")
     parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
+    parser.add_argument('-q', '--quiet', help='Hide most messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
 
     args = parser.parse_args()
 
