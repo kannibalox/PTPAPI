@@ -1,9 +1,12 @@
 import re
 import os
+import logging
 
 from bs4 import BeautifulSoup as bs4
 
 from session import session
+
+logger = logging.getLogger(__name__)
 
 class Torrent:
     def __init__(self, ID=None, data=None):
