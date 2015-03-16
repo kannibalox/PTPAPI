@@ -39,7 +39,6 @@ class User:
         ratings = []
         for row in soup.find(id='ratings_table').tbody.find_all('tr'):
             movieID = re.search(r'id=(\d+)', row.find(class_='l_movie')['href']).group(1)
-            print movieID
             r = row.find(id='user_rating_%s' % movieID).text.rstrip('%')
             ratings.append((movieID, r))
         return ratings
@@ -49,10 +48,22 @@ class CurrentUser(User):
     def inbox(self):
         soup = bs4(session.base_get('inbox.php').text)
         for row in soup.find(id="messageformtable").tbody.find_all('tr'):
-            print {'Subject': row.find_all('td')[1].text.encode('UTF-8').strip(),
+            yield {'Subject': row.find_all('td')[1].text.encode('UTF-8').strip(),
                    'Sender': row.find_all('td')[2].text,
                    'Date': row.find_all('td')[3].span['title'],
-                   'ID': re.search(r'id=(\d+)', row.find_all('td')[1].a['href']).group(1)}
+                   'ID': re.search(r'id=(\d+)', row.find_all('td')[1].a['href']).group(1),
+                   'Unread': True if 'inbox-message--unread' in row['class'] else False
+            }
+
+    def inbox_conv(self, conv_id):
+        soup = bs4(session.base_get('inbox.php', params={'action':'viewconv', 'id': conv_id}).text)
+        messages = []
+        print soup.find_all('div', id=re.compile('$message.*'), class_="forum-post")
+        for m in soup.find_all('div', id=re.compile('^message'), class_="forum-post"):
+            messages.append(m.find('div', class_="forum-post__body").text.strip())
+        return { 'Subject': soup.find('h2', class_="page__title").text,
+                 'Message': messages
+             }
 
     def remove_snatched_bookmarks(self):
         session.base_post("bookmarks.php", data={'action': 'remove_snatched'})
