@@ -246,7 +246,7 @@ def main():
 
     if args.url:
         parsed_url = parse_qs(urlparse(args.url).query)#['torrentid'][0]
-        if arts.path:
+        if args.path:
             path = arg_file
         elif 'torrentid' in parsed_url:
             path = match_by_torrent(ptpapi.Torrent(ID=parsed_url['torrentid'][0]), arg_file)
