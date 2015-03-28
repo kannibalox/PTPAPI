@@ -17,11 +17,16 @@ def ellipsize(string, length):
 
 def do_inbox(args):
     api = ptpapi.login()
-    if args.message:
-        print api.current_user().inbox_conv(args.message)
+    if args.conversation:
+        conv = api.current_user().inbox_conv(args.conversation)
+        print conv['Subject']
+        for m in conv['Message']:
+            print m
+            print
         return
     msgs = list(api.current_user().inbox())
-    print "ID" + ' '*8 + "Subject" + ' '*25 + 'Sender' + ' '*9
+    print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
+    print '-'*55
     for m in msgs:
         if not args.unread or (args.unread and m['Unread']):
             print "{0: <8}{1: <32}{2: <15}".format(
@@ -65,7 +70,7 @@ if __name__ == '__main__':
 
     inbox_parser = subparsers.add_parser('inbox')
     inbox_parser.add_argument('-u', '--unread', help="Only show unread messages", action="store_true")
-    inbox_parser.add_argument('-m', '--message', help="Get the text of a specific message", type=int)
+    inbox_parser.add_argument('-c', '--conversation', help="Get the messages of a specific conversation", type=int)
     inbox_parser.set_defaults(func=do_inbox)
 
     args = parser.parse_args()

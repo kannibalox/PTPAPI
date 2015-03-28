@@ -43,8 +43,8 @@ class User:
             ratings.append((movieID, r))
         return ratings
 
-"""Define some additional methods that only apply to the logged in user."""
 class CurrentUser(User):
+    """Defines some additional methods that only apply to the logged in user."""
     def inbox(self):
         soup = bs4(session.base_get('inbox.php').text)
         for row in soup.find(id="messageformtable").tbody.find_all('tr'):
@@ -58,7 +58,6 @@ class CurrentUser(User):
     def inbox_conv(self, conv_id):
         soup = bs4(session.base_get('inbox.php', params={'action':'viewconv', 'id': conv_id}).text)
         messages = []
-        print soup.find_all('div', id=re.compile('$message.*'), class_="forum-post")
         for m in soup.find_all('div', id=re.compile('^message'), class_="forum-post"):
             messages.append(m.find('div', class_="forum-post__body").text.strip())
         return { 'Subject': soup.find('h2', class_="page__title").text,
