@@ -16,5 +16,6 @@ setup(
         'scripts/ptp-reseed',
         'scripts/ptp-bookmarks',
         'scripts/ptp-hnrs',
+        'scripts/ptp-trump',
     ],
 )

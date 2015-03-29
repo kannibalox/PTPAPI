@@ -1,5 +1,6 @@
 #!/bin/env python
 import re
+import os.path
 import logging
 from urlparse import urlparse, parse_qs
 
@@ -12,9 +13,13 @@ def main():
     parser = argparse.ArgumentParser(description='Automatically download trumped torrents')
     parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
+    parser.add_argument('-d', '--directory', help="The directory to save the files to")
     
     args = parser.parse_args()
     logging.basicConfig(level=args.loglevel)
+
+    if args.directory:
+            os.chdir(args.directory)            
 
     api = ptpapi.login()
     for m in api.current_user().inbox():
