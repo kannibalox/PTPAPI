@@ -1,8 +1,10 @@
 #!/bin/env python
 # Download hnr files to specified directory
 import os
+import os.path
 import argparse
 import logging
+import subprocess
 
 import ptpapi
 
@@ -12,6 +14,8 @@ def main():
     parser = argparse.ArgumentParser(description="Download HnR torrent files")
     parser.add_argument('-d','--destination', help="The destination folder", default=os.getcwd())
     parser.add_argument('-n','--no-unzip', help="Do not try to automatically unzip file", action="store_true")
+    parser.add_argument('-q','--quiet', help="Suppress outpuit", action="store_const", dest="loglevel", const=logging.CRITICAL)
+    parser.add_argument('-v','--verbose', help="Print extra information", action="store_const", dest="loglevel", const=logging.INFO)
     parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
 
     args = parser.parse_args()
@@ -20,13 +24,15 @@ def main():
     logging.basicConfig(level=args.loglevel)
             
     os.chdir(args.destination)
+    zip_data = api.current_user().hnr_zip()
+    if zip_data is None:
+        logger.error("No HNRs found to create zip file from.")
+        return
     with open('hnr.zip', 'wb') as fh:
-        fh.write(api.hnr_zip().content)
-    if not args.no_unzip:
-        try:
-            subprocess.call(['unzip', 'hnr.zip'])
-        except OSError:
-            pass
+        fh.write(api.current_user().hnr_zip().content)
+    if not args.no_unzip and os.path.isfile('hnr.zip'):
+        subprocess.call(['unzip', 'hnr.zip'])
         os.remove('hnr.zip')
+        
                             
 main()

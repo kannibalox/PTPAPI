@@ -74,4 +74,8 @@ class CurrentUser(User):
         session.base_post("bookmarks.php", data={'action': 'remove_uploaded'})
 
     def hnr_zip(self):
-        return session.base_get('snatchlist.php', params={'action':'hnrzip'})
+        z = session.base_get('snatchlist.php', params={'action':'hnrzip'})
+        if z.headers['Content-Type'] == 'application/zip':
+            return z
+        else:
+            return None
