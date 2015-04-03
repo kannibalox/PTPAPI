@@ -37,7 +37,14 @@ def do_inbox(args):
 def do_download(args):
     api = ptpapi.login()
     for arg in args.turl:
-        t = ptpapi.Torrent(parse_qs(urlparse(arg).query)['torrentid'][0])
+        url_args = parse_qs(urlparse(arg).query)
+        if 'torrentid' in url_args:
+            t = ptpapi.Torrent(url_args['torrentid'][0])
+        elif 'action' in url_args and url_args['action'][0] == 'download':
+            t = ptpapi.Torrent(url_args['id'][0])
+        else:
+            logger.warning('URL {0} doesn\'t appear to be a PTP torrent link.'.format(arg))
+            continue
         t.download_to_file()        
 
 def do_search(args):
