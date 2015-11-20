@@ -108,7 +108,7 @@ class API:
 
     def contest_leaders(self):
         logger.debug("Fetching contest leaderboard")
-        soup = bs4(session.base_get("contestleaders.php").content)
+        soup = bs4(session.base_get("contestleaders.php").content, "html.parser")
         ret_array = []
         for cell in soup.find('table', class_='table--panel-like').find('tbody').find_all('tr'):
             ret_array.append((cell.find_all('td')[1].get_text(), cell.find_all('td')[2].get_text()))

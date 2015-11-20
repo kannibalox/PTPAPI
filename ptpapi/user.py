@@ -35,7 +35,7 @@ class User:
         """Fetch a list of rated movies
 
         :rtype: array of tuples with a Movie and a rating out of 100"""
-        soup = bs4(session.base_get('user.php', params={'id': self.ID, 'action': 'ratings'}).text)
+        soup = bs4(session.base_get('user.php', params={'id': self.ID, 'action': 'ratings'}).text, "html.parser")
         ratings = []
         for row in soup.find(id='ratings_table').tbody.find_all('tr'):
             movieID = re.search(r'id=(\d+)', row.find(class_='l_movie')['href']).group(1)
@@ -46,7 +46,7 @@ class User:
 class CurrentUser(User):
     """Defines some additional methods that only apply to the logged in user."""
     def inbox(self):
-        soup = bs4(session.base_get('inbox.php').text)
+        soup = bs4(session.base_get('inbox.php').text, "html.parser")
         for row in soup.find(id="messageformtable").tbody.find_all('tr'):
             yield {'Subject': row.find_all('td')[1].text.encode('UTF-8').strip(),
                    'Sender': row.find_all('td')[2].text,
@@ -56,13 +56,14 @@ class CurrentUser(User):
             }
 
     def inbox_conv(self, conv_id):
-        soup = bs4(session.base_get('inbox.php', params={'action':'viewconv', 'id': conv_id}).text)
+        soup = bs4(session.base_get('inbox.php', params={'action':'viewconv', 'id': conv_id}).text, "html.parser")
         messages = []
         for m in soup.find_all('div', id=re.compile('^message'), class_="forum-post"):
             messages.append(m.find('div', class_="forum-post__body").text.strip())
-        return { 'Subject': soup.find('h2', class_="page__title").text,
-                 'Message': messages
-             }
+        return {
+            'Subject': soup.find('h2', class_="page__title").text,
+            'Message': messages
+        }
 
     def remove_snatched_bookmarks(self):
         session.base_post("bookmarks.php", data={'action': 'remove_snatched'})
