@@ -28,7 +28,7 @@ class PTPAPIException(Exception):
 class API:
     def __init__(self, username=None, password=None, passkey=None):
         j = None
-        cookiesFile = config.get('Main', 'cookiesFile')
+        cookiesFile = os.path.expanduser(config.get('Main', 'cookiesFile'))
         logger.info("Initiating login sequence.")
         password = (password or config.get('PTP', 'password'))
         username = (username or config.get('PTP', 'username'))
