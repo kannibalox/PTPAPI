@@ -76,12 +76,12 @@ class API:
 
     def __save_cookie(self):        
         with open(self.cookiesFile, 'w') as fh:
-            logger.debug("Pickling HTTP cookies to %s" % cfile)
+            logger.debug("Pickling HTTP cookies to %s" % self.cookiesFile)
             pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fh)
 
     def __load_cookies(self):
         with open(self.cookiesFile) as fh:
-            logger.debug("Unpickling HTTP cookies from file %s" % cfile)
+            logger.debug("Unpickling HTTP cookies from file %s" % self.cookiesFile)
             session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fh))
 
     def current_user(self):
