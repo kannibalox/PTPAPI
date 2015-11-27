@@ -6,7 +6,7 @@ from urlparse import parse_qs, urlparse
 from bs4 import BeautifulSoup as bs4
 
 from session import session
-from api import PTPAPIException
+from error import PTPAPIException
 
 logger = logging.getLogger(__name__)
 

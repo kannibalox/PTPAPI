@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup as bs4
 
 from session import session
 from torrent import Torrent
-from api import PTPAPIException
+from error import PTPAPIException
 
 logger = logging.getLogger(__name__)
 

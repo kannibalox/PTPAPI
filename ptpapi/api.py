@@ -13,6 +13,7 @@ from config import config
 from session import session
 from movie import Movie
 from user import CurrentUser
+from error import PTPAPIException
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +21,6 @@ logger = logging.getLogger(__name__)
 def login(**kwargs):
     """Simple helper function"""
     return API(**kwargs)
-
-
-class PTPAPIException(Exception):
-    """A generic exception to designate module-specific errors"""
-    pass
 
 
 class API:
