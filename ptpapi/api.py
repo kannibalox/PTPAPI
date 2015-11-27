@@ -28,22 +28,23 @@ class PTPAPIException(Exception):
 class API:
     def __init__(self, username=None, password=None, passkey=None):
         j = None
-        cookiesFile = os.path.expanduser(config.get('Main', 'cookiesFile'))
+        self.cookiesFile = os.path.expanduser(config.get('Main', 'cookiesFile'))
         logger.info("Initiating login sequence.")
         password = (password or config.get('PTP', 'password'))
         username = (username or config.get('PTP', 'username'))
         passkey = (passkey or config.get('PTP', 'passkey'))
-        if os.path.isfile(cookiesFile):
-            self.__load_cookies(cookiesFile)
+        if os.path.isfile(self.cookiesFile):
+            self.__load_cookies()
             # A really crude test to see if we're logged in
             session.max_redirects = 1
             try:
                 r = session.base_get('torrents.php')
             except requests.exceptions.TooManyRedirects:
-                os.remove(cookiesFile)
+                if os.path.isfile(self.cookiesFile):
+                    os.remove(self.cookiesFile)
                 session.cookies = requests.cookies.RequestsCookieJar()
             session.max_redirects = 3
-        if not os.path.isfile(cookiesFile):
+        if not os.path.isfile(self.cookiesFile):
             if not password or not passkey or not username:
                 raise PTPAPIException("Not enough info provided to log in.")
             try:
@@ -63,7 +64,7 @@ class API:
                         r.raise_for_status()
             if j["Result"] != "Ok":
                 raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % j)
-            self.__save_cookie(cookiesFile)
+            self.__save_cookie()
             # Get some information that will be useful for later
             r = session.base_get('index.php')
         logger.info("Login successful.")
@@ -72,17 +73,16 @@ class API:
 
     def logout(self):
         """Forces a logout."""
-        cookiesFile = config.get('Main', 'cookiesFile')
-        os.remove(cookiesFile)
+        os.remove(self.cookiesFile)
         return session.base_get('logout.php', params={'auth': self.auth_key})
 
-    def __save_cookie(self, cfile):        
-        with open(cfile, 'w') as fh:
+    def __save_cookie(self):        
+        with open(self.cookiesFile, 'w') as fh:
             logger.debug("Pickling HTTP cookies to %s" % cfile)
             pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fh)
 
-    def __load_cookies(self, cfile):
-        with open(cfile) as fh:
+    def __load_cookies(self):
+        with open(self.cookiesFile) as fh:
             logger.debug("Unpickling HTTP cookies from file %s" % cfile)
             session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fh))
 
