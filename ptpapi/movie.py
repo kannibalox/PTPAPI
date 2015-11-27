@@ -1,12 +1,15 @@
 import re
 import logging
+from datetime import datetime
 
 from bs4 import BeautifulSoup as bs4
 
 from session import session
 from torrent import Torrent
+from api import PTPAPIException
 
 logger = logging.getLogger(__name__)
+
 
 class Movie:
     """A class representing a movie"""
@@ -40,8 +43,8 @@ class Movie:
 
     def load_json_data(self, basic=True, overwrite=False):
         self.data.update(session.base_get("torrents.php",
-                                params={'id': self.ID,
-                                        'json': '1'}).json())
+                                          params={'id': self.ID,
+                                                  'json': '1'}).json())
         self.conv_json_torrents()
 
     def conv_json_torrents(self):
@@ -50,7 +53,7 @@ class Movie:
             self.data['Torrents'] = [Torrent(data=t) for t in torrents]
 
     def load_html_data(self, basic=True, overwrite=False):
-        soup = bs4(session.base_get("torrents.php", params={'id':self.ID}).text, "html.parser")
+        soup = bs4(session.base_get("torrents.php", params={'id': self.ID}).text, "html.parser")
         self.data['Cover'] = soup.find('img', class_='sidebar-cover-image')['src']
         # Title and Year
         match = re.match(r'(.*) \[(\d{4})\]', soup.find('h2', class_='page__title').encode_contents())
@@ -67,7 +70,7 @@ class Movie:
             filediv = soup.find("div", id="files_%s" % t.ID)
             t.data['Filelist'] = {}
             for e in filediv.find("tbody").find_all("tr"):
-                bytesize = e("td")[1]("span")[0]['title'].replace(",","").replace(' bytes', '')
+                bytesize = e("td")[1]("span")[0]['title'].replace(",", "").replace(' bytes', '')
                 t.data['Filelist'][e("td")[0].string] = bytesize
             # Check if trumpable
             if soup.find(id="trumpable_%s" % t.ID):

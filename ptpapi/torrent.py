@@ -1,16 +1,36 @@
 import re
 import os
 import logging
+from urlparse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup as bs4
 
 from session import session
+from api import PTPAPIException
 
 logger = logging.getLogger(__name__)
 
+
 class Torrent:
     def __init__(self, ID=None, data=None):
-        self.movieJsonKeys = ['Quality', 'Source', 'Container', 'UploadTime', 'Codec', 'Leechers', 'Seeders', 'Snatched', 'ReleaseName', 'GoldenPopcorn', 'Checked', 'RemasterTitle', 'GroupId', 'Scene', 'Resolution', 'Size']
+        self.movieJsonKeys = [
+            'Quality',
+            'Source',
+            'Container',
+            'UploadTime',
+            'Codec',
+            'Leechers',
+            'Seeders',
+            'Snatched',
+            'ReleaseName',
+            'GoldenPopcorn',
+            'Checked',
+            'RemasterTitle',
+            'GroupId',
+            'Scene',
+            'Resolution',
+            'Size'
+        ]
         self.torrentJsonKeys = ['Description', 'Nfo']
         self.movieHtmlKeys = ['Filelist']
         if data:
@@ -35,7 +55,7 @@ class Torrent:
 
     def __nonzero__(self):
         return self.ID is not None
-        
+
     def __getattr__(self, name):
         if name not in self.data or self.data[name] is None:
             if name in self.movieJsonKeys:
@@ -54,7 +74,7 @@ class Torrent:
         filediv = soup.find("div", id="files_%s" % self.ID)
         self.data['Filelist'] = {}
         for e in filediv.find("tbody").find_all("tr"):
-            bytesize = e("td")[1]("span")[0]['title'].replace(",","").replace(' bytes', '')
+            bytesize = e("td")[1]("span")[0]['title'].replace(",", "").replace(' bytes', '')
             self.data['Filelist'][e("td")[0].string] = bytesize
         # Check if trumpable
         if soup.find("trumpable_%s" % self.ID):
@@ -70,7 +90,7 @@ class Torrent:
         movieData = session.base_get('torrents.php',
                                      params={'torrentid': self.ID,
                                              'id': self.data['GroupId'],
-                                             'json':'1'}).json()
+                                             'json': '1'}).json()
         for t in movieData['Torrents']:
             if int(t['Id']) == int(self.ID):
                 self.data.update(t)
@@ -82,9 +102,9 @@ class Torrent:
             movie_url = session.base_get('torrents.php', params={'torrentid': self.ID}).url
             self.data['GroupId'] = re.search(r'\?id=(\d+)', movie_url).group(1)
         self.data.update(session.base_get('torrents.php',
-                                          params = {'action': 'description',
-                                                    'id': self.data['GroupId'],
-                                                    'torrentid': self.ID }).json())
+                                          params={'action': 'description',
+                                                  'id': self.data['GroupId'],
+                                                  'torrentid': self.ID}).json())
 
     def download(self):
         r = session.base_get("torrents.php",
@@ -95,8 +115,8 @@ class Torrent:
 
     def download_to_file(self, dest=None, name=None):
         r = session.base_get("torrents.php",
-                        params={'action': 'download',
-                                'id': self.ID})
+                             params={'action': 'download',
+                                     'id': self.ID})
         if not dest:
             dest = os.getcwd()
         if not name:

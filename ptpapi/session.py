@@ -7,6 +7,7 @@ from config import config
 
 logger = logging.getLogger(__name__)
 
+
 class TokenSession(requests.Session):
     """Allows rate-limiting requests to the site"""
     def __init__(self, tokens, fill_rate):
@@ -17,7 +18,7 @@ class TokenSession(requests.Session):
         self._tokens = float(tokens)
         self.fill_rate = float(fill_rate)
         self.timestamp = time()
-        
+
     def consume(self, tokens):
         """Consume tokens from the bucket. Returns True if there were
         sufficient tokens otherwise False."""
@@ -42,7 +43,7 @@ class TokenSession(requests.Session):
             self._tokens = min(self.capacity, self._tokens + delta)
             self.timestamp = now
         return self._tokens
-        
+
     tokens = property(get_tokens)
 
     def base_get(self, url_path, *args, **kwargs):

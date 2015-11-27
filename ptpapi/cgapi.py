@@ -1,16 +1,13 @@
 import re
-import argparse
-import json
-import ConfigParser
 
-import requests
 from bs4 import BeautifulSoup
 
 from config import config
 from session import session
 
+
 class CGAPI:
-    HttpHeader = { "User-Agent": "Wget/1.13.4" }
+    HttpHeader = {"User-Agent": "Wget/1.13.4"}
 
     def __init__(self):
         self.baseURL = "http://cinemageddon.net"
@@ -20,15 +17,15 @@ class CGAPI:
         password = (password or config.get('CG', 'password'))
         username = (username or config.get('CG', 'username'))
         response = session.post(self.baseURL + "/takelogin.php",
-                                data = {"username": username,
-                                        "password": password}).text
-        if response.find( 'action="takelogin.php"' ) != -1:
+                                data={"username": username,
+                                      "password": password}).text
+        if response.find('action="takelogin.php"') != -1:
             print response
             raise CGAPIException("Failed to log in")
         self.loggedIn = True
 
     def search(self, search_args):
-        search_string = '&'.join([ "%s=%s" % (key, value) for (key, value) in search_args.items() ])
+        search_string = '&'.join(["%s=%s" % (key, value) for (key, value) in search_args.items()])
         soup = self.__httpRequest('/browse.php?%s' % search_string)
         return self.getTorrentListInfo(soup)
 
@@ -69,6 +66,7 @@ class CGAPI:
             print "Not logged in"
             return None
         return session.get(url, data=data).json()
+
 
 class CGAPIException(Exception):
     pass

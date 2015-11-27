@@ -1,7 +1,5 @@
 #!/bin/env python
-import sys
 import logging
-from pprint import pprint
 from urlparse import urlparse, parse_qs
 
 import argparse
@@ -10,10 +8,12 @@ import ptpapi
 
 logger = logging.getLogger(__name__)
 
+
 def ellipsize(string, length):
     if len(string) > length:
         return string[:length-3] + '...'
     return string
+
 
 def do_inbox(args):
     api = ptpapi.login()
@@ -31,11 +31,11 @@ def do_inbox(args):
         if not args.unread or (args.unread and m['Unread']):
             print "{0: <8}{1: <32}{2: <15}".format(
                 m['ID'],
-                ellipsize(m['Subject'], 30), 
+                ellipsize(m['Subject'], 30),
                 ellipsize(m['Sender'], 15))
 
+
 def do_download(args):
-    api = ptpapi.login()
     for arg in args.turl:
         url_args = parse_qs(urlparse(arg).query)
         if 'torrentid' in url_args:
@@ -45,7 +45,8 @@ def do_download(args):
         else:
             logger.warning('URL {0} doesn\'t appear to be a PTP torrent link.'.format(arg))
             continue
-        t.download_to_file()        
+        t.download_to_file()
+
 
 def do_search(args):
     terms = {}
@@ -57,13 +58,17 @@ def do_search(args):
             terms[term[0]] = term[2]
     api = ptpapi.login()
     for m in api.search(terms):
-        print "%s (%s) - %s - [%s] - [PTP %s, IMDB %s]" % (m.Title, m.Year, ', '.join([d['Name'] for d in m.Directors]), '/'.join(m.Tags), m.GroupId, (m.ImdbId or '0'))
+        print "%s (%s) - %s - [%s] - [PTP %s, IMDB %s]" % (m.Title, m.Year,
+                                                           ', '.join([d['Name'] for d in m.Directors]),
+                                                           '/'.join(m.Tags), m.GroupId, (m.ImdbId or '0'))
         for t in m.Torrents:
-            print "- %s/%s/%s/%s - %s - %s/%s/%s" % (t.Codec, t.Container, t.Source, t.Resolution, t.ReleaseName, t.Snatched, t.Seeders, t.Leechers)
+            print "- %s/%s/%s/%s - %s - %s/%s/%s" % (t.Codec, t.Container, t.Source, t.Resolution,
+                                                     t.ReleaseName, t.Snatched, t.Seeders, t.Leechers)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extensible command line utility for PTP')
-    parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
+    parser.add_argument('--debug', help='Print lots of debugging statements',
+                        action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
     subparsers = parser.add_subparsers()
 

@@ -12,18 +12,20 @@ import requests
 from config import config
 from session import session
 from movie import Movie
-from user import User, CurrentUser
-from torrent import Torrent
+from user import CurrentUser
 
 logger = logging.getLogger(__name__)
+
 
 def login(**kwargs):
     """Simple helper function"""
     return API(**kwargs)
 
+
 class PTPAPIException(Exception):
     """A generic exception to designate module-specific errors"""
     pass
+
 
 class API:
     def __init__(self, username=None, password=None, passkey=None):
@@ -49,11 +51,11 @@ class API:
                 raise PTPAPIException("Not enough info provided to log in.")
             try:
                 r = session.base_post('ajax.php?action=login',
-                                 data={"username": username,
-                                       "password": password,
-                                       "passkey": passkey })
+                                      data={"username": username,
+                                            "password": password,
+                                            "passkey": passkey})
                 j = r.json()
-            except ValueError as e:
+            except ValueError:
                 if r.status_code == 200:
                     raise PTPAPIException("Could not parse returned json data.")
                 else:
@@ -74,7 +76,7 @@ class API:
         os.remove(self.cookiesFile)
         return session.base_get('logout.php', params={'auth': self.auth_key})
 
-    def __save_cookie(self):        
+    def __save_cookie(self):
         with open(self.cookiesFile, 'w') as fh:
             logger.debug("Pickling HTTP cookies to %s" % self.cookiesFile)
             pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fh)
@@ -111,11 +113,12 @@ class API:
         for cell in soup.find('table', class_='table--panel-like').find('tbody').find_all('tr'):
             ret_array.append((cell.find_all('td')[1].get_text(), cell.find_all('td')[2].get_text()))
         return ret_array
-            
+
 
 class Collection(object):
     def __init__(self, ID):
         self.ID = ID
+
 
 class util(object):
     """A class for misc. utilities"""
@@ -128,7 +131,7 @@ class util(object):
         data = []
         for d in re.finditer(r'coverViewJsonData\[\s*\d+\s*\]\s*=\s*({.*});', text):
             data.extend(json.loads(d.group(1))['Movies'])
-        return data 
+        return data
 
     @staticmethod
     def creds_from_conf(filename):
@@ -138,6 +141,6 @@ class util(object):
         :rtype: a diction of the username, password and passkey"""
         config = ConfigParser.ConfigParser()
         config.read(filename)
-        return { 'username': config.get('PTP', 'username'),
-                 'password': config.get('PTP', 'password'),
-                 'passkey': config.get('PTP', 'passkey') }
+        return {'username': config.get('PTP', 'username'),
+                'password': config.get('PTP', 'password'),
+                'passkey': config.get('PTP', 'passkey')}

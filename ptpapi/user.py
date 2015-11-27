@@ -6,6 +6,7 @@ import api
 from session import session
 from movie import Movie
 
+
 class User:
     """A primitive class to represent a user"""
     def __init__(self, ID):
@@ -43,6 +44,7 @@ class User:
             ratings.append((movieID, r))
         return ratings
 
+
 class CurrentUser(User):
     """Defines some additional methods that only apply to the logged in user."""
     def inbox(self):
@@ -52,11 +54,10 @@ class CurrentUser(User):
                    'Sender': row.find_all('td')[2].text,
                    'Date': row.find_all('td')[3].span['title'],
                    'ID': re.search(r'id=(\d+)', row.find_all('td')[1].a['href']).group(1),
-                   'Unread': True if 'inbox-message--unread' in row['class'] else False
-            }
+                   'Unread': True if 'inbox-message--unread' in row['class'] else False}
 
     def inbox_conv(self, conv_id):
-        soup = bs4(session.base_get('inbox.php', params={'action':'viewconv', 'id': conv_id}).text, "html.parser")
+        soup = bs4(session.base_get('inbox.php', params={'action': 'viewconv', 'id': conv_id}).text, "html.parser")
         messages = []
         for m in soup.find_all('div', id=re.compile('^message'), class_="forum-post"):
             messages.append(m.find('div', class_="forum-post__body").text.strip())
@@ -75,7 +76,7 @@ class CurrentUser(User):
         session.base_post("bookmarks.php", data={'action': 'remove_uploaded'})
 
     def hnr_zip(self):
-        z = session.base_get('snatchlist.php', params={'action':'hnrzip'})
+        z = session.base_get('snatchlist.php', params={'action': 'hnrzip'})
         if z.headers['Content-Type'] == 'application/zip':
             return z
         else:
