@@ -59,9 +59,7 @@ class API:
                 else:
                     if r.status_code == 429:
                         logger.critical(r.text.strip())
-                        r.raise_for_status()
-                    else:
-                        r.raise_for_status()
+                    r.raise_for_status()
             if j["Result"] != "Ok":
                 raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % j)
             self.__save_cookie()
