@@ -36,6 +36,7 @@ def do_inbox(args):
 
 
 def do_download(args):
+    api = ptpapi.login()
     for arg in args.turl:
         url_args = parse_qs(urlparse(arg).query)
         if 'torrentid' in url_args:
