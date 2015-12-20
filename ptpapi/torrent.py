@@ -5,6 +5,7 @@ from urlparse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup as bs4
 
+from config import config
 from session import session
 from error import PTPAPIException
 
@@ -118,7 +119,7 @@ class Torrent:
                              params={'action': 'download',
                                      'id': self.ID})
         if not dest:
-            dest = os.getcwd()
+            dest = config.get('Main', 'downloadDirectory')
         if not name:
             name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
         with open(os.path.join(dest, name), 'wb') as fh:

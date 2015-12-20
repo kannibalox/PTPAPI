@@ -5,6 +5,7 @@ import ConfigParser
 confFile = os.path.join(os.environ['HOME'], '.ptpapi.conf')
 
 defaults = {'baseURL': 'https://tls.passthepopcorn.me/',
-            'cookiesFile': '~/.ptp.cookies.txt'}
+            'cookiesFile': '~/.ptp.cookies.txt',
+            'downloadDirectory': '.'}
 config = ConfigParser.ConfigParser(defaults)
 config.read(confFile)
