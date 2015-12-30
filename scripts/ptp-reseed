@@ -200,12 +200,9 @@ def load_torrent(proxy, ID, path):
 def main():
     parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
     parser.add_argument('-u', '--url', help='Permalink to the torrent page')
-    parser.add_argument('files', help='Paths directly to files/directories', nargs='+')
+    parser.add_argument('files', help='Paths directly to files/directories (or `-` to read stdin)', nargs='+')
     parser.add_argument('-n', '--dry-run', help="Don't actually create any files or load torrents", action="store_true")
     parser.add_argument('-a', '--action', help="Method to use when creating files", choices=['hard', 'soft'])
-    parser.add_argument('--loop', help="Run in loop mode to avoid rapid session creation", action="store_true")
-    parser.add_argument('--batch', help='Take a list of file names to process (stdin by default)', type=argparse.FileType('r'),
-                        nargs='?', const=sys.stdin, default=None)
     parser.add_argument('--debug', help='Print lots of debugging statements',
                         action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
@@ -224,38 +221,15 @@ def main():
     # Load PTP API
     ptp = ptpapi.login()
 
-    if args.batch:
-        logger.debug("Reading in file names from {0}".format(args.batch))
-        for line in args.batch:
-            match = match_against_file(ptp, line.rstrip('\n').decode('UTF-8'))
-            if match:
-                if not args.dry_run:
-                    load_torrent(proxy, match.ID, match.path)
-            else:
-                logger.error(u"Could not find match for file {0}".format(line.rstrip('\n').decode('UTF-8')))
-        return
-
-    if args.loop:
-        print "Entering file read loop. Enter 'q', 'quit' or 'exit' to exit the loop."
-        while True:
-            filepath = raw_input('file>>> ').decode('UTF-8')
-            if filepath in ['q', 'quit', 'exit']:
-                break
-            match = match_against_file(ptp, filepath)
-            if match:
-                if not args.dry_run:
-                    load_torrent(proxy, match.ID, match.path)
-            else:
-                logger.error(u"Could not find match for file {0}".format(filepath))
-        return
-
     match = Match(None, None)
 
-    if args.file:
-        arg_file = args.file.decode('UTF-8')
+    if args.file == ['-']:
+        filelist = sys.stdin
+    else:
+        filelist = args.file
 
-    for f in args.files:
-        arg_file = f.decode('UTF-8')
+    for f in filelist:
+        arg_file = f.rstrip('\n').decode('UTF-8')
 
         if args.url:
             parsed_url = parse_qs(urlparse(args.url).query)
