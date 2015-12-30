@@ -29,6 +29,8 @@ password=<password>
 passkey=<passkey>
 ```
 
+The is only the minimum required configuration. See `ptpapi.conf.example` for a full-futured config file with comments.
+
 ## Usage
 
 The three CLI commands are `ptp`, `ptp-reseed`, and `ptp-bookmarks`

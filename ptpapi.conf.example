@@ -1,0 +1,17 @@
+[Main]
+# The base URL to use when making HTTP calls
+#baseURL=https://tls.passthepopcorn.me/
+
+# Where cookies are stored from the site, to reduce the necessary number of logins
+#cookiesFile=~/.ptp.cookies.txt
+
+# The directory to download any .torrent files to (the . means download to the current directory)
+#downloadDirectory=.
+
+[PTP]
+# Your site username
+username=
+# Your site password
+password=
+# Your passkey (can be found on upload.php, it's that random string of number and letters inside the announce URL)
+passkey=
