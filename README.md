@@ -1,6 +1,6 @@
 # PTPAPI
 
-A small API for a mildly popular movie site. The goal was to be able to collect as much information in as few network requests as possible
+A small API for a mildly popular movie site. The goal was to be able to collect as much information in as few network requests as possible.
 
 ## Dependencies
 
