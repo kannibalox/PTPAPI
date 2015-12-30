@@ -124,12 +124,12 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
     return Match(torrent.ID, os.path.join(os.path.dirname(path1), torrent.ReleaseName))
 
 
-def match_by_movie(movie, filename):
+def match_by_movie(movie, filepath):
     logger.debug(u"Attempting to match against movie {0} ({1})".format(movie.ID, movie.Title))
 
     movie.load_html_data()
     for t in movie.Torrents:
-        match = match_by_torrent(t, os.path.abspath(filename))
+        match = match_by_torrent(t, os.path.abspath(filepath))
         if match:
             return Match(t.ID, match)
     return Match(None, None)
