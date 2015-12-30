@@ -7,6 +7,7 @@ import argparse
 import logging
 from time import sleep
 from urlparse import urlparse, parse_qs
+from collections import namedtuple
 
 from pyrobase import bencode
 from pyrocore import config
@@ -15,6 +16,16 @@ from pyrocore.util import load_config, metafile
 import ptpapi
 
 logger = logging.getLogger(__name__)
+
+
+# A tiny class to make code cleaner,
+# as well as possibly making adding something like a confidence indicator easier
+# ID is an integer-as-a-string, and path is filepath
+class Match(namedtuple('Match', 'ID path')):
+    def __nonzero__(self):
+        if self.ID is not None and self.path is not None:
+            return True
+        return False
 
 
 def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
@@ -34,7 +45,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
 
     if len(path1_files) < len(path2_files):
         logger.debug("Too little files to match torrent ({0} locally, {1} in torrent)".format(len(path1_files), len(path2_files)))
-        return None
+        return Match(None, None)
 
     matched_files = {}
     logger.debug("Looking for exact matches")
@@ -48,7 +59,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
     # If the match is 1:1, no need to go through with the rest of the rigmarole
     if len(path2_files) == 0:
         logger.debug("Found exact file match, returning early")
-        return path1
+        return Match(torrent.ID, path1)
 
     logger.debug("Looking for matches with same size and name but different root folder")
     for filename1, size1 in path1_files.items():
@@ -85,7 +96,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
 
     if len(path2_files) > 0:
         logger.debug("Not all files could be matched, returning...")
-        return None
+        return Match(None, None)
 
     # Start creating the matched files
 
@@ -110,7 +121,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
                 os.symlink(os.path.relpath(origin_file, os.path.dirname(file_to_create)), file_to_create)
             elif action == 'hard':
                 os.link(origin_file, file_to_create)
-    return os.path.join(os.path.dirname(path1), torrent.ReleaseName)
+    return Match(torrent.ID, os.path.join(os.path.dirname(path1), torrent.ReleaseName))
 
 
 def match_by_movie(movie, filename):
@@ -120,33 +131,17 @@ def match_by_movie(movie, filename):
     for t in movie.Torrents:
         match = match_by_torrent(t, os.path.abspath(filename))
         if match:
-            return (t.ID, match)
-    return None
+            return Match(t.ID, match)
+    return Match(None, None)
 
 
-def find_by_file(ptp, filepath):
-    filepath = os.path.abspath(filepath)
-    if not os.path.exists(filepath):
-        logger.error(u"File/directory {0} does not exist".format(filepath))
-        return
-    logger.debug("Searching movies by file list")
-    for m in ptp.search({'filelist': os.path.basename(filepath)}):
-        match = match_by_movie(m, filepath)
-        if match:
-            return match
-    match = guess_by_name(ptp, filepath)
-    if match:
-        return match
-    return None
-
-
-def guess_by_name(ptp, filepath, name=None):
+def match_by_guessed_name(ptp, filepath, name=None):
     filepath = os.path.abspath(filepath)
     try:
         import guessit
     except ImportError:
         logger.debug("Error importing 'guessit' module, skipping name guess")
-        return None
+        return Match(None, None)
     logger.debug("Guessing name from filepath with guessit")
     if not name:
         name = os.path.basename(filepath)
@@ -155,10 +150,29 @@ def guess_by_name(ptp, filepath, name=None):
         movies = ptp.search({'searchstr': guess['title']})
         if len(movies) == 0:
             movies = ptp.search({'searchstr': guess['title'], 'inallakas': '1'})
+        if len(movies) == 0:
+            logger.debug("Could not find any movies by search with a guessed name")
         for m in movies:
             match = match_by_movie(m, filepath)
             if match:
                 return match
+    return Match(None, None)
+
+
+def match_against_file(ptp, filepath):
+    filepath = os.path.abspath(filepath)
+    if not os.path.exists(filepath):
+        logger.error(u"File/directory {0} does not exist".format(filepath))
+        return Match(None, None)
+    logger.debug("Searching movies by file list")
+    for m in ptp.search({'filelist': os.path.basename(filepath)}):
+        match = match_by_movie(m, filepath)
+        if match:
+            return match
+    match = match_by_guessed_name(ptp, filepath)
+    if match:
+        return match
+    return None
 
 
 def load_torrent(proxy, ID, path):
@@ -189,7 +203,6 @@ def load_torrent(proxy, ID, path):
 def main():
     parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
     parser.add_argument('-u', '--url', help='Permalink to the torrent page')
-    parser.add_argument('-p', '--path', help='Base directory of the file')
     parser.add_argument('file', help='Path directly to file/directory', nargs='?')
     parser.add_argument('-n', '--dry-run', help="Don't actually create any files or load torrents", action="store_true")
     parser.add_argument('-a', '--action', help="Method to use when creating files", choices=['hard', 'soft'])
@@ -217,10 +230,10 @@ def main():
     if args.batch:
         logger.debug("Reading in file names from {0}".format(args.batch))
         for line in args.batch:
-            match = find_by_file(ptp, line.rstrip('\n').decode('UTF-8'))
+            match = match_against_file(ptp, line.rstrip('\n').decode('UTF-8'))
             if match:
                 if not args.dry_run:
-                    load_torrent(proxy, *match)
+                    load_torrent(proxy, match.ID, match.path)
             else:
                 logger.error(u"Could not find match for file {0}".format(line.rstrip('\n').decode('UTF-8')))
         return
@@ -231,52 +244,38 @@ def main():
             filepath = raw_input('file>>> ').decode('UTF-8')
             if filepath in ['q', 'quit', 'exit']:
                 break
-            match = find_by_file(ptp, filepath)
+            match = match_against_file(ptp, filepath)
             if match:
                 if not args.dry_run:
-                    load_torrent(proxy, *match)
+                    load_torrent(proxy, match.ID, match.path)
             else:
                 logger.error(u"Could not find match for file {0}".format(filepath))
         return
 
-    # These are the two variables absolutely required to load a torrent
-    path = None
-    tID = None
+    match = Match(None, None)
 
     if args.file:
         arg_file = args.file.decode('UTF-8')
 
     if args.url:
         parsed_url = parse_qs(urlparse(args.url).query)
-        if args.path:
-            path = arg_file
-        elif 'torrentid' in parsed_url:
-            path = match_by_torrent(ptpapi.Torrent(ID=parsed_url['torrentid'][0]), arg_file)
-            if path:
-                tID = parsed_url['torrentid'][0]
+        if 'torrentid' in parsed_url:
+            match = match_by_torrent(ptpapi.Torrent(ID=parsed_url['torrentid'][0]), arg_file)
         elif 'id' in parsed_url:
             match = match_by_movie(ptpapi.Movie(ID=parsed_url['id'][0]), arg_file)
-            if match:
-                (tID, path) = match
     elif arg_file:
-        match = find_by_file(ptp, arg_file)
-        if match:
-            (tID, path) = match
+        match = match_against_file(ptp, arg_file)
 
     # Make sure we have the minimum information required
-    if not tID or not path:
+    if not match:
         logger.error("Could not find an associated torrent, cannot reseed")
-        ptp.logout()
         return
 
-    logger.info(u"Found match, now loading torrent {0} to path {1}".format(tID, path))
+    logger.info(u"Found match, now loading torrent {0} to path {1}".format(match.ID, match.path))
     if args.dry_run:
         logger.debug("Stopping before loading")
-        ptp.logout()
         return
-    load_torrent(proxy, tID, path)
-
-    ptp.logout()
+    load_torrent(proxy, match.ID, match.path)
 
     logger.debug("Exiting...")
 
