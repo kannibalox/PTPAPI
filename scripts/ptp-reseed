@@ -193,14 +193,14 @@ def load_torrent(proxy, ID, path):
         except xmlrpclib.Fault:
             pass
     logger.info(u"Torrent loaded at {0}".format(path))
-    proxy.d.directory_base.set(thash, path)
+    proxy.d.directory_base.set(thash, str(path))
     proxy.d.check_hash(thash)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
     parser.add_argument('-u', '--url', help='Permalink to the torrent page')
-    parser.add_argument('files', help='Paths directly to files/directories (or `-` to read stdin)', nargs='+')
+    parser.add_argument('files', help='Paths to files/directories to reseed (or leave blank to read stdin)', nargs='*')
     parser.add_argument('-n', '--dry-run', help="Don't actually create any files or load torrents", action="store_true")
     parser.add_argument('-a', '--action', help="Method to use when creating files", choices=['hard', 'soft'])
     parser.add_argument('--debug', help='Print lots of debugging statements',
@@ -223,10 +223,10 @@ def main():
 
     match = Match(None, None)
 
-    if args.file == ['-']:
+    if args.files == ['-'] or args.files == []:
         filelist = sys.stdin
     else:
-        filelist = args.file
+        filelist = args.files
 
     for f in filelist:
         arg_file = f.rstrip('\n').decode('UTF-8')
