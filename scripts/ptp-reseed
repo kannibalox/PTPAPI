@@ -214,8 +214,9 @@ def main():
     parser.add_argument('-u', '--url', help='Permalink to the torrent page')
     parser.add_argument('files', help='Paths to files/directories to reseed (or leave blank to read stdin)', nargs='*')
     parser.add_argument('-n', '--dry-run', help="Don't actually create any files or load torrents", action="store_true")
-    parser.add_argument('-a', '--action', help="Method to use when creating files", choices=['hard', 'soft'], default='hard')
-    parser.add_argument('-d', '--directory', help="Directory to create any new files in, if necessary", default=None)
+    parser.add_argument('-a', '--action', help="Method to use when creating files", choices=['hard', 'soft'],
+                        default=ptpapi.config.config.get('Reseed', 'action'))
+    parser.add_argument('-d', '--create-in-directory', help="Directory to create any new files in, if necessary", default=None)
     parser.add_argument('--debug', help='Print lots of debugging statements',
                         action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
@@ -260,7 +261,13 @@ def main():
             return
 
         logger.info(u"Found match, now loading torrent {0} to path {1}".format(match.ID, match.path))
-        create_matched_files(match, directory=args.directory, action=args.action, dry_run=args.dry_run)
+        if args.create_in_directory:
+            create_in = args.create_in_directory
+        elif ptpapi.config.config.has_option('Reseed', 'createInDirectory'):
+            create_in = ptpapi.config.config.get('Reseed', 'createInDirectory')
+        else:
+            create_in = None
+        create_matched_files(match, directory=create_in, action=args.action, dry_run=args.dry_run)
         if args.dry_run:
             logger.debug("Stopping before actual load")
             return
