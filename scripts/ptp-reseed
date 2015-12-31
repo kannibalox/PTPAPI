@@ -157,7 +157,7 @@ def match_against_file(ptp, filepath):
 
 def create_matched_files(match, directory=None, action='hard', dry_run=False):
     if dry_run:
-        logger.debug("Dry run, no files will be created")
+        logger.debug("Dry run, no files or directories will be created")
     for origin_file, matched_file in match.matched_files.items():
         origin_file = os.path.join(os.path.dirname(match.path), origin_file)
         if directory is None:
@@ -167,7 +167,8 @@ def create_matched_files(match, directory=None, action='hard', dry_run=False):
         path_to_create = os.path.dirname(file_to_create)
         try:
             logger.debug(u"Creating directory '{0}'".format(path_to_create))
-            os.makedirs(path_to_create)
+            if not dry_run:
+                os.makedirs(path_to_create)
         except OSError as e:
             # Ignore OSError only if the directory already exists
             if e.errno != 17:
