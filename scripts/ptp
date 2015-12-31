@@ -15,8 +15,7 @@ def ellipsize(string, length):
     return string
 
 
-def do_inbox(args):
-    api = ptpapi.login()
+def do_inbox(api, args):
     if args.conversation:
         conv = api.current_user().inbox_conv(args.conversation)
         print conv['Subject']
@@ -38,8 +37,7 @@ def do_inbox(args):
             ellipsize(m['Sender'], 15))
 
 
-def do_download(args):
-    api = ptpapi.login()
+def do_download(api, args):
     for arg in args.turl:
         url_args = parse_qs(urlparse(arg).query)
         if 'torrentid' in url_args:
@@ -52,7 +50,7 @@ def do_download(args):
         t.download_to_file()
 
 
-def do_search(args):
+def do_search(api, args):
     terms = {}
     for arg in args.filter:
         term = arg.partition('=')
@@ -60,7 +58,6 @@ def do_search(args):
             terms['searchstr'] = term[0]
         else:
             terms[term[0]] = term[2]
-    api = ptpapi.login()
     for m in api.search(terms):
         print "%s (%s) - %s - [%s] - [PTP %s, IMDB %s]" % (m.Title, m.Year,
                                                            ', '.join([d['Name'] for d in m.Directors]),
@@ -95,4 +92,6 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=args.loglevel)
 
-    args.func(args)
+    api = ptpapi.login()
+
+    args.func(api, args)
