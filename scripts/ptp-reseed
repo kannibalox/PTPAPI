@@ -7,7 +7,6 @@ import argparse
 import logging
 from time import sleep
 from urlparse import urlparse, parse_qs
-from collections import namedtuple
 
 from pyrobase import bencode
 from pyrocore import config
@@ -22,14 +21,18 @@ logger = logging.getLogger(__name__)
 # as well as possibly making adding something like a confidence indicator easier
 # ID is an integer-as-a-string, and path is filepath
 class Match(object):
-    def __init__(self, ID=None, path=None, matched_files=None):
+    def __init__(self, ID=None, path=None, matched_files={}):
         self.ID = ID
         self.path = path
+        self.matched_files = matched_files
 
     def __nonzero__(self):
         if self.ID is not None and self.path is not None:
             return True
         return False
+
+    def __str__(self):
+        return "<Match {0}:{1}>".format(self.ID, self.path)
 
 
 def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
@@ -101,31 +104,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
     if len(path2_files) > 0:
         logger.debug("Not all files could be matched, returning...")
         return Match(None)
-
-    # Start creating the matched files
-
-    if dry_run:
-        logger.debug("Skipping file creation")
-    else:
-        for origin_file, matched_file in matched_files.items():
-            origin_file = os.path.join(os.path.dirname(path1), origin_file)
-            file_to_create = os.path.join(os.path.dirname(path1), matched_file)
-            path_to_create = os.path.dirname(file_to_create)
-            try:
-                logger.debug(u"Creating directory '{0}'".format(path_to_create))
-                os.makedirs(path_to_create)
-            except OSError as e:
-                if e.errno != 17:
-                    raise
-            if os.path.lexists(file_to_create):
-                logger.debug(u"File '{0}' already exists, skipping creation".format(file_to_create))
-                continue
-            logger.debug(u"Creating file '{0}' from '{1}' via action '{2}'".format(file_to_create, origin_file, action))
-            if action == 'soft':
-                os.symlink(os.path.relpath(origin_file, os.path.dirname(file_to_create)), file_to_create)
-            elif action == 'hard':
-                os.link(origin_file, file_to_create)
-    return Match(torrent.ID, os.path.join(os.path.dirname(path1), torrent.ReleaseName))
+    return Match(torrent.ID, os.path.join(os.path.dirname(path1), torrent.ReleaseName), matched_files)
 
 
 def match_by_movie(movie, filepath):
@@ -135,7 +114,7 @@ def match_by_movie(movie, filepath):
     for t in movie.Torrents:
         match = match_by_torrent(t, os.path.abspath(filepath))
         if match:
-            return Match(t.ID, match)
+            return match
     return Match(None)
 
 
@@ -176,6 +155,34 @@ def match_against_file(ptp, filepath):
     return match_by_guessed_name(ptp, filepath)
 
 
+def create_matched_files(match, directory=None, action='hard', dry_run=False):
+    if dry_run:
+        logger.debug("Dry run, no files will be created")
+    for origin_file, matched_file in match.matched_files.items():
+        origin_file = os.path.join(os.path.dirname(match.path), origin_file)
+        if directory is None:
+            file_to_create = os.path.join(os.path.dirname(match.path), matched_file)
+        else:
+            file_to_create = os.path.join(directory, matched_file)
+        path_to_create = os.path.dirname(file_to_create)
+        try:
+            logger.debug(u"Creating directory '{0}'".format(path_to_create))
+            os.makedirs(path_to_create)
+        except OSError as e:
+            # Ignore OSError only if the directory already exists
+            if e.errno != 17:
+                raise
+        if os.path.lexists(file_to_create):
+            logger.debug(u"File '{0}' already exists, skipping creation".format(file_to_create))
+            continue
+        logger.debug(u"Creating file '{0}' from '{1}' via action '{2}'".format(file_to_create, origin_file, action))
+        if not dry_run:
+            if action == 'soft':
+                os.symlink(os.path.relpath(origin_file, os.path.dirname(file_to_create)), file_to_create)
+            elif action == 'hard':
+                os.link(origin_file, file_to_create)
+
+
 def load_torrent(proxy, ID, path):
     torrent = ptpapi.Torrent(ID=ID)
     torrent_data = torrent.download()
@@ -197,7 +204,7 @@ def load_torrent(proxy, ID, path):
         except xmlrpclib.Fault:
             pass
     logger.info(u"Torrent loaded at {0}".format(path))
-    proxy.d.directory_base.set(thash, str(path))
+    proxy.d.directory_base.set(thash, path)
     proxy.d.check_hash(thash)
 
 
@@ -207,6 +214,7 @@ def main():
     parser.add_argument('files', help='Paths to files/directories to reseed (or leave blank to read stdin)', nargs='*')
     parser.add_argument('-n', '--dry-run', help="Don't actually create any files or load torrents", action="store_true")
     parser.add_argument('-a', '--action', help="Method to use when creating files", choices=['hard', 'soft'], default='hard')
+    parser.add_argument('-d', '--directory', help="Directory to create any new files in, if necessary", default=None)
     parser.add_argument('--debug', help='Print lots of debugging statements',
                         action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
@@ -234,6 +242,7 @@ def main():
 
     for f in filelist:
         arg_file = f.rstrip('\n').decode('UTF-8')
+        logger.debug('Starting reseed attempt on file {0}'.format(arg_file))
 
         if args.url:
             parsed_url = parse_qs(urlparse(args.url).query)
@@ -250,6 +259,7 @@ def main():
             return
 
         logger.info(u"Found match, now loading torrent {0} to path {1}".format(match.ID, match.path))
+        create_matched_files(match, directory=args.directory, action=args.action, dry_run=args.dry_run)
         if args.dry_run:
             logger.debug("Stopping before actual load")
             return
