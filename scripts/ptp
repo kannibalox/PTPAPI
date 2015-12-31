@@ -74,7 +74,8 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers()
 
     search_parser = subparsers.add_parser('search')
-    search_parser.add_argument('filter', help="A list of filter in [field]=[text] format", nargs='*')
+    search_parser.add_argument('filter', help="""A list of filters in [field]=[text] format.
+                               If the '=' is omitted, the field is assumed to be 'name'.""", nargs='+')
     search_parser.set_defaults(func=do_search)
 
     download_parser = subparsers.add_parser('download')
