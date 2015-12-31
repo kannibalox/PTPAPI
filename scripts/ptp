@@ -28,11 +28,14 @@ def do_inbox(args):
     print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
     print '-'*55
     for m in msgs:
-        if not args.unread or (args.unread and m['Unread']):
-            print "{0: <8}{1: <32}{2: <15}".format(
-                m['ID'],
-                ellipsize(m['Subject'], 30),
-                ellipsize(m['Sender'], 15))
+        if args.unread and m['Unread'] is False:
+            continue
+        if args.user is not None and m['Sender'] != args.user:
+            continue
+        print "{0: <8}{1: <32}{2: <15}".format(
+            m['ID'],
+            ellipsize(m['Subject'], 30),
+            ellipsize(m['Sender'], 15))
 
 
 def do_download(args):
@@ -84,6 +87,7 @@ if __name__ == '__main__':
 
     inbox_parser = subparsers.add_parser('inbox')
     inbox_parser.add_argument('-u', '--unread', help="Only show unread messages", action="store_true")
+    inbox_parser.add_argument('--user', help="Filter messages by the sender")
     inbox_parser.add_argument('-c', '--conversation', help="Get the messages of a specific conversation", type=int)
     inbox_parser.set_defaults(func=do_inbox)
 
