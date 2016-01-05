@@ -36,7 +36,7 @@ class Match(object):
 
 
 def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
-    logger.debug(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent.ReleaseName))
+    logger.info(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent.ReleaseName))
 
     path1 = os.path.abspath(filepath)
     path1_files = {}
@@ -98,13 +98,13 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
     logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
     if len(path2_files) > 0:
-        logger.debug("Not all files could be matched, returning...")
+        logger.info("Not all files could be matched, returning...")
         return Match(None)
     return Match(torrent.ID, os.path.dirname(path1), matched_files)
 
 
 def match_by_movie(movie, filepath):
-    logger.debug(u"Attempting to match against movie {0} ({1})".format(movie.ID, movie.Title))
+    logger.info(u"Attempting to match against movie {0} ({1})".format(movie.ID, movie.Title))
 
     movie.load_html_data()
     for t in movie.Torrents:
@@ -119,9 +119,9 @@ def match_by_guessed_name(ptp, filepath, name=None):
     try:
         import guessit
     except ImportError:
-        logger.debug("Error importing 'guessit' module, skipping name guess")
+        logger.warn("Error importing 'guessit' module, skipping name guess")
         return Match(None)
-    logger.debug("Guessing name from filepath with guessit")
+    logger.info("Guessing name from filepath with guessit")
     if not name:
         name = os.path.basename(filepath)
     guess = guessit.guess_movie_info(name)
@@ -143,7 +143,7 @@ def match_against_file(ptp, filepath):
     if not os.path.exists(filepath):
         logger.error(u"File/directory {0} does not exist".format(filepath))
         return Match(None)
-    logger.debug("Searching movies by file list")
+    logger.info("Searching movies by file list")
     for m in ptp.search({'filelist': os.path.basename(filepath)}):
         match = match_by_movie(m, filepath)
         if match:
@@ -153,7 +153,7 @@ def match_against_file(ptp, filepath):
 
 def create_matched_files(match, directory=None, action='hard', dry_run=False):
     if dry_run:
-        logger.debug("Dry run, no files or directories will be created")
+        logger.info("Dry run, no files or directories will be created")
     for origin_file, matched_file in match.matched_files.items():
         origin_file = os.path.join(match.path, origin_file)
         if directory is None:
@@ -171,7 +171,7 @@ def create_matched_files(match, directory=None, action='hard', dry_run=False):
         if os.path.lexists(file_to_create):
             logger.debug(u"File '{0}' already exists, skipping creation".format(file_to_create))
             continue
-        logger.debug(u"Creating file '{0}' from '{1}' via action '{2}'".format(file_to_create, origin_file, action))
+        logger.info(u"Creating file '{0}' from '{1}' via action '{2}'".format(file_to_create, origin_file, action))
         if not dry_run:
             if action == 'soft':
                 os.symlink(origin_file, file_to_create)
@@ -241,7 +241,7 @@ def main():
 
     for f in filelist:
         arg_file = f.rstrip('\n').decode('UTF-8')
-        logger.debug('Starting reseed attempt on file {0}'.format(arg_file))
+        logger.info('Starting reseed attempt on file {0}'.format(arg_file))
 
         if args.url:
             parsed_url = parse_qs(urlparse(args.url).query)
@@ -257,7 +257,6 @@ def main():
             logger.error("Could not find an associated torrent, cannot reseed")
             continue
 
-        logger.info(u"Found match, now loading torrent {0} to path {1}".format(match.ID, match.path))
         if args.create_in_directory:
             create_in = args.create_in_directory
         elif ptpapi.config.config.has_option('Reseed', 'createInDirectory'):
