@@ -60,7 +60,11 @@ class CurrentUser(User):
         soup = bs4(session.base_get('inbox.php', params={'action': 'viewconv', 'id': conv_id}).text, "html.parser")
         messages = []
         for m in soup.find_all('div', id=re.compile('^message'), class_="forum-post"):
-            messages.append(m.find('div', class_="forum-post__body").text.strip())
+            message = {}
+            message['Text'] = m.find('div', class_="forum-post__body").text.strip()
+            message['User'] = m.find('strong').find('a', class_="username").text.strip()
+            message['Time'] = m.find('span', class_="time").text.strip()
+            messages.append(message)
         return {
             'Subject': soup.find('h2', class_="page__title").text,
             'Message': messages

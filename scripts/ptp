@@ -21,8 +21,9 @@ def do_inbox(api, args):
         conv = api.current_user().inbox_conv(args.conversation)
         print conv['Subject']
         for m in conv['Message']:
-            print m
-            print
+            print "{0} - {1}\n".format(m['User'], m['Time'])
+            print m['Text']
+            print '----------------------------'
         return
     msgs = list(api.current_user().inbox())
     print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
@@ -70,9 +71,12 @@ def do_search(api, args):
 
 def do_raw(api, args):
     for u in args.url:
-        path = urlparse(u).path
-        data = ptpapi.session.session.base_get(path).content
-        with open(os.path.basename(path), 'w') as fh:
+        url = urlparse(u)
+        if url.query == '':
+            data = ptpapi.session.session.base_get(url).content
+        else:
+            data = ptpapi.session.session.base_get('?'.join([url.path, url.query])).content
+        with open(os.path.basename(url.path), 'w') as fh:
             fh.write(data)
 
 if __name__ == '__main__':
