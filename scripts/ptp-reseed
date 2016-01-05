@@ -255,7 +255,7 @@ def main():
         # Make sure we have the minimum information required
         if not match:
             logger.error("Could not find an associated torrent, cannot reseed")
-            return
+            continue
 
         logger.info(u"Found match, now loading torrent {0} to path {1}".format(match.ID, match.path))
         if args.create_in_directory:
@@ -268,7 +268,7 @@ def main():
         logger.info(u"Found match, now loading torrent {0} to path {1}".format(match.ID, match.path))
         if args.dry_run:
             logger.debug("Dry-run: Stopping before actual load")
-            return
+            continue
         load_torrent(proxy, match.ID, match.path)
 
     logger.debug("Exiting...")
