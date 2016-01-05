@@ -48,7 +48,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
     elif os.path.isfile(path1):
         path1_files[path1.replace(os.path.dirname(path1) + os.sep, '')] = os.path.getsize(path1)
 
-    path2_files = dict((os.path.join(torrent.ReleaseName, f), int(s)) for f, s in torrent.Filelist.items())
+    path2_files = dict((f, int(s)) for f, s in torrent.Filelist.items())
 
     if len(path1_files) < len(path2_files):
         logger.debug("Too little files to match torrent ({0} locally, {1} in torrent)".format(len(path1_files), len(path2_files)))
@@ -62,11 +62,6 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
             del path1_files[filename]
             del path2_files[filename]
     logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
-
-    # If the match is 1:1, no need to go through with the rest of the rigmarole
-    if len(path2_files) == 0:
-        logger.debug("Found exact file match, returning early")
-        return Match(torrent.ID, path1)
 
     logger.debug("Looking for matches with same size and name but different root folder")
     for filename1, size1 in path1_files.items():
@@ -95,6 +90,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
     for filename1, size1 in path1_files.items():
         for filename2, size2 in path2_files.items():
             if size1 == size2 and path2_files.values().count(size2) == 1:
+                logger.debug("{0} matched with {1}".format(filename1, filename2))
                 matched_files[filename1] = filename2
                 del path1_files[filename1]
                 del path2_files[filename2]
@@ -104,7 +100,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
     if len(path2_files) > 0:
         logger.debug("Not all files could be matched, returning...")
         return Match(None)
-    return Match(torrent.ID, os.path.join(os.path.dirname(path1), torrent.ReleaseName), matched_files)
+    return Match(torrent.ID, os.path.dirname(path1), matched_files)
 
 
 def match_by_movie(movie, filepath):
@@ -159,11 +155,10 @@ def create_matched_files(match, directory=None, action='hard', dry_run=False):
     if dry_run:
         logger.debug("Dry run, no files or directories will be created")
     for origin_file, matched_file in match.matched_files.items():
-        origin_file = os.path.join(os.path.dirname(match.path), origin_file)
+        origin_file = os.path.join(match.path, origin_file)
         if directory is None:
-            file_to_create = os.path.join(os.path.dirname(match.path), matched_file)
-        else:
-            file_to_create = os.path.join(directory, matched_file)
+            directory = match.path
+        file_to_create = os.path.join(directory, matched_file)
         path_to_create = os.path.dirname(file_to_create)
         try:
             logger.debug(u"Creating directory '{0}'".format(path_to_create))
@@ -179,9 +174,11 @@ def create_matched_files(match, directory=None, action='hard', dry_run=False):
         logger.debug(u"Creating file '{0}' from '{1}' via action '{2}'".format(file_to_create, origin_file, action))
         if not dry_run:
             if action == 'soft':
-                os.symlink(os.path.relpath(origin_file, os.path.dirname(file_to_create)), file_to_create)
+                os.symlink(origin_file, file_to_create)
             elif action == 'hard':
                 os.link(origin_file, file_to_create)
+    match.path = directory
+    return match
 
 
 def load_torrent(proxy, ID, path):
@@ -205,7 +202,7 @@ def load_torrent(proxy, ID, path):
         except xmlrpclib.Fault:
             pass
     logger.info(u"Torrent loaded at {0}".format(path))
-    proxy.d.directory_base.set(thash, path)
+    proxy.d.directory.set(thash, path)
     proxy.d.check_hash(thash)
 
 
@@ -267,9 +264,10 @@ def main():
             create_in = ptpapi.config.config.get('Reseed', 'createInDirectory')
         else:
             create_in = None
-        create_matched_files(match, directory=create_in, action=args.action, dry_run=args.dry_run)
+        match = create_matched_files(match, directory=create_in, action=args.action, dry_run=args.dry_run)
+        logger.info(u"Found match, now loading torrent {0} to path {1}".format(match.ID, match.path))
         if args.dry_run:
-            logger.debug("Stopping before actual load")
+            logger.debug("Dry-run: Stopping before actual load")
             return
         load_torrent(proxy, match.ID, match.path)
 

@@ -1,5 +1,6 @@
 import re
 import logging
+import os.path
 from datetime import datetime
 
 from bs4 import BeautifulSoup as bs4
@@ -69,9 +70,11 @@ class Movie:
             # Get file list
             filediv = soup.find("div", id="files_%s" % t.ID)
             t.data['Filelist'] = {}
+            basepath = re.match(r'\/(.*)\/', filediv.find("thead").find_all("div")[1].string).group(1)
             for e in filediv.find("tbody").find_all("tr"):
                 bytesize = e("td")[1]("span")[0]['title'].replace(",", "").replace(' bytes', '')
-                t.data['Filelist'][e("td")[0].string] = bytesize
+                filepath = os.path.join(basepath, e("td")[0].string)
+                t.data['Filelist'][filepath] = bytesize
             # Check if trumpable
             if soup.find(id="trumpable_%s" % t.ID):
                 t.data['Trumpable'] = [s.get_text() for s in soup.find(id="trumpable_%s" % t.ID).find_all('span')]
