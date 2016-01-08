@@ -62,7 +62,11 @@ class CurrentUser(User):
         for m in soup.find_all('div', id=re.compile('^message'), class_="forum-post"):
             message = {}
             message['Text'] = m.find('div', class_="forum-post__body").text.strip()
-            message['User'] = m.find('strong').find('a', class_="username").text.strip()
+            username = m.find('strong').find('a', class_="username")
+            if username is None:
+                message['User'] = 'System'
+            else:
+                message['User'] = username.text.strip()
             message['Time'] = m.find('span', class_="time").text.strip()
             messages.append(message)
         return {
