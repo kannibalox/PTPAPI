@@ -148,7 +148,7 @@ def match_against_file(ptp, filepath):
         match = match_by_movie(m, filepath)
         if match:
             return match
-    return match_by_guessed_name(ptp, filepath)
+    return Match(None)
 
 
 def create_matched_files(match, directory=None, action='hard', dry_run=False):
@@ -250,7 +250,15 @@ def main():
             elif 'id' in parsed_url:
                 match = match_by_movie(ptpapi.Movie(ID=parsed_url['id'][0]), arg_file)
         elif arg_file:
-            match = match_against_file(ptp, arg_file)
+            for matchType in ptpapi.config.config.get('Reseed', 'findBy').split(','):
+                if matchType == 'filename':
+                    match = match_against_file(ptp, arg_file)
+                elif matchType == 'title':
+                    match = match_by_guessed_name(ptp, arg_file)
+                else:
+                    logger.error("Match type {0} not recognized, skipping".format(matchType))
+                if match:
+                    break
 
         # Make sure we have the minimum information required
         if not match:

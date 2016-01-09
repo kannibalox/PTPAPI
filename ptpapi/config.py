@@ -16,6 +16,7 @@ downloadDirectory=.
 
 [Reseed]
 action=hard
+findBy=filename,title
 """
 config = ConfigParser.ConfigParser()
 config.readfp(StringIO.StringIO(default))

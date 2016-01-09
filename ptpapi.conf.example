@@ -24,3 +24,9 @@ passkey=
 # Where to create any new files
 # Defaults to the same directory as where the reseed match was found
 #createInDirectory=
+
+# The methods to use when searching for a file, in order
+# Available methods:
+# * filename
+# * title
+#findBy=filename,title
