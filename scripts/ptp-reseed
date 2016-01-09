@@ -126,7 +126,7 @@ def match_by_guessed_name(ptp, filepath, name=None):
         name = os.path.basename(filepath)
     guess = guessit.guess_movie_info(name)
     if guess['title']:
-        movies = ptp.search({'searchstr': guess['title']})
+        movies = ptp.search({'searchstr': guess['title'], 'year': guess['year']})
         if len(movies) == 0:
             movies = ptp.search({'searchstr': guess['title'], 'inallakas': '1'})
         if len(movies) == 0:
