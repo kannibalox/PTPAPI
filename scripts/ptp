@@ -72,10 +72,7 @@ def do_search(api, args):
 def do_raw(api, args):
     for u in args.url:
         url = urlparse(u)
-        if url.query == '':
-            data = ptpapi.session.session.base_get(url).content
-        else:
-            data = ptpapi.session.session.base_get('?'.join([url.path, url.query])).content
+        data = ptpapi.session.session.base_get('?'.join([url.path, url.query])).content
         with open(os.path.basename(url.path), 'w') as fh:
             fh.write(data)
 
