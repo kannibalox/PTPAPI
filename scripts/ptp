@@ -4,6 +4,7 @@ import os.path
 from urlparse import urlparse, parse_qs
 
 import argparse
+import tempita
 
 import ptpapi
 
@@ -56,6 +57,15 @@ def do_search(api, args):
     terms = {}
     movies = []
     torrents = []
+    if args.movie_format:
+        movie_template = tempita.Template(args.movie_format)
+    else:
+        movie_template = tempita.Template("{{Title}} ({{Year}}) - {{','.join([d['Name'] for d in Directors])}} - [{{'/'.join(Tags)}}] - [PTP {{GroupId}}, IMDB tt{{ImdbId}}]")
+    if args.torrent_format:
+        torrent_template = tempita.Template(args.torrent_format)
+    else:
+        torrent_template = tempita.Template("- {{Codec}}/{{Container}}/{{Source}}/{{Resolution}} - {{ReleaseName}} - {{Snatched}}/{{Seeders}}/{{Leechers}}")
+
     for arg in args.search_terms:
         url_args = parse_qs(urlparse(arg).query)
         if 'torrentid' in url_args:
@@ -80,12 +90,9 @@ def do_search(api, args):
             else:
                 logger.info("No match found for for movie %s (%s)" % (m.Title, m.Year))
         else:
-            print "%s (%s) - %s - [%s] - [PTP %s, IMDB %s]" % (m.Title, m.Year,
-                                                               ', '.join([d['Name'] for d in m.Directors]),
-                                                               '/'.join(m.Tags), m.GroupId, (m.ImdbId or '0'))
+            print movie_template.substitute(m.data)
             for t in m.Torrents:
-                print "- %s/%s/%s/%s - %s - %s/%s/%s" % (t.Codec, t.Container, t.Source, t.Resolution,
-                                                         t.ReleaseName, t.Snatched, t.Seeders, t.Leechers)
+                print torrent_template.substitute(t.data)
     for t in torrents:
         if args.download and not args.dry_run:
             t.download_to_file()
@@ -111,6 +118,8 @@ if __name__ == '__main__':
     search_parser.add_argument('-n', '--dry-run', help="Don't actually download any torrents", action='store_true')
     search_parser.add_argument('-f', '--filter', help="Define a filter to download movies with",
                                default=ptpapi.config.config.get('Main', 'filter'))
+    search_parser.add_argument('--movie-format', help="Set the output for movies", default=None)
+    search_parser.add_argument('--torrent-format', help="Set the output for torrents", default=None)
     search_parser.set_defaults(func=do_search)
 
     download_parser = subparsers.add_parser('download')

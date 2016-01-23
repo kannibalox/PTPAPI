@@ -7,6 +7,7 @@ setup(
     install_requires=[
         "requests",
         "beautifulsoup4",
+        "tempita"
     ],
     extras_require={
         'reseed': ['guessit>=2']
