@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Torrent:
     def __init__(self, ID=None, data=None):
-        self.keysFrom = {
+        self.key_finder = {
             'movie_json': [
                 'Quality',
                 'Source',
@@ -67,7 +67,7 @@ class Torrent:
 
     def __getitem__(self, name):
         if name not in self.data or self.data[name] is None:
-            for k, v in self.keysFrom.iteritems():
+            for k, v in self.key_finder.iteritems():
                 if name in v:
                     getattr(self, "load_%s_data" % k)()
         return self.data[name]
