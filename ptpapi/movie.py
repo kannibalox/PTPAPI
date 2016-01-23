@@ -104,7 +104,7 @@ class Movie:
                 '1080p': (lambda t: t.Resolution == '1080p'),
                 'HD': (lambda t: t.Quality == 'High Definition'),
                 'SD': (lambda t: t.Quality == 'Standard Definition'),
-                'Remux': (lambda t: 'remux' in t.RemasterTitle.lower()),
+                'remux': (lambda t: 'remux' in t.RemasterTitle.lower()),
                 'x264': (lambda t: t.Codec == 'x264')
                 }
             for (name, func) in filter_dict.items():
