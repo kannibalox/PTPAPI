@@ -29,7 +29,7 @@ password=<password>
 passkey=<passkey>
 ```
 
-The is only the minimum required configuration. See `ptpapi.conf.example` for a full-futured config file with comments.
+This is only the minimum required configuration. See `ptpapi.conf.example` for a full-futured config file with comments.
 
 ## Usage
 
