@@ -96,6 +96,9 @@ def do_search(api, args):
     for t in torrents:
         if args.download and not args.dry_run:
             t.download_to_file()
+        else:
+            t.load_movie_json_data()
+            print torrent_template.substitute(t.data)
 
 def do_raw(api, args):
     for u in args.url:
