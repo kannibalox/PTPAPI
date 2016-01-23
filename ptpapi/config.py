@@ -13,6 +13,7 @@ default = """
 baseURL=https://tls.passthepopcorn.me/
 cookiesFile=~/.ptp.cookies.txt
 downloadDirectory=.
+filter=
 
 [Reseed]
 action=hard

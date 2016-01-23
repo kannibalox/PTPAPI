@@ -8,10 +8,11 @@ import ptpapi
 
 
 def main():
+    filters = ptpapi.config.config.get('Main', 'filter')
     parser = argparse.ArgumentParser(description="Download a number of bookmarks")
     parser.add_argument('-d', '--destination', help="The destination folder", default=os.getcwd())
     parser.add_argument('-n', '--number', help='Number of torrents to download', default=1, type=int)
-    parser.add_argument('-f', '--filters', help='A string filter of the torrents to download', required=True)
+    parser.add_argument('-f', '--filters', help='A string filter of the torrents to download', default=filters)
     parser.add_argument('-c', '--cred', help='Credential file', default="creds.ini")
     parser.add_argument('--debug', help='Print lots of debugging statements', action="store_const", dest="loglevel",
                         const=logging.DEBUG, default=logging.WARNING)
@@ -22,6 +23,10 @@ def main():
     args = parser.parse_args()
 
     logging.basicConfig(level=args.loglevel)
+
+    if not filters:
+        logging.error("Filters not defined, cannot run")
+        return
 
     api = ptpapi.login()
 

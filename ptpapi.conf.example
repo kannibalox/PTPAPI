@@ -8,6 +8,10 @@
 # The directory to download any .torrent files to (the . means download to the current directory)
 #downloadDirectory=.
 
+# A filter to select a torrent automatically from a movie
+# See the README for more information
+#filter=
+
 [PTP]
 # Your site username
 username=
