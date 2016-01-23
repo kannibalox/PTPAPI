@@ -18,6 +18,21 @@ class Movie:
         self.torrents = []
         self.jsonKeys = ['ImdbId', 'ImdbRating', 'ImdbVoteCount', 'Torrents']
         self.htmlKeys = ['Title', 'Year', 'Cover', 'Tags']
+        self.key_finder = {
+            'json': [
+                'ImdbId',
+                'ImdbRating',
+                'ImdbVoteCount',
+                'Torrents'
+            ],
+            'html': [
+                'Title',
+                'Year',
+                'Cover',
+                'Tags'
+            ]
+        }
+
         if data:
             self.data = data
             self.conv_json_torrents()
@@ -34,12 +49,11 @@ class Movie:
     def __str__(self):
         return "<ptpapi.Movie ID %s>" % self.ID
 
-    def __getattr__(self, name):
-        if name not in self.data:
-            if name in self.jsonKeys:
-                self.load_json_data()
-            elif name in self.htmlKeys:
-                self.load_html_data()
+    def __getitem__(self, name):
+        if name not in self.data or self.data[name] is None:
+            for k, v in self.key_finder.iteritems():
+                if name in v:
+                    getattr(self, "load_%s_data" % k)()
         return self.data[name]
 
     def load_json_data(self, basic=True, overwrite=False):
