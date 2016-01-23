@@ -14,26 +14,34 @@ logger = logging.getLogger(__name__)
 
 class Torrent:
     def __init__(self, ID=None, data=None):
-        self.movieJsonKeys = [
-            'Quality',
-            'Source',
-            'Container',
-            'UploadTime',
-            'Codec',
-            'Leechers',
-            'Seeders',
-            'Snatched',
-            'ReleaseName',
-            'GoldenPopcorn',
-            'Checked',
-            'RemasterTitle',
-            'GroupId',
-            'Scene',
-            'Resolution',
-            'Size'
-        ]
-        self.torrentJsonKeys = ['Description', 'Nfo']
-        self.movieHtmlKeys = ['Filelist']
+        self.keysFrom = {
+            'movie_json': [
+                'Quality',
+                'Source',
+                'Container',
+                'UploadTime',
+                'Codec',
+                'Leechers',
+                'Seeders',
+                'Snatched',
+                'ReleaseName',
+                'GoldenPopcorn',
+                'Checked',
+                'RemasterTitle',
+                'GroupId',
+                'Scene',
+                'Resolution',
+                'Size'
+            ],
+            'torrent_json': [
+                'Description',
+                'Nfo'
+            ],
+            'movie_html': [
+                'Filelist'
+            ]
+        }
+
         if data:
             self.data = data
             if 'Id' in data:
@@ -57,15 +65,21 @@ class Torrent:
     def __nonzero__(self):
         return self.ID is not None
 
-    def __getattr__(self, name):
+    def __getitem__(self, name):
         if name not in self.data or self.data[name] is None:
-            if name in self.movieJsonKeys:
-                self.load_movie_json_data()
-            if name in self.torrentJsonKeys:
-                self.load_torrent_json_data()
-            if name in self.movieHtmlKeys:
-                self.load_movie_html_data()
+            for k, v in self.keysFrom.iteritems():
+                if name in v:
+                    getattr(self, "load_%s_data" % k)()
         return self.data[name]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+    def items(self):
+        return self.data.items()
+
+    def keys(self):
+        return self.data.keys()
 
     def load_movie_html_data(self):
         if 'GroupId' not in self.data or not self.data['GroupId']:
