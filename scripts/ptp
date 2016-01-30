@@ -70,17 +70,19 @@ def do_search(api, args):
         url_args = parse_qs(urlparse(arg).query)
         if 'torrentid' in url_args:
             torrents.append(ptpapi.Torrent(url_args['torrentid'][0]))
-            continue
+        elif 'id' in url_args:
+            movies.append(ptpapi.Movie(url_args['id'][0]))
         elif 'action' in url_args and url_args['action'][0] == 'download':
             torrents.append(ptpapi.Torrent(url_args['id'][0]))
-            continue
-        term = arg.partition('=')
-        if not term[2]:
-            terms['searchstr'] = term[0]
         else:
-            terms[term[0]] = term[2]
+            term = arg.partition('=')
+            if not term[2]:
+                terms['searchstr'] = term[0]
+            else:
+                terms[term[0]] = term[2]
     # If we haven't found any URL-looking things
     if not movies and terms:
+        logger.debug("Performing search with terms {0}".format(terms))
         movies = api.search(terms)
     for m in movies:
         if args.download:
