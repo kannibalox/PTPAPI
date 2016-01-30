@@ -52,21 +52,13 @@ def do_download(api, args):
             continue
         t.download_to_file()
 
-
-def do_search(api, args):
-    terms = {}
-    movies = []
+def parse_terms(termlist):
     torrents = []
-    if args.movie_format is not None:
-        movie_template = tempita.Template(args.movie_format)
-    else:
-        movie_template = tempita.Template("{{Title}} ({{Year}}) - {{','.join([d['Name'] for d in Directors])}} - [{{'/'.join(Tags)}}] - [PTP {{GroupId}}, IMDB tt{{ImdbId}}]")
-    if args.torrent_format is not None:
-        torrent_template = tempita.Template(args.torrent_format)
-    else:
-        torrent_template = tempita.Template("- {{Codec}}/{{Container}}/{{Source}}/{{Resolution}} - {{ReleaseName}} - {{Snatched}}/{{Seeders}}/{{Leechers}}")
+    movies = []
+    terms = {}
+    target = 'torrents'
 
-    for arg in args.search_terms:
+    for arg in termlist:
         url_args = parse_qs(urlparse(arg).query)
         if 'torrentid' in url_args:
             torrents.append(ptpapi.Torrent(url_args['torrentid'][0]))
@@ -88,12 +80,27 @@ def do_search(api, args):
                     if term[0] in v:
                         term = (k, term[1], term[2])
                 terms[term[0]] = term[2]
+    return (target, movies, torrents, terms)
+
+
+def do_search(api, args):
+    (target, movies, torrents, terms) = parse_terms(args.search_terms)
+    if args.movie_format is not None:
+        movie_template = tempita.Template(args.movie_format)
+    else:
+        movie_template = tempita.Template("{{Title}} ({{Year}}) - {{','.join([d['Name'] for d in Directors])}} - [{{'/'.join(Tags)}}] - [PTP {{GroupId}}, IMDB tt{{ImdbId}}]")
+    if args.torrent_format is not None:
+        torrent_template = tempita.Template(args.torrent_format)
+    else:
+        torrent_template = tempita.Template("- {{Codec}}/{{Container}}/{{Source}}/{{Resolution}} - {{ReleaseName}} - {{Snatched}}/{{Seeders}}/{{Leechers}}")
+
     # If we haven't found any URL-looking things
     if not movies and terms:
         logger.debug("Performing search with terms {0}".format(terms))
         movies = api.search(terms)
-    for m in movies:
-        if args.download:
+
+    if args.download:
+        for m in movies:
             match = m.best_match(args.filter)
             if match and not args.dry_run:
                 match.download_to_file()
@@ -101,14 +108,17 @@ def do_search(api, args):
                 logger.info("Dry-run, not downloading %s" % match)
             else:
                 logger.info("No match found for for movie %s (%s)" % (m['Title'], m['Year']))
-        else:
+        for t in torrents:
+            if args.download and not args.dry_run:
+                t.download_to_file()
+            elif args.dry_run:
+                logger.info("Dry-run, not downloading %s" % t)
+    else:
+        for m in movies:
             print movie_template.substitute(m)
             for t in m['Torrents']:
                 print torrent_template.substitute(t)
-    for t in torrents:
-        if args.download and not args.dry_run:
-            t.download_to_file()
-        else:
+        for t in torrents:
             print torrent_template.substitute(t)
 
 
