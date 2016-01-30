@@ -8,6 +8,9 @@ setup(
         "requests",
         "beautifulsoup4",
     ],
+    extras_require={
+        'reseed': ['guessit>=2']
+    },
     packages=[
         'ptpapi',
     ],

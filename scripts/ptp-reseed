@@ -124,7 +124,7 @@ def match_by_guessed_name(ptp, filepath, name=None):
     logger.info("Guessing name from filepath with guessit")
     if not name:
         name = os.path.basename(filepath)
-    guess = guessit.guess_movie_info(name)
+    guess = guessit.guessit(name)
     if guess['title']:
         search_params = {'searchstr': guess['title']}
         if 'year' in guess:
