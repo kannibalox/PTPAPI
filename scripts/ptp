@@ -70,7 +70,10 @@ def parse_terms(termlist):
         else:
             term = arg.partition('=')
             if not term[2]:
-                terms['searchstr'] = term[0]
+                if term[0] == 'bookmarks':
+                    target = 'bookmarks'
+                else:
+                    terms['searchstr'] = term[0]
             else:
                 term_map = {
                     'taglist': [ 'genre', 'genres', 'tags' ],
@@ -95,9 +98,13 @@ def do_search(api, args):
         torrent_template = tempita.Template("- {{Codec}}/{{Container}}/{{Source}}/{{Resolution}} - {{ReleaseName}} - {{Snatched}}/{{Seeders}}/{{Leechers}}")
 
     # If we haven't found any URL-looking things
-    if not movies and terms:
-        logger.debug("Performing search with terms {0}".format(terms))
-        movies = api.search(terms)
+    if not movies and not torrents:
+        if target == 'torrents':
+            logger.debug("Searching all torrents with {0}".format(terms))
+            movies = api.search(terms)
+        elif target == 'bookmarks':
+            logger.debug("Searching bookmarks with {0}".format(terms))
+            movies = api.current_user().bookmarks(search_terms=terms)
 
     if args.download:
         for m in movies:
