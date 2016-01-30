@@ -40,18 +40,6 @@ def do_inbox(api, args):
             ellipsize(m['Sender'], 15))
 
 
-def do_download(api, args):
-    for arg in args.turl:
-        url_args = parse_qs(urlparse(arg).query)
-        if 'torrentid' in url_args:
-            t = ptpapi.Torrent(url_args['torrentid'][0])
-        elif 'action' in url_args and url_args['action'][0] == 'download':
-            t = ptpapi.Torrent(url_args['id'][0])
-        else:
-            logger.warning('URL {0} doesn\'t appear to be a PTP torrent link.'.format(arg))
-            continue
-        t.download_to_file()
-
 def parse_terms(termlist):
     torrents = []
     movies = []
@@ -170,11 +158,6 @@ if __name__ == '__main__':
     search_parser.add_argument('--movie-format', help="Set the output for movies", default=None)
     search_parser.add_argument('--torrent-format', help="Set the output for torrents", default=None)
     search_parser.set_defaults(func=do_search)
-
-    download_parser = subparsers.add_parser('download')
-    add_verbosity_args(download_parser)
-    download_parser.add_argument('turl', help="A list of torrent URLs to download from", nargs='+', metavar='torrent URL')
-    download_parser.set_defaults(func=do_download)
 
     inbox_parser = subparsers.add_parser('inbox', help='Reads messages in your inbox')
     add_verbosity_args(inbox_parser)
