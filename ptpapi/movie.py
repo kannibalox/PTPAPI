@@ -17,7 +17,7 @@ class Movie:
     def __init__(self, ID=None, data=None):
         self.torrents = []
         self.jsonKeys = ['ImdbId', 'ImdbRating', 'ImdbVoteCount', 'Torrents']
-        self.htmlKeys = ['Title', 'Year', 'Cover', 'Tags']
+        self.htmlKeys = ['Title', 'Year', 'Cover', 'Tags', 'Directors']
         self.key_finder = {
             'json': [
                 'ImdbId',
@@ -85,6 +85,9 @@ class Movie:
         for tagbox in soup.find_all('div', class_="box_tags"):
             for t in tagbox.find_all("li"):
                 self.data['Tags'].append(t.find('a').string)
+        self.data['Directors'] = []
+        for director in soup.find('h2', class_='page__title').find_all('a', class_='artist-info-link'):
+            self.data['Directors'].append({'Name': director.string})
         # File list & trumpability
         for t in self['Torrents']:
             # Get file list
