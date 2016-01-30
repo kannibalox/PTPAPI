@@ -71,7 +71,10 @@ def do_search(api, args):
         if 'torrentid' in url_args:
             torrents.append(ptpapi.Torrent(url_args['torrentid'][0]))
         elif 'id' in url_args:
-            movies.append(ptpapi.Movie(url_args['id'][0]))
+            if 'action' in url_args:
+                torrents.append(ptpapi.Torrent(url_args['id'][0]))
+            else:
+                movies.append(ptpapi.Movie(url_args['id'][0]))
         elif 'action' in url_args and url_args['action'][0] == 'download':
             torrents.append(ptpapi.Torrent(url_args['id'][0]))
         else:
@@ -89,6 +92,8 @@ def do_search(api, args):
             match = m.best_match(args.filter)
             if match and not args.dry_run:
                 match.download_to_file()
+            elif args.dry_run:
+                logger.info("Dry-run, not downloading %s" % match)
             else:
                 logger.info("No match found for for movie %s (%s)" % (m['Title'], m['Year']))
         else:
