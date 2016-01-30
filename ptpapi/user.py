@@ -19,11 +19,11 @@ class User:
     def __str__(self):
         return "<ptpapi.User ID %s>" % self.ID
 
-    def bookmarks(self):
+    def bookmarks(self, search_terms={}):
         """Fetch a list of movies the user has bookmarked
 
         :rtype: array of Movies"""
-        r = session.base_get('bookmarks.php', params={'id': self.ID})
+        r = session.base_get('bookmarks.php', params=search_terms.update({'id': self.ID}))
         movies = []
         for m in api.util.snarf_cover_view_data(r.text):
             m['Torrents'] = []
