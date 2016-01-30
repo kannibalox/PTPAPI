@@ -59,8 +59,12 @@ def parse_terms(termlist):
     target = 'torrents'
 
     for arg in termlist:
-        url_args = parse_qs(urlparse(arg).query)
-        if 'torrentid' in url_args:
+        url = urlparse(arg)
+        url_args = parse_qs(url.query)
+        if url.path == '/collages.php':
+            target = 'collage'
+            terms['id'] = url_args['id'][0]
+        elif 'torrentid' in url_args:
             torrents.append(ptpapi.Torrent(url_args['torrentid'][0]))
         elif 'id' in url_args:
             if 'action' in url_args and url_args['action'][0] == 'download':
@@ -105,6 +109,9 @@ def do_search(api, args):
         elif target == 'bookmarks':
             logger.debug("Searching bookmarks with {0}".format(terms))
             movies = api.current_user().bookmarks(search_terms=terms)
+        elif target == 'collage':
+            logger.debug("Searching collage {0} with {1}".format(terms['id'], terms))
+            movies = api.collage(terms['id'], terms)
 
     if args.download:
         for m in movies:
