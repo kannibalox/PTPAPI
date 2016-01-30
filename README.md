@@ -31,13 +31,47 @@ passkey=<passkey>
 
 This is only the minimum required configuration. See `ptpapi.conf.example` for a full-futured config file with comments.
 
+## Concepts
+
+### Filters
+
+Filters were designed as a way to take a full movie group, and narrow it down to a single torrent. A filter consists of multiple subfilters, where the first subfilter to match will download the torrent, and if not, the next subfilter will be checked. If none of the subfilters match, no download will occur. For instance, the filter `smallest GP,720p scene,largest` would attempt to download the smallest GP. If there are no GPs, it will try to find a 720p scene encode. If it can't find either of those, it will just pick the largest torrent available.
+
+The full list of possible values for picking encodes is:
+* `GP`
+* `Scene`
+* `576p` or `720p` or `1080p`
+* `HD` or `SD`
+* `Remux`
+
+Note that it's possible to have two incompatible values, e.g. `GP` and `Scene`, but this simply means the subfilter won't ever match a torrent, and it will always be skipped over.
+
+The possible values for sorting are:
+* `most recent`
+* `smallest`
+* `seeded` (the number of seeds)
+* `largest`
+
 ## Usage
 
 The three CLI commands are `ptp`, `ptp-reseed`, and `ptp-bookmarks`
 
 ### `ptp`
 
-This is a generally utility to do various things inside PTP. As of right now it can download files, search the site for movies, and list message in your inbox. See `ptp help` for more information.
+This is a generally utility to do various things inside PTP. As of right now it can download files, search the site for movies, and list message in your inbox.
+
+See `ptp help` for more information.
+
+#### `ptp search`
+
+This subcommand lets you search the site for movies. It can take movie and permalinks, as well as search by arbitrary parameters. For instance, `ptp search year=1980-2000 taglist=sci.fi`.
+
+There are a couple aliases to make life easier:
+
+* `genre`, `genres`, `tags` -> `taglist`
+* `name` -> `searchstr`
+
+In addition, [Tempita](http://pythonpaste.org/tempita/) can be used for custom formatting. For instance, `ptp search --movie-format="" --torrent-format="{{UploadTime}} - {{ReleaseName}}" year=1980-2000 taglist=sci.fi grouping=no`
 
 ### `ptp-reseed`
 
@@ -57,25 +91,9 @@ By default the script looks for exact matches against file names and sizes. If y
 
 This can download bookmarked torrents based on a human language filter. The basic syntax looks like `ptp-bookmarks -f <filter>`.
 
-The filter can consist of multiple subfilters, where the first subfilter to match will download the torrent, and if not, the next subfilter will be checked. For instance, the filter `smallest GP,720p scene,largest` would attempt to download the smallest GP. If there are no GPs, it will try to find a 720p scene encode. If it can't find either of those, it will just pick the largest torrent availables.
-
-The full list of possible values for picking encodes is:
-* `GP`
-* `Scene`
-* `576p` or `720p` or `1080p`
-* `HD` or `SD`
-* `Remux`
-
-It's possible to have two incompatible values, e.g. `GP` and `Scene`, but this simply means the subfilter won't ever match a torrent, and it will always be skipped over.
-
-The possible values for sorting are:
-* `most recent`
-* `smallest`
-* `seeded` (the number of seeds)
-* `largest`
 
 See `ptp-bookmarks --help` for more information.
 
 ### Notes
 
-I did this mostly for fun and to serve my limited needs, which is why it's not as polished as it could be. Pull requests are welcomed.
+I did this mostly for fun and to serve my limited needs, which is why it's not as polished as it could be, and will probably change frequently.  Pull requests are welcomed.
