@@ -36,7 +36,7 @@ class Match(object):
 
 
 def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
-    logger.info(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent.ReleaseName))
+    logger.info(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent['ReleaseName']))
 
     path1 = os.path.abspath(filepath)
     path1_files = {}
@@ -48,7 +48,7 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
     elif os.path.isfile(path1):
         path1_files[path1.replace(os.path.dirname(path1) + os.sep, '')] = os.path.getsize(path1)
 
-    path2_files = dict((f, int(s)) for f, s in torrent.Filelist.items())
+    path2_files = dict((f, int(s)) for f, s in torrent['Filelist'].items())
 
     if len(path1_files) < len(path2_files):
         logger.debug("Too little files to match torrent ({0} locally, {1} in torrent)".format(len(path1_files), len(path2_files)))
@@ -103,10 +103,10 @@ def match_by_torrent(torrent, filepath, dry_run=False, action='hard'):
 
 
 def match_by_movie(movie, filepath):
-    logger.info(u"Attempting to match against movie {0} ({1})".format(movie.ID, movie.Title))
+    logger.info(u"Attempting to match against movie {0} ({1})".format(movie.ID, movie['Title']))
 
     movie.load_html_data()
-    for t in movie.Torrents:
+    for t in movie['Torrents']:
         match = match_by_torrent(t, os.path.abspath(filepath))
         if match:
             return match

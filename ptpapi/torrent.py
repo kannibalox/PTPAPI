@@ -108,6 +108,9 @@ class Torrent:
                                              'json': '1'}).json()
         for t in movieData['Torrents']:
             if int(t['Id']) == int(self.ID):
+                # Fill in any optional fields
+                for key in ['RemasterTitle']:
+                    self.data[key] = ''
                 self.data.update(t)
                 break
 

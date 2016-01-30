@@ -80,7 +80,7 @@ class Movie:
             for t in tagbox.find_all("li"):
                 self.data['Tags'].append(t.find('a').string)
         # File list & trumpability
-        for t in self.Torrents:
+        for t in self.data['Torrents']:
             # Get file list
             filediv = soup.find("div", id="files_%s" % t.ID)
             t.data['Filelist'] = {}
@@ -108,29 +108,29 @@ class Movie:
         current_sort = None
         for p in profiles:
             logger.debug("Attempting to match movie to profile: %s" % p)
-            matches = self.Torrents
+            matches = self.data['Torrents']
             filter_dict = {
-                'gp': (lambda t: t.GoldenPopcorn),
-                'scene': (lambda t: t.Scene),
-                '576p': (lambda t: t.Resolution == '576p'),
-                '480p': (lambda t: t.Resolution == '480p'),
-                '720p': (lambda t: t.Resolution == '720p'),
-                '1080p': (lambda t: t.Resolution == '1080p'),
-                'HD': (lambda t: t.Quality == 'High Definition'),
-                'SD': (lambda t: t.Quality == 'Standard Definition'),
-                'remux': (lambda t: 'remux' in t.RemasterTitle.lower()),
-                'x264': (lambda t: t.Codec == 'x264')
-                }
+                'gp': (lambda t: t['GoldenPopcorn']),
+                'scene': (lambda t: t['Scene']),
+                '576p': (lambda t: t['Resolution'] == '576p'),
+                '480p': (lambda t: t['Resolution'] == '480p'),
+                '720p': (lambda t: t['Resolution'] == '720p'),
+                '1080p': (lambda t: t['Resolution'] == '1080p'),
+                'HD': (lambda t: t['Quality'] == 'High Definition'),
+                'SD': (lambda t: t['Quality'] == 'Standard Definition'),
+                'remux': (lambda t: 'remux' in t['RemasterTitle'].lower()),
+                'x264': (lambda t: t['Codec'] == 'x264')
+            }
             for (name, func) in filter_dict.items():
                 if name.lower() in p:
                     logger.debug("Filtering movies by parameter %s" % name)
                     matches = [t for t in matches if func(t)]
                 sort_dict = {
-                    'most recent': (True, (lambda t: datetime.strptime(t.UploadTime, "%Y-%m-%d %H:%M:%S"))),
-                    'smallest': (False, (lambda t: t.Size)),
-                    'seeded': (True, (lambda t: t.Seeders)),
-                    'largest': (True, (lambda t: t.Size)),
-                    }
+                    'most recent': (True, (lambda t: datetime.strptime(t['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
+                    'smallest': (False, (lambda t: t['Size'])),
+                    'seeded': (True, (lambda t: t['Seeders'])),
+                    'largest': (True, (lambda t: t['Size'])),
+                }
             for name, (rev, sort) in sort_dict.items():
                 if name in p:
                     logger.debug("Sorting by parameter %s" % name)
