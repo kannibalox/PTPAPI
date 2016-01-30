@@ -56,6 +56,12 @@ class Movie:
                     getattr(self, "load_%s_data" % k)()
         return self.data[name]
 
+    def items(self):
+        return self.data.items()
+
+    def __setitem__(self, key, value):
+                self.data[key] = value
+
     def load_json_data(self, basic=True, overwrite=False):
         self.data.update(session.base_get("torrents.php",
                                           params={'id': self.ID,
@@ -80,7 +86,7 @@ class Movie:
             for t in tagbox.find_all("li"):
                 self.data['Tags'].append(t.find('a').string)
         # File list & trumpability
-        for t in self.data['Torrents']:
+        for t in self['Torrents']:
             # Get file list
             filediv = soup.find("div", id="files_%s" % t.ID)
             t.data['Filelist'] = {}

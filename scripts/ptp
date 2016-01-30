@@ -92,7 +92,7 @@ def do_search(api, args):
             else:
                 logger.info("No match found for for movie %s (%s)" % (m.Title, m.Year))
         else:
-            print movie_template.substitute(m.data)
+            print movie_template.substitute(m)
             for t in m['Torrents']:
                 print torrent_template.substitute(t)
     for t in torrents:
