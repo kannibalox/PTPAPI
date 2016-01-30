@@ -90,7 +90,7 @@ def do_search(api, args):
             if match and not args.dry_run:
                 match.download_to_file()
             else:
-                logger.info("No match found for for movie %s (%s)" % (m.Title, m.Year))
+                logger.info("No match found for for movie %s (%s)" % (m['Title'], m['Year']))
         else:
             print movie_template.substitute(m)
             for t in m['Torrents']:
