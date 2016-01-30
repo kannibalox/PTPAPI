@@ -112,6 +112,8 @@ def do_search(api, args):
         elif target == 'collage':
             logger.debug("Searching collage {0} with {1}".format(terms['id'], terms))
             movies = api.collage(terms['id'], terms)
+        if args.limit:
+            movies = movies[:args.limit]
 
     if args.download:
         for m in movies:
@@ -155,6 +157,7 @@ if __name__ == '__main__':
                                If the '=' is omitted, the field is assumed to be 'name'.""", nargs='+', metavar='term')
     search_parser.add_argument('-d', '--download', help="Download any movies found", action="store_true")
     search_parser.add_argument('-n', '--dry-run', help="Don't actually download any torrents", action='store_true')
+    search_parser.add_argument('-l', '--limit', help="Limit search results to N movies", default=None, type=int)
     search_parser.add_argument('-f', '--filter', help="Define a filter to download movies with",
                                default=ptpapi.config.config.get('Main', 'filter'))
     search_parser.add_argument('--movie-format', help="Set the output for movies", default=None)
