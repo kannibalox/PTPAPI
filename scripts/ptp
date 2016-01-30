@@ -82,6 +82,13 @@ def do_search(api, args):
             if not term[2]:
                 terms['searchstr'] = term[0]
             else:
+                term_map = {
+                    'taglist': [ 'genre', 'genres', 'tags' ],
+                    'name': [ 'searchstr' ]
+                }
+                for k, v in term_map.items():
+                    if term[0] in v:
+                        term = (k, term[1], term[2])
                 terms[term[0]] = term[2]
     # If we haven't found any URL-looking things
     if not movies and terms:
