@@ -145,15 +145,21 @@ def do_raw(api, args):
         with open(os.path.basename(url.path), 'w') as fh:
             fh.write(data)
 
+
+def add_verbosity_args(p):
+    p.add_argument('--debug', help='Print lots of debugging statements',
+                        action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
+    p.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
+    p.add_argument('-q', '--quiet', help='Hide most messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extensible command line utility for PTP')
-    parser.add_argument('--debug', help='Print lots of debugging statements',
-                        action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
-    parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
-    parser.add_argument('-q', '--quiet', help='Hide most messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
+    add_verbosity_args(parser)
     subparsers = parser.add_subparsers()
 
     search_parser = subparsers.add_parser('search', help='Search for or download movies')
+    add_verbosity_args(search_parser)
     search_parser.add_argument('search_terms', help="""A list of terms in [field]=[text] format.
                                If the '=' is omitted, the field is assumed to be 'name'.""", nargs='+', metavar='term')
     search_parser.add_argument('-d', '--download', help="Download any movies found", action="store_true")
@@ -166,16 +172,19 @@ if __name__ == '__main__':
     search_parser.set_defaults(func=do_search)
 
     download_parser = subparsers.add_parser('download')
+    add_verbosity_args(download_parser)
     download_parser.add_argument('turl', help="A list of torrent URLs to download from", nargs='+', metavar='torrent URL')
     download_parser.set_defaults(func=do_download)
 
     inbox_parser = subparsers.add_parser('inbox', help='Reads messages in your inbox')
+    add_verbosity_args(inbox_parser)
     inbox_parser.add_argument('-u', '--unread', help="Only show unread messages", action="store_true")
     inbox_parser.add_argument('--user', help="Filter messages by the sender")
     inbox_parser.add_argument('-c', '--conversation', help="Get the messages of a specific conversation", type=int)
     inbox_parser.set_defaults(func=do_inbox)
 
     raw_parser = subparsers.add_parser('raw', help='Fetch the raw HTML of pages')
+    add_verbosity_args(raw_parser)
     raw_parser.add_argument('url', help="A list of urls to download", nargs='+')
     raw_parser.set_defaults(func=do_raw)
 
