@@ -110,6 +110,17 @@ class API:
             ret_array.append((cell.find_all('td')[1].get_text(), cell.find_all('td')[2].get_text()))
         return ret_array
 
+    def collage(self, ID, search_terms):
+        search_terms['id'] = ID
+        r = session.base_get('collages.php', params=search_terms)
+        movies = []
+        for m in util.snarf_cover_view_data(r.text):
+            m['Torrents'] = []
+            for g in m['GroupingQualities']:
+                m['Torrents'].extend(g['Torrents'])
+            movies.append(Movie(data=m))
+        return movies
+
 
 class Collection(object):
     def __init__(self, ID):
