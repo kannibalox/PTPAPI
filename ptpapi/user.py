@@ -23,7 +23,8 @@ class User:
         """Fetch a list of movies the user has bookmarked
 
         :rtype: array of Movies"""
-        r = session.base_get('bookmarks.php', params=search_terms.update({'id': self.ID}))
+        search_terms.update({'userid': self.ID})
+        r = session.base_get('bookmarks.php', params=search_terms)
         movies = []
         for m in api.util.snarf_cover_view_data(r.text):
             m['Torrents'] = []
