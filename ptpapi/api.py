@@ -121,7 +121,6 @@ class API:
             movies.append(Movie(data=m))
         return movies
 
-
     def log(self):
         soup = bs4(session.base_get('/log.php').content)
         ret_array = []
@@ -129,6 +128,7 @@ class API:
             ret_array.append((message.find('span', class_='time')['title'],
                               message.find('span', class_='log__message').get_text().lstrip()))
         return ret_array
+
 
 class Collection(object):
     def __init__(self, ID):
