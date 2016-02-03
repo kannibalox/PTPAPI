@@ -132,6 +132,14 @@ def do_raw(api, args):
             fh.write(data)
 
 
+def do_log(api, args):
+    msgs = api.log()
+    if args.reverse:
+        msgs.reverse()
+    for time, msg in msgs:
+        print time, msg
+
+
 def add_verbosity_args(p):
     p.add_argument('--debug', help='Print lots of debugging statements',
                         action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
@@ -168,6 +176,11 @@ if __name__ == '__main__':
     add_verbosity_args(raw_parser)
     raw_parser.add_argument('url', help="A list of urls to download", nargs='+')
     raw_parser.set_defaults(func=do_raw)
+
+    log_parser = subparsers.add_parser('log', help='Show the log of recent events')
+    add_verbosity_args(log_parser)
+    log_parser.add_argument('-r', '--reverse', help='Sort in reverse', action='store_true')
+    log_parser.set_defaults(func=do_log)
 
     args = parser.parse_args()
 

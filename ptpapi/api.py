@@ -122,6 +122,14 @@ class API:
         return movies
 
 
+    def log(self):
+        soup = bs4(session.base_get('/log.php').content)
+        ret_array = []
+        for message in soup.find('table').find('tbody').find_all('tr'):
+            ret_array.append((message.find('span', class_='time')['title'],
+                              message.find('span', class_='log__message').get_text().lstrip()))
+        return ret_array
+
 class Collection(object):
     def __init__(self, ID):
         self.ID = ID
