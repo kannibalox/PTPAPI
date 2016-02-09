@@ -69,8 +69,8 @@ def parse_terms(termlist):
                     terms['searchstr'] = term[0]
             else:
                 term_map = {
-                    'taglist': [ 'genre', 'genres', 'tags' ],
-                    'name': [ 'searchstr' ]
+                    'taglist': ['genre', 'genres', 'tags'],
+                    'name': ['searchstr']
                 }
                 for k, v in term_map.items():
                     if term[0] in v:
@@ -135,6 +135,7 @@ def do_raw(api, args):
 
 def do_log(api, args):
     interval = 30.0
+    lastmsg = None
     while (True):
         printmsg = False
         msgs = api.log()
@@ -155,7 +156,7 @@ def do_log(api, args):
 
 def add_verbosity_args(p):
     p.add_argument('--debug', help='Print lots of debugging statements',
-                        action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
+                   action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     p.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
     p.add_argument('-q', '--quiet', help='Hide most messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
 
