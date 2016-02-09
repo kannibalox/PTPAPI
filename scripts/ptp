@@ -2,6 +2,7 @@
 import logging
 import os.path
 from urlparse import urlparse, parse_qs
+from time import sleep
 
 import argparse
 import tempita
@@ -133,11 +134,23 @@ def do_raw(api, args):
 
 
 def do_log(api, args):
-    msgs = api.log()
-    if args.reverse:
-        msgs.reverse()
-    for time, msg in msgs:
-        print time, msg
+    interval = 30.0
+    while (True):
+        printmsg = False
+        msgs = api.log()
+        # We actually want it 'reversed' by default
+        if not args.reverse:
+            msgs.reverse()
+        for time, msg in msgs:
+            if lastmsg is None or printmsg:
+                print time, '-', msg
+                lastmsg = msg
+            if lastmsg == msg:
+                printmsg = True
+        if args.follow:
+            sleep(interval)
+        else:
+            break
 
 
 def add_verbosity_args(p):
@@ -180,6 +193,7 @@ if __name__ == '__main__':
     log_parser = subparsers.add_parser('log', help='Show the log of recent events')
     add_verbosity_args(log_parser)
     log_parser.add_argument('-r', '--reverse', help='Sort in reverse', action='store_true')
+    log_parser.add_argument('-f', '--follow', help='Print new entries as they appear', action="store_true")
     log_parser.set_defaults(func=do_log)
 
     args = parser.parse_args()
