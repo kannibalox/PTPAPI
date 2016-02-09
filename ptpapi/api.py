@@ -122,11 +122,11 @@ class API:
         return movies
 
     def log(self):
-        soup = bs4(session.base_get('/log.php').content)
+        soup = bs4(session.base_get('/log.php').content, "html.parser")
         ret_array = []
         for message in soup.find('table').find('tbody').find_all('tr'):
             ret_array.append((message.find('span', class_='time')['title'],
-                              message.find('span', class_='log__message').get_text().lstrip()))
+                              message.find('span', class_='log__message').get_text().lstrip().encode('UTF-8')))
         return ret_array
 
 
