@@ -97,13 +97,15 @@ def do_search(api, args):
             movies = api.search(terms)
         elif target == 'bookmarks':
             movies = api.current_user().bookmarks(search_terms=terms)
+            # Preload some movie data
+            for m in movies[:args.limit]:
+                m.load_json_data()
         elif target == 'collage':
             movies = api.collage(terms['id'], terms)
-        if args.limit > 0:
-            movies = movies[:args.limit]
+        movies = movies[:args.limit]
 
     if args.download:
-        for m in movies:
+        for m in movies[:args.limit]:
             match = m.best_match(args.filter)
             if match and not args.dry_run:
                 match.download_to_file()
@@ -117,7 +119,7 @@ def do_search(api, args):
             elif args.dry_run:
                 logger.info("Dry-run, not downloading %s" % t)
     else:
-        for m in movies:
+        for m in movies[:args.limit]:
             print movie_template.substitute(m)
             for t in m['Torrents']:
                 print torrent_template.substitute(t)
@@ -172,7 +174,7 @@ if __name__ == '__main__':
                                If the '=' is omitted, the field is assumed to be 'name'.""", nargs='+', metavar='term')
     search_parser.add_argument('-d', '--download', help="Download any movies found", action="store_true")
     search_parser.add_argument('-n', '--dry-run', help="Don't actually download any torrents", action='store_true')
-    search_parser.add_argument('-l', '--limit', help="Limit search results to N movies", default=0, type=int)
+    search_parser.add_argument('-l', '--limit', help="Limit search results to N movies", default=100, type=int)
     search_parser.add_argument('-f', '--filter', help="Define a filter to download movies with",
                                default=ptpapi.config.config.get('Main', 'filter'))
     search_parser.add_argument('--movie-format', help="Set the output for movies", default=None)
