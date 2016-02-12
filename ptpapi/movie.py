@@ -115,6 +115,8 @@ class Movie:
         # We're going to emulate what.cd's collector option
         profiles = profile.lower().split(',')
         current_sort = None
+        if 'Torrents' not in self.data:
+            self.load_json_data()
         for p in profiles:
             logger.debug("Attempting to match movie to profile: %s" % p)
             matches = self.data['Torrents']
