@@ -70,6 +70,7 @@ There are a couple aliases to make life easier:
 
 * `genre`, `genres`, `tags` -> `taglist`
 * `name` -> `searchstr`
+* `bookmarks` -> Search only your bookmarks
 
 In addition, [Tempita](http://pythonpaste.org/tempita/) can be used for custom formatting. For instance, `ptp search --movie-format="" --torrent-format="{{UploadTime}} - {{ReleaseName}}" year=1980-2000 taglist=sci.fi grouping=no`
 
@@ -84,15 +85,6 @@ See `ptp-reseed -h` for more information
 #### guessit
 
 By default the script looks for exact matches against file names and sizes. If you'd like the name matching to be less strict, you can install the guessit library (`pip install guessit`), and if the filename search fails, the script will attempt to parse the movie name out of the file and search by that.
-
-### `ptp-bookmarks`
-
-*This script will attempt to remove all snatched bookmarks. You have been warned.*
-
-This can download bookmarked torrents based on a human language filter. The basic syntax looks like `ptp-bookmarks -f <filter>`.
-
-
-See `ptp-bookmarks --help` for more information.
 
 ### Notes
 
