@@ -93,7 +93,7 @@ class Movie:
             # Get file list
             filediv = soup.find("div", id="files_%s" % t.ID)
             t.data['Filelist'] = {}
-            basepath = re.match(r'\/(.*)\/', filediv.find("thead").find_all("div")[1].string).group(1)
+            basepath = re.match(r'\/(.*)\/', filediv.find("thead").find_all("div")[1].get_text()).group(1)
             for e in filediv.find("tbody").find_all("tr"):
                 bytesize = e("td")[1]("span")[0]['title'].replace(",", "").replace(' bytes', '')
                 filepath = os.path.join(basepath, e("td")[0].string)
