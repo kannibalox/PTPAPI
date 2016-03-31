@@ -27,6 +27,10 @@ def do_inbox(api, args):
             print m['Text']
             print '----------------------------'
         return
+    if args.mark_read:
+        for conv in args.mark_read:
+            api.current_user().inbox_conv(conv)
+        return
     msgs = list(api.current_user().inbox())
     print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
     print '-'*55
@@ -184,6 +188,7 @@ if __name__ == '__main__':
     inbox_parser = subparsers.add_parser('inbox', help='Reads messages in your inbox')
     add_verbosity_args(inbox_parser)
     inbox_parser.add_argument('-u', '--unread', help="Only show unread messages", action="store_true")
+    inbox_parser.add_argument('-m', '--mark-read', help="Mark messages as read", type=lambda s: [int(n) for n in s.split(',')])
     inbox_parser.add_argument('--user', help="Filter messages by the sender")
     inbox_parser.add_argument('-c', '--conversation', help="Get the messages of a specific conversation", type=int)
     inbox_parser.set_defaults(func=do_inbox)
