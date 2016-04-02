@@ -172,18 +172,24 @@ if __name__ == '__main__':
     add_verbosity_args(parser)
     subparsers = parser.add_subparsers()
 
-    search_parser = subparsers.add_parser('search', help='Search for or download movies')
-    add_verbosity_args(search_parser)
-    search_parser.add_argument('search_terms', help="""A list of terms in [field]=[text] format.
+    search_parent = argparse.ArgumentParser()
+    add_verbosity_args(search_parent)
+    search_parent.add_argument('search_terms', help="""A list of terms in [field]=[text] format.
                                If the '=' is omitted, the field is assumed to be 'name'.""", nargs='+', metavar='term')
-    search_parser.add_argument('-d', '--download', help="Download any movies found", action="store_true")
-    search_parser.add_argument('-n', '--dry-run', help="Don't actually download any torrents", action='store_true')
-    search_parser.add_argument('-l', '--limit', help="Limit search results to N movies", default=100, type=int)
-    search_parser.add_argument('-f', '--filter', help="Define a filter to download movies with",
+    search_parent.add_argument('-n', '--dry-run', help="Don't actually download any torrents", action='store_true')
+    search_parent.add_argument('-l', '--limit', help="Limit search results to N movies", default=100, type=int)
+    search_parent.add_argument('-f', '--filter', help="Define a filter to download movies with",
                                default=ptpapi.config.config.get('Main', 'filter'))
-    search_parser.add_argument('--movie-format', help="Set the output for movies", default=None)
-    search_parser.add_argument('--torrent-format', help="Set the output for torrents", default=None)
+    search_parent.add_argument('--movie-format', help="Set the output for movies", default=None)
+    search_parent.add_argument('--torrent-format', help="Set the output for torrents", default=None)
+
+    search_parser = subparsers.add_parser('search', help='Search for or download movies', add_help=False, parents=[search_parent])
+    search_parser.add_argument('-d', '--download', help="Download any movies found", action="store_true")
     search_parser.set_defaults(func=do_search)
+
+    download_parser = subparsers.add_parser('download', help='An alias for search -d', add_help=False, parents=[search_parent])
+    download_parser.add_argument('-d', '--download', help="Download any movies found", action="store_true", default=True)
+    download_parser.set_defaults(func=do_search)
 
     inbox_parser = subparsers.add_parser('inbox', help='Reads messages in your inbox')
     add_verbosity_args(inbox_parser)
