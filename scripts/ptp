@@ -88,11 +88,13 @@ def do_search(api, args):
     if args.movie_format is not None:
         movie_template = tempita.Template(args.movie_format)
     else:
-        movie_template = tempita.Template("{{Title}} ({{Year}}) - {{','.join([d['Name'] for d in Directors])}} - [{{'/'.join(Tags)}}] - [PTP {{GroupId}}, IMDB tt{{ImdbId}}]")
+        movie_template = tempita.Template("{{Title}} ({{Year}}) - {{','.join([d['Name'] for d in Directors])}} - "
+                                          "[{{'/'.join(Tags)}}] - [PTP {{GroupId}}, IMDB tt{{ImdbId}}]")
     if args.torrent_format is not None:
         torrent_template = tempita.Template(args.torrent_format)
     else:
-        torrent_template = tempita.Template("- {{Codec}}/{{Container}}/{{Source}}/{{Resolution}} - {{ReleaseName}} - {{Snatched}}/{{Seeders}}/{{Leechers}}")
+        torrent_template = tempita.Template("- {{Codec}}/{{Container}}/{{Source}}/{{Resolution}} - {{ReleaseName}} - "
+                                            "{{Snatched}}/{{Seeders}}/{{Leechers}}")
 
     # If we haven't found any URL-looking things
     if not movies and not torrents:
