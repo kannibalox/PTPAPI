@@ -29,7 +29,16 @@ class User:
         for m in api.util.snarf_cover_view_data(r.text):
             m['Torrents'] = []
             for g in m['GroupingQualities']:
-                m['Torrents'].extend(g['Torrents'])
+                for torrent in g['Torrents']:
+                    match = re.search('&#(\d*);.*title="(.*?)">(.*?) / (.*?) / (.*?) / (.*?)[ <]', torrent['Title'])
+                    torrent['GoldenPopcorn'] = (match.group(1) == '10047')  # 10047 = Unicode GP symbol
+                    torrent['ReleaseName'] = match.group(2)
+                    torrent['Codec'] = match.group(3)
+                    torrent['Container'] = match.group(4)
+                    torrent['Source'] = match.group(5)
+                    torrent['Resolution'] = match.group(6)
+                    print torrent
+                    m['Torrents'].append(torrent)
             movies.append(Movie(data=m))
         return movies
 

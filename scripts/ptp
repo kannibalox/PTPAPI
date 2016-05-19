@@ -103,9 +103,6 @@ def do_search(api, args):
             movies = api.search(terms)
         elif target == 'bookmarks':
             movies = api.current_user().bookmarks(search_terms=terms)
-            # Preload some movie data
-            for m in movies[:args.limit]:
-                m.load_json_data()
         elif target == 'collage':
             movies = api.collage(terms['id'], terms)
         movies = movies[:args.limit]
