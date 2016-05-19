@@ -138,9 +138,9 @@ class Movie:
                     matches = [t for t in matches if func(t)]
                 sort_dict = {
                     'most recent': (True, (lambda t: datetime.strptime(t['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
-                    'smallest': (False, (lambda t: t['Size'])),
+                    'smallest': (True, (lambda t: t['Size'])),
                     'seeded': (True, (lambda t: t['Seeders'])),
-                    'largest': (True, (lambda t: t['Size'])),
+                    'largest': (False, (lambda t: t['Size'])),
                 }
             for name, (rev, sort) in sort_dict.items():
                 if name in p:
