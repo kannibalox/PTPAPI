@@ -16,6 +16,7 @@ class TokenSession(requests.Session):
         super(TokenSession, self).__init__()
         self.capacity = float(tokens)
         self._tokens = float(tokens)
+        self.consumed_tokens = 0
         self.fill_rate = float(fill_rate)
         self.timestamp = time()
 
@@ -25,6 +26,7 @@ class TokenSession(requests.Session):
         self.get_tokens()
         if tokens <= self.tokens:
             self._tokens -= tokens
+            self.consumed_tokens += tokens
             logger.debug("Consuming %i token(s)." % tokens)
         else:
             return False
@@ -51,6 +53,7 @@ class TokenSession(requests.Session):
 
     def base_post(self, url_path, *args, **kwargs):
         return self.post(config.get('Main', 'baseURL') + url_path, *args, **kwargs)
+
 
 logger.debug("Initializing token session")
 # If you change this and get in trouble, don't blame me
