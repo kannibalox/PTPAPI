@@ -118,7 +118,7 @@ class Movie:
         if 'Torrents' not in self.data:
             self.load_json_data()
         for p in profiles:
-            logger.debug("Attempting to match movie to profile: %s" % p)
+            logger.debug("Attempting to match movie to profile '%s'" % p)
             matches = self.data['Torrents']
             filter_dict = {
                 'gp': (lambda t: t['GoldenPopcorn']),
@@ -134,23 +134,25 @@ class Movie:
             }
             for (name, func) in filter_dict.items():
                 if name.lower() in p:
-                    logger.debug("Filtering movies by parameter %s" % name)
                     matches = [t for t in matches if func(t)]
-                sort_dict = {
-                    'most recent': (True, (lambda t: datetime.strptime(t['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
-                    'smallest': (True, (lambda t: t['Size'])),
-                    'seeded': (True, (lambda t: t['Seeders'])),
-                    'largest': (False, (lambda t: t['Size'])),
-                }
+                    logger.debug("%i matches after filtering by parameter %s" % (len(matches), name))
+            sort_dict = {
+                'most recent': (True, (lambda t: datetime.strptime(t['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
+                'smallest': (True, (lambda t: t['Size'])),
+                'seeded': (True, (lambda t: t['Seeders'])),
+                'largest': (False, (lambda t: t['Size'])),
+            }
             for name, (rev, sort) in sort_dict.items():
                 if name in p:
-                    logger.debug("Sorting by parameter %s" % name)
                     current_sort = name
             if len(matches) == 1:
                 return matches[0]
-            elif len(matches) > 1 and current_sort:
+            elif len(matches) > 1:
+                for name, (rev, sort) in sort_dict.items():
+                    if name in p:
+                        current_sort = name
+                logger.debug("Sorting by parameter %s" % current_sort)
                 (rev, sort) = sort_dict[current_sort]
                 return sorted(matches, key=sort, reverse=rev)[0]
-            logger.debug("Could not find match for profile: %s" % p)
         logger.info("Could not find best match for movie %s" % self.ID)
         return None
