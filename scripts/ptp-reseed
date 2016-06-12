@@ -145,9 +145,6 @@ def match_by_guessed_name(ptp, filepath, name=None):
 
 def match_against_file(ptp, filepath):
     filepath = os.path.abspath(filepath)
-    if not os.path.exists(filepath):
-        logger.error(u"File/directory {0} does not exist".format(filepath))
-        return Match(None)
     logger.info("Searching movies by file list")
     for m in ptp.search({'filelist': os.path.basename(filepath)}):
         match = match_by_movie(m, filepath)
@@ -253,6 +250,10 @@ def main():
     for f in filelist:
         arg_file = f.strip('\n').decode('UTF-8')
         logger.info('Starting reseed attempt on file {0}'.format(arg_file.encode('UTF-8')))
+
+        if not os.path.exists(arg_file):
+            logger.error(u"File/directory {0} does not exist".format(arg_file.encode('UTF-8')))
+            continue
 
         try:
             if args.url:
