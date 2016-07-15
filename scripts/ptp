@@ -27,11 +27,11 @@ def do_inbox(api, args):
             for m in api.current_user().inbox(page=page):
                 if m['Unread'] is False:
                     continue
-                api.current_user().inbox_conv(m['ID'])
+                user.inbox_conv(m['ID'])
             page += 1
         return
     if args.conversation:
-        conv = api.current_user().inbox_conv(args.conversation)
+        conv = user.inbox_conv(args.conversation)
         print conv['Subject']
         for m in conv['Message']:
             print "{0} - {1}\n".format(m['User'], m['Time'])
@@ -40,11 +40,14 @@ def do_inbox(api, args):
         return
     if args.mark_read:
         for conv in args.mark_read:
-            api.current_user().inbox_conv(conv)
+            user.inbox_conv(conv)
         return
-    msgs = list(api.current_user().inbox())
+    msgs = list(user.inbox())
     print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
     print '-'*55
+    if user.num_messages == 0:
+        print "No messages found"
+        return
     for m in msgs:
         if args.unread and m['Unread'] is False:
             continue
