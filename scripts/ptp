@@ -22,7 +22,7 @@ def do_inbox(api, args):
     page = args.page
     user = api.current_user()
     if args.mark_all_read:
-        user.get_num_messages()
+        print "Clearing out {0} messages".format(user.get_num_messages())
         while user.num_messages > 0:
             for m in api.current_user().inbox(page=page):
                 if m['Unread'] is False:
