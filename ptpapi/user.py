@@ -7,7 +7,7 @@ from session import session
 from movie import Movie
 
 
-class User:
+class User(object):
     """A primitive class to represent a user"""
     def __init__(self, ID):
         # Requires an ID, as searching by name isn't exact on PTP
@@ -57,17 +57,18 @@ class User:
 
 class CurrentUser(User):
     """Defines some additional methods that only apply to the logged in user."""
-    def __init__(self):
-        super(CurrentUser, self).__init__()
+    def __init__(self, ID):
+        super(CurrentUser, self).__init__(self)
         self.num_messages = 0
 
-    def num_messages(self):
+    def get_num_messages(self):
         m = 0
         soup = bs4(session.base_get('inbox.php').text, "html.parser")
-        for alert in soup.find(class_='alert_bar'):
-            match = re.search(r'You have \(\d+\) message', alert.text)
+        for alert in soup.find(class_='alert-bar'):
+            match = re.search(r'You have (\d+) new message', alert.text)
             if match:
                 m = match.group(1)
+        self.num_messages = m
         return m
 
     def inbox(self, page=1):
@@ -75,8 +76,8 @@ class CurrentUser(User):
 
         # Update the number of messages
         m = 0
-        for alert in soup.find(class_='alert_bar'):
-            match = re.search(r'You have \(\d+\) message', alert.text)
+        for alert in soup.find(class_='alert-bar'):
+            match = re.search(r'You have (\d+) new message', alert.text)
             if match:
                 m = match.group(1)
         self.num_messages = m
