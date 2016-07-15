@@ -29,34 +29,32 @@ def do_inbox(api, args):
                     continue
                 user.inbox_conv(m['ID'])
             page += 1
-        return
-    if args.conversation:
+    elif args.conversation:
         conv = user.inbox_conv(args.conversation)
         print conv['Subject']
         for m in conv['Message']:
             print "{0} - {1}\n".format(m['User'], m['Time'])
             print m['Text']
             print '----------------------------'
-        return
-    if args.mark_read:
+    elif args.mark_read:
         for conv in args.mark_read:
             user.inbox_conv(conv)
-        return
-    msgs = list(user.inbox())
-    if user.num_messages == 0:
-        print "No messages found"
-        return
-    print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
-    print '-'*55
-    for m in msgs:
-        if args.unread and m['Unread'] is False:
-            continue
-        if args.user is not None and m['Sender'] != args.user:
-            continue
-        print "{0: <8}{1: <32}{2: <15}".format(
-            m['ID'],
-            ellipsize(m['Subject'], 30),
-            ellipsize(m['Sender'], 15))
+    else:
+        msgs = list(user.inbox())
+        if user.num_messages == 0:
+            print "No messages found"
+            return
+        print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
+        print '-'*55
+        for m in msgs:
+            if args.unread and m['Unread'] is False:
+                continue
+            if args.user is not None and m['Sender'] != args.user:
+                continue
+            print "{0: <8}{1: <32}{2: <15}".format(
+                m['ID'],
+                ellipsize(m['Subject'], 30),
+                ellipsize(m['Sender'], 15))
 
 
 def parse_terms(termlist):
