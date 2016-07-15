@@ -43,11 +43,11 @@ def do_inbox(api, args):
             user.inbox_conv(conv)
         return
     msgs = list(user.inbox())
-    print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
-    print '-'*55
     if user.num_messages == 0:
         print "No messages found"
         return
+    print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
+    print '-'*55
     for m in msgs:
         if args.unread and m['Unread'] is False:
             continue
