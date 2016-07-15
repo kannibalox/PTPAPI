@@ -28,7 +28,6 @@ def do_inbox(api, args):
                 if m['Unread'] is False:
                     continue
                 api.current_user().inbox_conv(m['ID'])
-                sleep(1)
             page += 1
         return
     if args.conversation:
