@@ -206,7 +206,7 @@ if __name__ == '__main__':
     add_verbosity_args(inbox_parser)
     inbox_parser.add_argument('-u', '--unread', help="Only show unread messages", action="store_true")
     inbox_parser.add_argument('-m', '--mark-read', help="Mark messages as read", type=lambda s: [int(n) for n in s.split(',')])
-    inbox_parser.add_argument('--mark-all-read', help="Scan and mark all messages as read", action="store_true")
+    inbox_parser.add_argument('--mark-all-read', help="Scan and mark all messages as read. WARNING: If new messages arrive while this is running, the script can get caught in a loop until it reaches the end of the inbox's pages", action="store_true")
     inbox_parser.add_argument('--user', help="Filter messages by the sender")
     inbox_parser.add_argument('-c', '--conversation', help="Get the messages of a specific conversation", type=int)
     inbox_parser.add_argument('-p', '--page', help="Start at a certain page", type=int, default=1)
