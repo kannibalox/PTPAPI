@@ -57,8 +57,30 @@ class User:
 
 class CurrentUser(User):
     """Defines some additional methods that only apply to the logged in user."""
-    def inbox(self):
+    def __init__(self):
+        super(CurrentUser, self).__init__()
+        self.num_messages = 0
+
+    def num_messages(self):
+        m = 0
         soup = bs4(session.base_get('inbox.php').text, "html.parser")
+        for alert in soup.find(class_='alert_bar'):
+            match = re.search(r'You have \(\d+\) message', alert.text)
+            if match:
+                m = match.group(1)
+        return m
+
+    def inbox(self, page=1):
+        soup = bs4(session.base_get('inbox.php', params={'page': page}).text, "html.parser")
+
+        # Update the number of messages
+        m = 0
+        for alert in soup.find(class_='alert_bar'):
+            match = re.search(r'You have \(\d+\) message', alert.text)
+            if match:
+                m = match.group(1)
+        self.num_messages = m
+
         for row in soup.find(id="messageformtable").tbody.find_all('tr'):
             yield {'Subject': row.find_all('td')[1].text.encode('UTF-8').strip(),
                    'Sender': row.find_all('td')[2].text,
