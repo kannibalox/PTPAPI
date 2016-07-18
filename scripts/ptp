@@ -23,7 +23,7 @@ def do_inbox(api, args):
     user = api.current_user()
     if args.mark_all_read:
         print "Clearing out {0} messages".format(user.get_num_messages())
-        while user.num_messages > 0:
+        while user.new_messages > 0:
             for m in api.current_user().inbox(page=page):
                 if m['Unread'] is False:
                     continue
@@ -41,9 +41,6 @@ def do_inbox(api, args):
             user.inbox_conv(conv)
     else:
         msgs = list(user.inbox())
-        if user.num_messages == 0:
-            print "No messages found"
-            return
         print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
         print '-'*55
         for m in msgs:

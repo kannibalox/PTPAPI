@@ -61,14 +61,14 @@ class CurrentUser(User):
         super(CurrentUser, self).__init__(self)
         self.num_messages = 0
 
-    def get_num_messages(self):
+    def get_new_messages(self):
         m = 0
         soup = bs4(session.base_get('inbox.php').text, "html.parser")
         for alert in soup.find(class_='alert-bar'):
             match = re.search(r'You have (\d+) new message', alert.text)
             if match:
                 m = match.group(1)
-        self.num_messages = m
+        self.new_messages = m
         return m
 
     def inbox(self, page=1):
@@ -80,7 +80,7 @@ class CurrentUser(User):
             match = re.search(r'You have (\d+) new message', alert.text)
             if match:
                 m = match.group(1)
-        self.num_messages = m
+        self.new_messages = m
 
         for row in soup.find(id="messageformtable").tbody.find_all('tr'):
             yield {'Subject': row.find_all('td')[1].text.encode('UTF-8').strip(),
