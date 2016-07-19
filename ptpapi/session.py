@@ -5,7 +5,7 @@ import requests
 
 from config import config
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class TokenSession(requests.Session):
@@ -13,7 +13,7 @@ class TokenSession(requests.Session):
     def __init__(self, tokens, fill_rate):
         """tokens is the total tokens in the bucket. fill_rate is the
         rate in tokens/second that the bucket will be refilled."""
-        super(TokenSession, self).__init__()
+        requests.Session.__init__(self)
         self.capacity = float(tokens)
         self._tokens = float(tokens)
         self.consumed_tokens = 0
@@ -27,16 +27,16 @@ class TokenSession(requests.Session):
         if tokens <= self.tokens:
             self._tokens -= tokens
             self.consumed_tokens += tokens
-            logger.debug("Consuming %i token(s)." % tokens)
+            LOGGER.debug("Consuming %i token(s)." % tokens)
         else:
             return False
         return True
 
     def request(self, *args, **kwargs):
         while not self.consume(1):
-            logger.debug("Waiting for token bucket to refill...")
+            LOGGER.debug("Waiting for token bucket to refill...")
             sleep(1)
-        return super(TokenSession, self).request(*args, **kwargs)
+        return requests.Session.request(self, *args, **kwargs)
 
     def get_tokens(self):
         if self._tokens < self.capacity:
@@ -55,7 +55,7 @@ class TokenSession(requests.Session):
         return self.post(config.get('Main', 'baseURL') + url_path, *args, **kwargs)
 
 
-logger.debug("Initializing token session")
+LOGGER.debug("Initializing token session")
 # If you change this and get in trouble, don't blame me
 session = TokenSession(3, 0.5)
 session.headers.update({"User-Agent": "Wget/1.13.4"})

@@ -1,23 +1,21 @@
+"""Represent a movie"""
 import re
 import logging
 import os.path
 from datetime import datetime
 
-from bs4 import BeautifulSoup as bs4
+from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
 
 from session import session
 from torrent import Torrent
 from error import PTPAPIException
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
-
-class Movie:
+class Movie(object):
     """A class representing a movie"""
     def __init__(self, ID=None, data=None):
         self.torrents = []
-        self.jsonKeys = ['ImdbId', 'ImdbRating', 'ImdbVoteCount', 'Torrents']
-        self.htmlKeys = ['Title', 'Year', 'Cover', 'Tags', 'Directors']
         self.key_finder = {
             'json': [
                 'ImdbId',
@@ -36,7 +34,7 @@ class Movie:
         if data:
             self.data = data
             self.conv_json_torrents()
-            self.ID = data['GroupId']
+            self.ID = data['GroupId'] # pylint: disable=invalid-name
         elif ID:
             self.ID = ID
             self.data = {}
@@ -51,29 +49,33 @@ class Movie:
 
     def __getitem__(self, name):
         if name not in self.data or self.data[name] is None:
-            for k, v in self.key_finder.iteritems():
-                if name in v:
-                    getattr(self, "load_%s_data" % k)()
+            for key, val in self.key_finder.iteritems():
+                if name in val:
+                    getattr(self, "load_%s_data" % key)()
         return self.data[name]
 
     def items(self):
+        """Passthru function for underlying dict"""
         return self.data.items()
 
     def __setitem__(self, key, value):
-                self.data[key] = value
+        self.data[key] = value
 
-    def load_json_data(self, basic=True, overwrite=False):
+    def load_json_data(self):
+        """Load movie JSON data"""
         self.data.update(session.base_get("torrents.php",
                                           params={'id': self.ID,
                                                   'json': '1'}).json())
         self.conv_json_torrents()
 
     def conv_json_torrents(self):
+        """Util function to normalize data"""
         if self.data['Torrents']:
             torrents = self.data['Torrents']
             self.data['Torrents'] = [Torrent(data=t) for t in torrents]
 
-    def load_html_data(self, basic=True, overwrite=False):
+    def load_html_data(self):
+        """Scrape all data from a movie's HTML page"""
         soup = bs4(session.base_get("torrents.php", params={'id': self.ID}).text, "html.parser")
         self.data['Cover'] = soup.find('img', class_='sidebar-cover-image')['src']
         # Title and Year
@@ -83,28 +85,28 @@ class Movie:
         # Genre tags
         self.data['Tags'] = []
         for tagbox in soup.find_all('div', class_="box_tags"):
-            for t in tagbox.find_all("li"):
-                self.data['Tags'].append(t.find('a').string)
+            for tag in tagbox.find_all("li"):
+                self.data['Tags'].append(tag.find('a').string)
         self.data['Directors'] = []
         for director in soup.find('h2', class_='page__title').find_all('a', class_='artist-info-link'):
             self.data['Directors'].append({'Name': director.string})
         # File list & trumpability
-        for t in self['Torrents']:
+        for tor in self['Torrents']:
             # Get file list
-            filediv = soup.find("div", id="files_%s" % t.ID)
-            t.data['Filelist'] = {}
+            filediv = soup.find("div", id="files_%s" % tor.ID)
+            tor.data['Filelist'] = {}
             basepath = re.match(r'\/(.*)\/', filediv.find("thead").find_all("div")[1].get_text()).group(1)
-            for e in filediv.find("tbody").find_all("tr"):
-                bytesize = e("td")[1]("span")[0]['title'].replace(",", "").replace(' bytes', '')
-                filepath = os.path.join(basepath, e("td")[0].string)
-                t.data['Filelist'][filepath] = bytesize
+            for elem in filediv.find("tbody").find_all("tr"):
+                bytesize = elem("td")[1]("span")[0]['title'].replace(",", "").replace(' bytes', '')
+                filepath = os.path.join(basepath, elem("td")[0].string)
+                tor.data['Filelist'][filepath] = bytesize
             # Check if trumpable
-            if soup.find(id="trumpable_%s" % t.ID):
-                t.data['Trumpable'] = [s.get_text() for s in soup.find(id="trumpable_%s" % t.ID).find_all('span')]
+            if soup.find(id="trumpable_%s" % tor.ID):
+                tor.data['Trumpable'] = [s.get_text() for s in soup.find(id="trumpable_%s" % tor.ID).find_all('span')]
             else:
-                t.data['Trumpable'] = []
+                tor.data['Trumpable'] = []
 
-    def best_match(self, profile, allow_dead=False):
+    def best_match(self, profile):
         """A function to pull the best match of a movie, based on a human-readable filter
 
         :param movie: a :py:class:`Movie` object
@@ -117,8 +119,8 @@ class Movie:
         current_sort = None
         if 'Torrents' not in self.data:
             self.load_json_data()
-        for p in profiles:
-            logger.debug("Attempting to match movie to profile '%s'" % p)
+        for profile in profiles:
+            LOGGER.debug("Attempting to match movie to profile '%s'", profile)
             matches = self.data['Torrents']
             filter_dict = {
                 'gp': (lambda t: t['GoldenPopcorn']),
@@ -133,9 +135,9 @@ class Movie:
                 'x264': (lambda t: t['Codec'] == 'x264')
             }
             for (name, func) in filter_dict.items():
-                if name.lower() in p:
+                if name.lower() in profile:
                     matches = [t for t in matches if func(t)]
-                    logger.debug("%i matches after filtering by parameter %s" % (len(matches), name))
+                    LOGGER.debug("%i matches after filtering by parameter %s", len(matches), name)
             sort_dict = {
                 'most recent': (True, (lambda t: datetime.strptime(t['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
                 'smallest': (True, (lambda t: t['Size'])),
@@ -143,16 +145,16 @@ class Movie:
                 'largest': (False, (lambda t: t['Size'])),
             }
             for name, (rev, sort) in sort_dict.items():
-                if name in p:
+                if name in profile:
                     current_sort = name
             if len(matches) == 1:
                 return matches[0]
             elif len(matches) > 1:
                 for name, (rev, sort) in sort_dict.items():
-                    if name in p:
+                    if name in profile:
                         current_sort = name
-                logger.debug("Sorting by parameter %s" % current_sort)
+                LOGGER.debug("Sorting by parameter %s", current_sort)
                 (rev, sort) = sort_dict[current_sort]
                 return sorted(matches, key=sort, reverse=rev)[0]
-        logger.info("Could not find best match for movie %s" % self.ID)
+        LOGGER.info("Could not find best match for movie %s", self.ID)
         return None

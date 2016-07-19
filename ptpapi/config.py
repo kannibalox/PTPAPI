@@ -1,3 +1,5 @@
+# pylint: disable=invalid-name
+"""Hold config values"""
 import os
 import os.path
 import StringIO
@@ -5,9 +7,6 @@ import ConfigParser
 
 confFile = os.path.join(os.environ['HOME'], '.ptpapi.conf')
 
-defaults = {'baseURL': 'https://tls.passthepopcorn.me/',
-            'cookiesFile': '~/.ptp.cookies.txt',
-            'downloadDirectory': '.'}
 default = """
 [Main]
 baseURL=https://tls.passthepopcorn.me/

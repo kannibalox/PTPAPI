@@ -1,4 +1,5 @@
 #!/bin/env python
+"""The entrypoint module for access the API"""
 import ConfigParser
 import re
 import os
@@ -6,8 +7,8 @@ import json
 import pickle
 import logging
 
-from bs4 import BeautifulSoup as bs4
-import requests
+from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
+import requests # pylint: disable=import-error
 
 from config import config
 from session import session
@@ -15,7 +16,7 @@ from movie import Movie
 from user import CurrentUser
 from error import PTPAPIException
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def login(**kwargs):
@@ -23,105 +24,114 @@ def login(**kwargs):
     return API(**kwargs)
 
 
-class API:
+class API(object):
+    """Used for instantiating an object that can access the API"""
     def __init__(self, username=None, password=None, passkey=None):
         j = None
-        self.cookiesFile = os.path.expanduser(config.get('Main', 'cookiesFile'))
-        logger.info("Initiating login sequence.")
+        self.cookies_file = os.path.expanduser(config.get('Main', 'cookiesFile'))
+        LOGGER.info("Initiating login sequence.")
         password = (password or config.get('PTP', 'password'))
         username = (username or config.get('PTP', 'username'))
         passkey = (passkey or config.get('PTP', 'passkey'))
-        if os.path.isfile(self.cookiesFile):
+        if os.path.isfile(self.cookies_file):
             self.__load_cookies()
             # A really crude test to see if we're logged in
             session.max_redirects = 1
             try:
-                r = session.base_get('torrents.php')
+                req = session.base_get('torrents.php')
             except requests.exceptions.TooManyRedirects:
-                if os.path.isfile(self.cookiesFile):
-                    os.remove(self.cookiesFile)
+                if os.path.isfile(self.cookies_file):
+                    os.remove(self.cookies_file)
                 session.cookies = requests.cookies.RequestsCookieJar()
             session.max_redirects = 3
-        if not os.path.isfile(self.cookiesFile):
+        if not os.path.isfile(self.cookies_file):
             if not password or not passkey or not username:
                 raise PTPAPIException("Not enough info provided to log in.")
             try:
-                r = session.base_post('ajax.php?action=login',
-                                      data={"username": username,
-                                            "password": password,
-                                            "passkey": passkey})
-                j = r.json()
+                req = session.base_post('ajax.php?action=login',
+                                        data={"username": username,
+                                              "password": password,
+                                              "passkey": passkey})
+                j = req.json()
             except ValueError:
-                if r.status_code == 200:
+                if req.status_code == 200:
                     raise PTPAPIException("Could not parse returned json data.")
                 else:
-                    if r.status_code == 429:
-                        logger.critical(r.text.strip())
-                    r.raise_for_status()
+                    if req.status_code == 429:
+                        LOGGER.critical(req.text.strip())
+                    req.raise_for_status()
             if j["Result"] != "Ok":
                 raise PTPAPIException("Failed to log in. Please check the username, password and passkey. Response: %s" % j)
             self.__save_cookie()
             # Get some information that will be useful for later
-            r = session.base_get('index.php')
-        logger.info("Login successful.")
-        self.current_user_id = re.search(r'user.php\?id=(\d+)', r.text).group(1)
-        self.auth_key = re.search(r'auth=([0-9a-f]{32})', r.text).group(1)
+            req = session.base_get('index.php')
+        LOGGER.info("Login successful.")
+        self.current_user_id = re.search(r'user.php\?id=(\d+)', req.text).group(1)
+        self.auth_key = re.search(r'auth=([0-9a-f]{32})', req.text).group(1)
 
     def logout(self):
         """Forces a logout."""
-        os.remove(self.cookiesFile)
+        os.remove(self.cookies_file)
         return session.base_get('logout.php', params={'auth': self.auth_key})
 
     def __save_cookie(self):
-        with open(self.cookiesFile, 'w') as fh:
-            logger.debug("Pickling HTTP cookies to %s" % self.cookiesFile)
-            pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fh)
+        """Save requests' cookies to a file"""
+        with open(self.cookies_file, 'w') as fileh:
+            LOGGER.debug("Pickling HTTP cookies to %s", self.cookies_file)
+            pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fileh)
 
     def __load_cookies(self):
-        with open(self.cookiesFile) as fh:
-            logger.debug("Unpickling HTTP cookies from file %s" % self.cookiesFile)
-            session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fh))
+        """Reload requests' cookies"""
+        with open(self.cookies_file) as fileh:
+            LOGGER.debug("Unpickling HTTP cookies from file %s", self.cookies_file)
+            session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fileh))
 
     def current_user(self):
+        """Helper function to get the current user"""
         return CurrentUser(self.current_user_id)
 
     def search(self, filters):
+        """Perform a movie search"""
         if 'name' in filters:
             filters['searchstr'] = filters['name']
         filters['json'] = 'noredirect'
         ret_array = []
-        for m in session.base_get('torrents.php', params=filters).json()['Movies']:
-            if 'Directors' not in m:
-                m['Directors'] = []
-            if 'ImdbId' not in m:
-                m['ImdbId'] = '0'
-            ret_array.append(Movie(data=m))
+        for movie in session.base_get('torrents.php', params=filters).json()['Movies']:
+            if 'Directors' not in movie:
+                movie['Directors'] = []
+            if 'ImdbId' not in movie:
+                movie['ImdbId'] = '0'
+            ret_array.append(Movie(data=movie))
         return ret_array
 
     def need_for_seed(self):
-        data = util.snarf_cover_view_data(session.base_get("needforseed.php").content)
+        """List torrents that need seeding"""
+        data = Util.snarf_cover_view_data(session.base_get("needforseed.php").content)
         return [t['GroupingQualities'][0]['Torrents'][0] for t in data]
 
     def contest_leaders(self):
-        logger.debug("Fetching contest leaderboard")
+        """Get data on who's winning"""
+        LOGGER.debug("Fetching contest leaderboard")
         soup = bs4(session.base_get("contestleaders.php").content, "html.parser")
         ret_array = []
         for cell in soup.find('table', class_='table--panel-like').find('tbody').find_all('tr'):
             ret_array.append((cell.find_all('td')[1].get_text(), cell.find_all('td')[2].get_text()))
         return ret_array
 
-    def collage(self, ID, search_terms):
-        search_terms['id'] = ID
-        r = session.base_get('collages.php', params=search_terms)
+    def collage(self, coll_id, search_terms):
+        """Simplistic representation of a collage, might be split out later"""
+        search_terms['id'] = coll_id
+        req = session.base_get('collages.php', params=search_terms)
         movies = []
-        for m in util.snarf_cover_view_data(r.text):
-            m['Torrents'] = []
-            for g in m['GroupingQualities']:
-                m['Torrents'].extend(g['Torrents'])
-            movies.append(Movie(data=m))
+        for movie in Util.snarf_cover_view_data(req.text):
+            movie['Torrents'] = []
+            for group in movie['GroupingQualities']:
+                movie['Torrents'].extend(group['Torrents'])
+            movies.append(Movie(data=movie))
         return movies
 
     def log(self):
+        """Gets the PTP log"""
         soup = bs4(session.base_get('/log.php').content, "html.parser")
         ret_array = []
         for message in soup.find('table').find('tbody').find_all('tr'):
@@ -130,12 +140,7 @@ class API:
         return ret_array
 
 
-class Collection(object):
-    def __init__(self, ID):
-        self.ID = ID
-
-
-class util(object):
+class Util(object):
     """A class for misc. utilities"""
     @staticmethod
     def snarf_cover_view_data(text):
@@ -144,8 +149,8 @@ class util(object):
         :param text: a raw html string
         :rtype: a dictionary of movie data"""
         data = []
-        for d in re.finditer(r'coverViewJsonData\[\s*\d+\s*\]\s*=\s*({.*});', text):
-            data.extend(json.loads(d.group(1))['Movies'])
+        for json_data in re.finditer(r'coverViewJsonData\[\s*\d+\s*\]\s*=\s*({.*});', text):
+            data.extend(json.loads(json_data.group(1))['Movies'])
         return data
 
     @staticmethod
@@ -154,8 +159,8 @@ class util(object):
 
         :param filename: an absolute filename
         :rtype: a diction of the username, password and passkey"""
-        config = ConfigParser.ConfigParser()
-        config.read(filename)
-        return {'username': config.get('PTP', 'username'),
-                'password': config.get('PTP', 'password'),
-                'passkey': config.get('PTP', 'passkey')}
+        config_file = ConfigParser.ConfigParser()
+        config_file.read(filename)
+        return {'username': config_file.get('PTP', 'username'),
+                'password': config_file.get('PTP', 'password'),
+                'passkey': config_file.get('PTP', 'passkey')}

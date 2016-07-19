@@ -1,18 +1,19 @@
+"""Represent a single torrent object"""
 import re
 import os
 import logging
 from urlparse import parse_qs, urlparse
 
-from bs4 import BeautifulSoup as bs4
+from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
 
 from config import config
 from session import session
 from error import PTPAPIException
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
-
-class Torrent:
+class Torrent(object):
+    """Represent as single torrent"""
     def __init__(self, ID=None, data=None):
         self.key_finder = {
             'movie_json': [
@@ -45,7 +46,7 @@ class Torrent:
         if data:
             self.data = data
             if 'Id' in data:
-                self.ID = data['Id']
+                self.ID = data['Id'] # pylint: disable=invalid-name
             elif 'TorrentId' in data:
                 self.ID = data['TorrentId']
             else:
@@ -67,8 +68,8 @@ class Torrent:
 
     def __getitem__(self, name):
         if name not in self.data or self.data[name] is None:
-            for k, v in self.key_finder.iteritems():
-                if name in v:
+            for k, value in self.key_finder.iteritems():
+                if name in value:
                     getattr(self, "load_%s_data" % k)()
         return self.data[name]
 
@@ -76,21 +77,24 @@ class Torrent:
         self.data[key] = value
 
     def items(self):
+        """Passthru for underlying dict"""
         return self.data.items()
 
     def keys(self):
+        """Passthru for underlying dict"""
         return self.data.keys()
 
     def load_movie_html_data(self):
+        """Get data from the parent movie's JSON data"""
         if 'GroupId' not in self.data or not self.data['GroupId']:
             movie_url = session.base_get('torrents.php', params={'torrentid': self.ID}).url
             self.data['GroupId'] = parse_qs(urlparse(movie_url).query)['id'][0]
         soup = bs4(session.base_get('torrents.php', params={'id': self.data['GroupId']}).content, "html.parser")
         filediv = soup.find("div", id="files_%s" % self.ID)
         self.data['Filelist'] = {}
-        for e in filediv.find("tbody").find_all("tr"):
-            bytesize = e("td")[1]("span")[0]['title'].replace(",", "").replace(' bytes', '')
-            self.data['Filelist'][e("td")[0].string] = bytesize
+        for elem in filediv.find("tbody").find_all("tr"):
+            bytesize = elem("td")[1]("span")[0]['title'].replace(",", "").replace(' bytes', '')
+            self.data['Filelist'][elem("td")[0].string] = bytesize
         # Check if trumpable
         if soup.find("trumpable_%s" % self.ID):
             self.data['Trumpable'] = [s.get_text() for s in soup.find("trumpable_%s" % self.ID).find('span')]
@@ -98,24 +102,26 @@ class Torrent:
             self.data['Trumpable'] = []
 
     def load_movie_json_data(self):
-        logger.debug("Loading Torrent data from movie JSON page.")
+        """Load data from the movie page"""
+        LOGGER.debug("Loading Torrent data from movie JSON page.")
         if 'GroupId' not in self.data or not self.data['GroupId']:
             movie_url = session.base_get('torrents.php', params={'torrentid': self.ID}).url
             self.data['GroupId'] = re.search(r'\?id=(\d+)', movie_url).group(1)
-        movieData = session.base_get('torrents.php',
-                                     params={'torrentid': self.ID,
-                                             'id': self.data['GroupId'],
-                                             'json': '1'}).json()
-        for t in movieData['Torrents']:
-            if int(t['Id']) == int(self.ID):
+        movie_data = session.base_get('torrents.php',
+                                      params={'torrentid': self.ID,
+                                              'id': self.data['GroupId'],
+                                              'json': '1'}).json()
+        for tor in movie_data['Torrents']:
+            if int(tor['Id']) == int(self.ID):
                 # Fill in any optional fields
                 for key in ['RemasterTitle']:
                     self.data[key] = ''
-                self.data.update(t)
+                self.data.update(tor)
                 break
 
     def load_torrent_json_data(self):
-        logger.debug("Loading Torrent data from torrent JSON page.")
+        """Load torrent data from a JSON call"""
+        LOGGER.debug("Loading Torrent data from torrent JSON page.")
         if 'GroupId' not in self.data or not self.data['GroupId']:
             movie_url = session.base_get('torrents.php', params={'torrentid': self.ID}).url
             self.data['GroupId'] = re.search(r'\?id=(\d+)', movie_url).group(1)
@@ -125,20 +131,21 @@ class Torrent:
                                                   'torrentid': self.ID}).json())
 
     def download(self):
-        r = session.base_get("torrents.php",
-                             params={'action': 'download',
-                                     'id': self.ID})
-        self.downloadName = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
-        return r.content
+        """Download the torrent contents"""
+        req = session.base_get("torrents.php",
+                               params={'action': 'download',
+                                       'id': self.ID})
+        return req.content
 
     def download_to_file(self, dest=None, name=None):
-        r = session.base_get("torrents.php",
-                             params={'action': 'download',
-                                     'id': self.ID})
+        """Convience method to download directly to a file"""
+        req = session.base_get("torrents.php",
+                               params={'action': 'download',
+                                       'id': self.ID})
         if not dest:
             dest = config.get('Main', 'downloadDirectory')
         if not name:
-            name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
-        with open(os.path.join(dest, name), 'wb') as fh:
-            fh.write(r.content)
+            name = re.search(r'filename="(.*)"', req.headers['Content-Disposition']).group(1)
+        with open(os.path.join(dest, name), 'wb') as fileh:
+            fileh.write(req.content)
         return os.path.join(dest, name)
