@@ -64,10 +64,11 @@ class CurrentUser(User):
     def get_new_messages(self):
         m = 0
         soup = bs4(session.base_get('inbox.php').text, "html.parser")
-        for alert in soup.find(class_='alert-bar'):
-            match = re.search(r'You have (\d+) new message', alert.text)
-            if match:
-                m = match.group(1)
+        if soup.find(class_='alert-bar'):
+            for alert in soup.find(class_='alert-bar'):
+                match = re.search(r'You have (\d+) new message', alert.text)
+                if match:
+                    m = match.group(1)
         self.new_messages = m
         return m
 
@@ -76,10 +77,11 @@ class CurrentUser(User):
 
         # Update the number of messages
         m = 0
-        for alert in soup.find(class_='alert-bar'):
-            match = re.search(r'You have (\d+) new message', alert.text)
-            if match:
-                m = match.group(1)
+        if soup.find(class_='alert-bar'):
+            for alert in soup.find(class_='alert-bar'):
+                match = re.search(r'You have (\d+) new message', alert.text)
+                if match:
+                    m = match.group(1)
         self.new_messages = m
 
         for row in soup.find(id="messageformtable").tbody.find_all('tr'):
