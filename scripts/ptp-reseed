@@ -255,25 +255,22 @@ def main():
             logger.error(u"File/directory {0} does not exist".format(arg_file.encode('UTF-8')))
             continue
 
-        try:
-            if args.url:
-                parsed_url = parse_qs(urlparse(args.url).query)
-                if 'torrentid' in parsed_url:
-                    match = match_by_torrent(ptpapi.Torrent(ID=parsed_url['torrentid'][0]), arg_file)
-                elif 'id' in parsed_url:
-                    match = match_by_movie(ptpapi.Movie(ID=parsed_url['id'][0]), arg_file)
-            elif arg_file:
-                for matchType in ptpapi.config.config.get('Reseed', 'findBy').split(','):
-                    if matchType == 'filename':
-                        match = match_against_file(ptp, arg_file)
-                    elif matchType == 'title':
-                        match = match_by_guessed_name(ptp, arg_file)
-                    else:
-                        logger.error("Match type {0} not recognized, skipping".format(matchType))
-                    if match:
-                        break
-        except:
-            traceback.print_exc()
+        if args.url:
+            parsed_url = parse_qs(urlparse(args.url).query)
+            if 'torrentid' in parsed_url:
+                match = match_by_torrent(ptpapi.Torrent(ID=parsed_url['torrentid'][0]), arg_file)
+            elif 'id' in parsed_url:
+                match = match_by_movie(ptpapi.Movie(ID=parsed_url['id'][0]), arg_file)
+        elif arg_file:
+            for matchType in ptpapi.config.config.get('Reseed', 'findBy').split(','):
+                if matchType == 'filename':
+                    match = match_against_file(ptp, arg_file)
+                elif matchType == 'title':
+                    match = match_by_guessed_name(ptp, arg_file)
+                else:
+                    logger.error("Match type {0} not recognized, skipping".format(matchType))
+                if match:
+                    break
 
         # Make sure we have the minimum information required
         if not match:
