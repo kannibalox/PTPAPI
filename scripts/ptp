@@ -94,12 +94,16 @@ def parse_terms(termlist):
 
 def do_search(api, args):
     (target, movies, torrents, terms) = parse_terms(args.search_terms)
-    if args.movie_format is not None:
+    if args.movie_format == "":
+        movie_template = None # Just to make linting happy
+    elif args.movie_format is not None:
         movie_template = tempita.Template(args.movie_format)
     else:
         movie_template = tempita.Template("{{Title}} ({{Year}}) - {{','.join([d['Name'] for d in Directors])}} - "
                                           "[{{'/'.join(Tags)}}] - [PTP {{GroupId}}, IMDB tt{{ImdbId}}]")
-    if args.torrent_format is not None:
+    if args.torrent_format == "":
+        torrent_template = None
+    elif args.torrent_format is not None:
         torrent_template = tempita.Template(args.torrent_format)
     else:
         torrent_template = tempita.Template("- {{Codec}}/{{Container}}/{{Source}}/{{Resolution}} - {{ReleaseName}} - "
@@ -132,11 +136,14 @@ def do_search(api, args):
                 logger.info("Dry-run, not downloading %s" % t)
     else:
         for m in movies[:args.limit]:
-            print movie_template.substitute(m)
+            if movie_template:
+                print movie_template.substitute(m)
             for t in m['Torrents']:
-                print torrent_template.substitute(t)
+                if torrent_template:
+                    print torrent_template.substitute(t)
         for t in torrents:
-            print torrent_template.substitute(t)
+            if torrent_template:
+                print torrent_template.substitute(t)
 
 
 def do_raw(api, args):
