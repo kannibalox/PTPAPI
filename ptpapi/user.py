@@ -15,7 +15,7 @@ class User(object):
         self.ID = ID # pylint: disable=invalid-name
 
     def __repr__(self):
-        return "<ptpapi.User ID %s>" % self.ID
+        return self.__str__()
 
     def __str__(self):
         return "<ptpapi.User ID %s>" % self.ID
@@ -40,7 +40,6 @@ class User(object):
                     torrent['Container'] = match.group(4)
                     torrent['Source'] = match.group(5)
                     torrent['Resolution'] = match.group(6)
-                    print torrent
                     movie['Torrents'].append(torrent)
             movies.append(Movie(data=movie))
         return movies
@@ -65,6 +64,7 @@ class User(object):
 class CurrentUser(User):
     """Defines some additional methods that only apply to the logged in user."""
     def __init__(self, ID):
+        self.ID = ID
         super(CurrentUser, self).__init__(self)
         self.new_messages = 0
 
