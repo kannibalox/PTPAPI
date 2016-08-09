@@ -182,7 +182,7 @@ def add_verbosity_args(p):
     p.add_argument('-q', '--quiet', help='Hide most messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description='Extensible command line utility for PTP')
     add_verbosity_args(parser)
     subparsers = parser.add_subparsers()
@@ -235,3 +235,6 @@ if __name__ == '__main__':
     api = ptpapi.login()
 
     args.func(api, args)
+
+if __name__ == '__main__':
+    main()
