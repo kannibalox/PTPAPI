@@ -9,7 +9,7 @@ import tempita
 
 import ptpapi
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def ellipsize(string, length):
@@ -24,17 +24,17 @@ def do_inbox(api, args):
     if args.mark_all_read:
         print "Clearing out {0} messages".format(user.get_num_messages())
         while user.new_messages > 0:
-            for m in api.current_user().inbox(page=page):
-                if m['Unread'] is False:
+            for msg in api.current_user().inbox(page=page):
+                if msg['Unread'] is False:
                     continue
-                user.inbox_conv(m['ID'])
+                user.inbox_conv(msg['ID'])
             page += 1
     elif args.conversation:
         conv = user.inbox_conv(args.conversation)
         print conv['Subject']
-        for m in conv['Message']:
-            print "{0} - {1}\n".format(m['User'], m['Time'])
-            print m['Text']
+        for msg in conv['Message']:
+            print "{0} - {1}\n".format(msg['User'], msg['Time'])
+            print msg['Text']
             print '----------------------------'
     elif args.mark_read:
         for conv in args.mark_read:
@@ -43,18 +43,24 @@ def do_inbox(api, args):
         msgs = list(user.inbox())
         print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
         print '-'*55
-        for m in msgs:
-            if args.unread and m['Unread'] is False:
+        for msg in msgs:
+            if args.unread and msg['Unread'] is False:
                 continue
-            if args.user is not None and m['Sender'] != args.user:
+            if args.user is not None and msg['Sender'] != args.user:
                 continue
             print "{0: <8}{1: <32}{2: <15}".format(
-                m['ID'],
-                ellipsize(m['Subject'], 30),
-                ellipsize(m['Sender'], 15))
+                msg['ID'],
+                ellipsize(msg['Subject'], 30),
+                ellipsize(msg['Sender'], 15))
 
 
 def parse_terms(termlist):
+    """Takes an array of terms, and sorts them out into 4 categories:
+       * torrent URLs
+       * movie URLs
+       * targets (where to perform the search e.g. collages or bookmarks)
+       * all other search parameters
+    """
     torrents = []
     movies = []
     terms = {}
@@ -85,9 +91,9 @@ def parse_terms(termlist):
                     'taglist': ['genre', 'genres', 'tags'],
                     'name': ['searchstr']
                 }
-                for k, v in term_map.items():
-                    if term[0] in v:
-                        term = (k, term[1], term[2])
+                for key, value in term_map.items():
+                    if term[0] in value:
+                        term = (key, term[1], term[2])
                 terms[term[0]] = term[2]
     return (target, movies, torrents, terms)
 
@@ -111,7 +117,7 @@ def do_search(api, args):
 
     # If we haven't found any URL-looking things
     if not movies and not torrents:
-        logger.debug('Attempting to search target "%s" with terms %s' % (target, terms))
+        LOGGER.debug('Attempting to search target "%s" with terms %s', target, terms)
         if target == 'torrents':
             movies = api.search(terms)
         elif target == 'bookmarks':
@@ -121,46 +127,47 @@ def do_search(api, args):
         movies = movies[:args.limit]
 
     if args.download:
-        for m in movies[:args.limit]:
-            match = m.best_match(args.filter)
+        for movie in movies[:args.limit]:
+            match = movie.best_match(args.filter)
             if match and not args.dry_run:
                 match.download_to_file()
             elif args.dry_run:
-                logger.info("Dry-run, not downloading %s" % match)
+                LOGGER.info("Dry-run, not downloading %s", match)
             else:
-                logger.info("No match found for for movie %s (%s)" % (m['Title'], m['Year']))
-        for t in torrents:
+                LOGGER.info("No match found for for movie %s (%s)", movie['Title'], movie['Year'])
+        for torrent in torrents:
             if args.download and not args.dry_run:
-                t.download_to_file()
+                torrent.download_to_file()
             elif args.dry_run:
-                logger.info("Dry-run, not downloading %s" % t)
+                LOGGER.info("Dry-run, not downloading %s", torrent)
     else:
-        for m in movies[:args.limit]:
+        for movie in movies[:args.limit]:
             if movie_template:
-                print movie_template.substitute(m)
-            for t in m['Torrents']:
+                print movie_template.substitute(movie)
+            for torrent in movie['Torrents']:
                 if torrent_template:
-                    print torrent_template.substitute(t)
-        for t in torrents:
+                    print torrent_template.substitute(torrent)
+        for torrent in torrents:
             if torrent_template:
-                print torrent_template.substitute(t)
+                print torrent_template.substitute(torrent)
 
 
-def do_raw(api, args):
-    for u in args.url:
-        url = urlparse(u)
+def do_raw(_, args):
+    """Given a URL, download the raw HTML to the current directory"""
+    for url_str in args.url:
+        url = urlparse(url_str)
         data = ptpapi.session.session.base_get('?'.join([url.path, url.query])).content
-        with open(os.path.basename(url.path), 'w') as fh:
-            fh.write(data)
+        with open(os.path.basename(url.path), 'w') as fileh:
+            fileh.write(data)
 
 
 def do_log(api, args):
     interval = 30.0
     lastmsg = None
-    while (True):
+    while True:
         printmsg = False
         msgs = api.log()
-        # We actually want it 'reversed' by default
+        # We actually want it 'reversed' by default, with the newest at the bottom
         if not args.reverse:
             msgs.reverse()
         for time, msg in msgs:
@@ -175,11 +182,12 @@ def do_log(api, args):
             break
 
 
-def add_verbosity_args(p):
-    p.add_argument('--debug', help='Print lots of debugging statements',
-                   action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
-    p.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
-    p.add_argument('-q', '--quiet', help='Hide most messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
+def add_verbosity_args(parser):
+    """Helper function to improve DRY"""
+    parser.add_argument('--debug', help='Print lots of debugging statements',
+                        action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
+    parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
+    parser.add_argument('-q', '--quiet', help='Hide most messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
 
 
 def main():
