@@ -130,14 +130,14 @@ def do_search(api, args):
         for movie in movies[:args.limit]:
             match = movie.best_match(args.filter)
             if match and not args.dry_run:
-                match.download_to_file()
+                match.download_to_file(args.output_directory)
             elif args.dry_run:
                 LOGGER.info("Dry-run, not downloading %s", match)
             else:
                 LOGGER.info("No match found for for movie %s (%s)", movie['Title'], movie['Year'])
         for torrent in torrents:
             if args.download and not args.dry_run:
-                torrent.download_to_file()
+                torrent.download_to_file(args.output_directory)
             elif args.dry_run:
                 LOGGER.info("Dry-run, not downloading %s", torrent)
     else:
@@ -205,6 +205,7 @@ def main():
                                default=ptpapi.config.config.get('Main', 'filter'))
     search_parent.add_argument('--movie-format', help="Set the output for movies", default=None)
     search_parent.add_argument('--torrent-format', help="Set the output for torrents", default=None)
+    search_parent.add_argument('-o', '--output-directory', help="Location for any downloaded files", default=None)
 
     search_parser = subparsers.add_parser('search', help='Search for or download movies', add_help=False, parents=[search_parent])
     search_parser.add_argument('-d', '--download', help="Download any movies found", action="store_true")
