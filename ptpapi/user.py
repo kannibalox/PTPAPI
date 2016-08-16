@@ -99,7 +99,7 @@ class CurrentUser(User):
                    'Unread': True if 'inbox-message--unread' in row['class'] else False}
 
     def inbox_conv(self, conv_id):
-        """Get a spefici conversation from the inbox"""
+        """Get a specific conversation from the inbox"""
         soup = bs4(session.base_get('inbox.php', params={'action': 'viewconv', 'id': conv_id}).text, "html.parser")
         messages = []
         for msg in soup.find_all('div', id=re.compile('^message'), class_="forum-post"):
