@@ -1,5 +1,6 @@
 """Represent a user"""
 import re
+import HTMLParser
 
 from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
 
@@ -29,13 +30,14 @@ class User(object):
         req = session.base_get('bookmarks.php', params=search_terms)
         movies = []
         for movie in api.Util.snarf_cover_view_data(req.text):
+            movie['Title'] = HTMLParser.HTMLParser().unescape(movie['Title'])
             movie['Torrents'] = []
             for group in movie['GroupingQualities']:
                 for torrent in group['Torrents']:
                     torrent_re = r'&#(\d*);.*title="(.*?)">(.*?) / (.*?) / (.*?) / (.*?)[ <]' # pylint: disable=line-too-long
                     match = re.search(torrent_re, torrent['Title'])
                     torrent['GoldenPopcorn'] = (match.group(1) == '10047') # 10047 = Unicode GP symbol pylint: disable=line-too-long
-                    torrent['ReleaseName'] = match.group(2)
+                    torrent['ReleaseName'] = HTMLParser.HTMLParser().unescape(match.group(2))
                     torrent['Codec'] = match.group(3)
                     torrent['Container'] = match.group(4)
                     torrent['Source'] = match.group(5)
