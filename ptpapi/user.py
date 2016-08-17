@@ -65,7 +65,6 @@ class CurrentUser(User):
     """Defines some additional methods that only apply to the logged in user."""
     def __init__(self, ID):
         self.ID = ID
-        super(CurrentUser, self).__init__(self)
         self.new_messages = 0
 
     def __parse_new_messages(self, soup):
