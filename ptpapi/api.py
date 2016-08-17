@@ -6,6 +6,7 @@ import os
 import json
 import pickle
 import logging
+import HTMLParser
 
 from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
 import requests # pylint: disable=import-error
@@ -101,6 +102,7 @@ class API(object):
                 movie['Directors'] = []
             if 'ImdbId' not in movie:
                 movie['ImdbId'] = '0'
+            movie['Title'] = HTMLParser.HTMLParser().unescape(movie['Title'])
             ret_array.append(Movie(data=movie))
         return ret_array
 
