@@ -96,7 +96,7 @@ This script automatically matches up files to movies on PTP. It's most basic usa
 
 For instance, if you have the file `Movie.2000.mkv`, and the torrent contains `Movie (2000)/Movie.2000.mkv`, the script will try to automatically create the folder `Movie (2000)` and hard link the file inside of it before attempting to seed it. See [ptpapi.conf.example](ptpapi.conf.example#L23) for more configuration options.
 
-See `ptp-reseed -h` for more information.
+See `ptp-reseed -h` and `ptpapi.conf.example` for more information and configuration options.
 
 #### guessit
 
