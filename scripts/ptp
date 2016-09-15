@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 import logging
 import os.path
 from urlparse import urlparse, parse_qs

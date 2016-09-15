@@ -109,10 +109,7 @@ class Movie(object):
     def best_match(self, profile):
         """A function to pull the best match of a movie, based on a human-readable filter
 
-        :param movie: a :py:class:`Movie` object
         :param profile: a filter string
-        :param allow_dead: Allow dead torrents to be returned
-        :type allow_dead: Boolean
         :rtype: The best matching movie, or None"""
         # We're going to emulate what.cd's collector option
         profiles = profile.lower().split(',')
