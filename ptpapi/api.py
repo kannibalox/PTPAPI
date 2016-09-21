@@ -66,6 +66,7 @@ class API(object):
             self.__save_cookie()
             # Get some information that will be useful for later
             req = session.base_get('index.php')
+        Util.raise_for_cloudflare(req.text)
         LOGGER.info("Login successful.")
         self.current_user_id = re.search(r'user.php\?id=(\d+)', req.text).group(1)
         self.auth_key = re.search(r'auth=([0-9a-f]{32})', req.text).group(1)
@@ -144,6 +145,13 @@ class API(object):
 
 class Util(object):
     """A class for misc. utilities"""
+    @staticmethod
+    def raise_for_cloudflare(text):
+        """Raises an exception if a CloudFlare error page is detected"""
+        soup = bs4(text, "html.parser")
+        msg = '-'.join(soup.find(class_="cf-error-overview").get_text().splitlines())
+        raise PTPAPIException("Encountered Cloudflare error page: %s", msg)
+
     @staticmethod
     def snarf_cover_view_data(text):
         """Grab cover view data directly from an html source
