@@ -149,8 +149,9 @@ class Util(object):
     def raise_for_cloudflare(text):
         """Raises an exception if a CloudFlare error page is detected"""
         soup = bs4(text, "html.parser")
-        msg = '-'.join(soup.find(class_="cf-error-overview").get_text().splitlines())
-        raise PTPAPIException("Encountered Cloudflare error page: %s", msg)
+        if soup.find(class_="cf-error-overview") is not None:
+            msg = '-'.join(soup.find(class_="cf-error-overview").get_text().splitlines())
+            raise PTPAPIException("Encountered Cloudflare error page: %s", msg)
 
     @staticmethod
     def snarf_cover_view_data(text):
