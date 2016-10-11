@@ -114,8 +114,8 @@ def match_by_movie(movie, filepath):
     LOGGER.info(u"Attempting to match against movie {0} ({1})".format(movie.ID, movie['Title']))
 
     movie.load_html_data()
-    for t in movie['Torrents']:
-        match = match_by_torrent(t, os.path.abspath(filepath))
+    for torrent in movie['Torrents']:
+        match = match_by_torrent(torrent, os.path.abspath(filepath))
         if match:
             return match
     return Match(None)
@@ -141,8 +141,8 @@ def match_by_guessed_name(ptp, filepath, name=None):
             movies = ptp.search({'searchstr': guess['title'], 'inallakas': '1'})
         if len(movies) == 0:
             LOGGER.debug("Could not find any movies by search with a guessed name")
-        for m in movies:
-            match = match_by_movie(m, filepath)
+        for movie in movies:
+            match = match_by_movie(movie, filepath)
             if match:
                 return match
     return Match(None)
@@ -151,8 +151,8 @@ def match_by_guessed_name(ptp, filepath, name=None):
 def match_against_file(ptp, filepath):
     filepath = os.path.abspath(filepath)
     LOGGER.info("Searching movies by file list")
-    for m in ptp.search({'filelist': os.path.basename(filepath)}):
-        match = match_by_movie(m, filepath)
+    for movie in ptp.search({'filelist': os.path.basename(filepath)}):
+        match = match_by_movie(movie, filepath)
         if match:
             return match
     return Match(None)
@@ -277,7 +277,7 @@ def main():
                 elif match_type == 'title':
                     match = match_by_guessed_name(ptp, arg_file)
                 else:
-                    LOGGER.error("Match type {0} not recognized, skipping".format(match_type))
+                    LOGGER.error("Match type {0} not recognized for {1}, skipping".format(match_type, filename))
                 if match:
                     break
 
