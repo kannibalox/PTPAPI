@@ -323,6 +323,7 @@ def main():
         print '==> Not found:'
         print '\n'.join(not_found)
 
+    LOGGER.debug("Total session tokens consumed: %s", ptpapi.session.session.consumed_tokens)
     LOGGER.debug("Exiting...")
 
 if __name__ == '__main__':
