@@ -129,7 +129,8 @@ class Movie(object):
                 'HD': (lambda t: t['Quality'] == 'High Definition'),
                 'SD': (lambda t: t['Quality'] == 'Standard Definition'),
                 'remux': (lambda t: 'remux' in t['RemasterTitle'].lower()),
-                'x264': (lambda t: t['Codec'] == 'x264')
+                'x264': (lambda t: t['Codec'] == 'x264'),
+                'seeded': (lambda t: t['Seeders'] > 0),
             }
             for (name, func) in filter_dict.items():
                 if name.lower() in profile:
