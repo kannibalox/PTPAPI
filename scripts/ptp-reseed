@@ -96,8 +96,8 @@ def match_by_torrent(torrent, filepath):
     for filename1, size1 in path1_files.items():
         for filename2, size2 in path2_files.items():
             LOGGER.debug("Comparing size of {0} ({1}) to size of {2} ({3})".format(filename1.encode('UTF-8'), size1, filename2.encode('UTF-8'), size2))
-            if size1 == size2: #and path2_files.values().count(size2) == 1:
-                LOGGER.debug("Matched {0} to {1}".format(filename1, filename2))
+            if size1 == size2:
+                LOGGER.debug("Matched {0} to {1}".format(filename1.encode('UTF-8'), filename2.encode('UTF-8')))
                 matched_files[filename1] = filename2
                 del path1_files[filename1]
                 del path2_files[filename2]
