@@ -134,22 +134,21 @@ class Movie(object):
             for (name, func) in filter_dict.items():
                 if name.lower() in profile:
                     matches = [t for t in matches if func(t)]
-                    LOGGER.debug("%i matches after filtering by parameter %s", len(matches), name)
+                    LOGGER.debug("%i matches after filtering by parameter '%s'", len(matches), name)
             sort_dict = {
                 'most recent': (True, (lambda t: datetime.strptime(t['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
                 'smallest': (True, (lambda t: t['Size'])),
                 'seeded': (True, (lambda t: t['Seeders'])),
                 'largest': (False, (lambda t: t['Size'])),
             }
-            for name, (rev, sort) in sort_dict.items():
-                if name in profile:
-                    current_sort = name
             if len(matches) == 1:
                 return matches[0]
             elif len(matches) > 1:
                 for name, (rev, sort) in sort_dict.items():
                     if name in profile:
                         current_sort = name
+                if current_sort is None:
+                    current_sort = 'most recent'
                 LOGGER.debug("Sorting by parameter %s", current_sort)
                 (rev, sort) = sort_dict[current_sort]
                 return sorted(matches, key=sort, reverse=rev)[0]
