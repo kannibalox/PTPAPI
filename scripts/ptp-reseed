@@ -148,10 +148,10 @@ def match_by_guessed_name(ptp, filepath, name=None):
     return Match(None)
 
 
-def match_against_file(ptp, filepath):
+def match_against_file(ptp, filepath, movie_limit):
     filepath = os.path.abspath(filepath)
     LOGGER.info("Searching movies by file list")
-    for movie in ptp.search({'filelist': os.path.basename(filepath)}):
+    for movie in ptp.search({'filelist': os.path.basename(filepath)})[:movie_limit]:
         match = match_by_movie(movie, filepath)
         if match:
             return match
@@ -226,6 +226,7 @@ def define_parser():
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
     parser.add_argument('-q', '--quiet', help='Don\'t show any messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
     parser.add_argument('-s', '--summary', help='Show a summary of all actions', action="store_true")
+    parser.add_argument('--movie-limit', help='Limit the number of movies checked for each file (if applicable)', type=int, default=5)
     return parser
 
 def main():
@@ -273,7 +274,7 @@ def main():
         elif arg_file:
             for match_type in ptpapi.config.config.get('Reseed', 'findBy').split(','):
                 if match_type == 'filename':
-                    match = match_against_file(ptp, arg_file)
+                    match = match_against_file(ptp, arg_file, args.movie_limit)
                 elif match_type == 'title':
                     match = match_by_guessed_name(ptp, arg_file)
                 else:
@@ -284,7 +285,7 @@ def main():
         # Make sure we have the minimum information required
         if not match:
             not_found.append(filename)
-            LOGGER.error("Could not find an associated torrent, cannot reseed")
+            LOGGER.error("Could not find an associated torrent for {0}, cannot reseed".format(filename.strip()))
             continue
 
         if args.create_in_directory:
