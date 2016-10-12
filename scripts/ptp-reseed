@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Reseed a torrent from PTP, given a path"""
 import sys
 import os
 import os.path
@@ -22,6 +23,7 @@ LOGGER = logging.getLogger(__name__)
 # ID is an integer-as-a-string, and path is filepath
 class Match(object):
     """A tiny class to make matching easiter"""
+    # pylint: disable=too-few-public-methods
     def __init__(self, ID=None, path=None, matched_files=None):
         """A defined match"""
         self.ID = ID
@@ -111,6 +113,7 @@ def match_by_torrent(torrent, filepath):
 
 
 def match_by_movie(movie, filepath):
+    """Tries to match a torrent against a single movie"""
     LOGGER.info(u"Attempting to match against movie {0} ({1})".format(movie.ID, movie['Title']))
 
     movie.load_html_data()
@@ -122,9 +125,10 @@ def match_by_movie(movie, filepath):
 
 
 def match_by_guessed_name(ptp, filepath, name=None):
+    """Use guessit to find the movie by metadata scraped from the filename"""
     filepath = os.path.abspath(filepath)
     try:
-        import guessit
+        import guessit # pylint: disable=import-error
     except ImportError:
         LOGGER.warn("Error importing 'guessit' module, skipping name guess")
         return Match(None)
@@ -149,6 +153,7 @@ def match_by_guessed_name(ptp, filepath, name=None):
 
 
 def match_against_file(ptp, filepath, movie_limit):
+    """Use's PTP's file search feature to match a filename to a movie"""
     filepath = os.path.abspath(filepath)
     LOGGER.info("Searching movies by file list")
     for movie in ptp.search({'filelist': os.path.basename(filepath)})[:movie_limit]:
@@ -159,6 +164,7 @@ def match_against_file(ptp, filepath, movie_limit):
 
 
 def create_matched_files(match, directory=None, action='hard', dry_run=False):
+    """Intelligently create any necessary files or directories by different methods"""
     if dry_run:
         LOGGER.info("Dry run, no files or directories will be created")
     for origin_file, matched_file in match.matched_files.items():
@@ -189,6 +195,7 @@ def create_matched_files(match, directory=None, action='hard', dry_run=False):
 
 
 def load_torrent(proxy, ID, path):
+    """Send a torrent to rtorrent and kick off the hash recheck"""
     torrent = ptpapi.Torrent(ID=ID)
     torrent_data = torrent.download()
     data = bencode.bdecode(torrent_data)
@@ -213,7 +220,7 @@ def load_torrent(proxy, ID, path):
     proxy.d.check_hash(thash)
 
 def define_parser():
-    """Define the argument parser"""
+    """Define the arguments for the CLI"""
     parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
     parser.add_argument('-u', '--url', help='Permalink to the torrent page')
     parser.add_argument('files', help='Paths to files/directories to reseed (or leave blank to read stdin)', nargs='*')
@@ -230,6 +237,7 @@ def define_parser():
     return parser
 
 def main():
+    """The entrypoint"""
     parser = define_parser()
     args = parser.parse_args()
 
