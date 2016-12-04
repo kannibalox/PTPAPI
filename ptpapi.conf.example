@@ -1,6 +1,6 @@
 [Main]
 # The base URL to use when making HTTP calls
-#baseURL=https://tls.passthepopcorn.me/
+#baseURL=https://passthepopcorn.me/
 
 # Where cookies are stored from the site, to reduce the necessary number of logins
 #cookiesFile=~/.ptp.cookies.txt

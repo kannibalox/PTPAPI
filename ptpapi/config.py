@@ -9,7 +9,7 @@ confFile = os.path.join(os.environ['HOME'], '.ptpapi.conf')
 
 default = """
 [Main]
-baseURL=https://tls.passthepopcorn.me/
+baseURL=https://passthepopcorn.me/
 cookiesFile=~/.ptp.cookies.txt
 downloadDirectory=.
 filter=
