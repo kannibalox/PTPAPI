@@ -142,7 +142,7 @@ def do_search(api, args):
         for torrent in torrents:
             if args.download and not args.dry_run:
                 if torrent_template:
-                    print torrent_template.substitute(match)
+                    print torrent_template.substitute(torrent)
                 torrent.download_to_file(args.output_directory)
             elif args.dry_run:
                 LOGGER.info("Dry-run, not downloading %s", torrent)
