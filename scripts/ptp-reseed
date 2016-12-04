@@ -281,14 +281,18 @@ def main():
                 match = match_by_movie(ptpapi.Movie(ID=parsed_url['id'][0]), arg_file)
         elif arg_file:
             for match_type in ptpapi.config.config.get('Reseed', 'findBy').split(','):
-                if match_type == 'filename':
-                    match = match_against_file(ptp, arg_file, args.movie_limit)
-                elif match_type == 'title':
-                    match = match_by_guessed_name(ptp, arg_file)
-                else:
-                    LOGGER.error("Match type {0} not recognized for {1}, skipping".format(match_type, filename))
-                if match:
-                    break
+                try:
+                    if match_type == 'filename':
+                        match = match_against_file(ptp, arg_file, args.movie_limit)
+                    elif match_type == 'title':
+                        match = match_by_guessed_name(ptp, arg_file)
+                    else:
+                        LOGGER.error("Match type {0} not recognized for {1}, skipping".format(match_type, filename))
+                    if match:
+                        break
+                except Exception:
+                    print "Error while attempting to match file '{0}'".format(arg_file)
+                    raise
 
         # Make sure we have the minimum information required
         if not match:
