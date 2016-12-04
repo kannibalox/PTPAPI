@@ -49,9 +49,9 @@ def match_by_torrent(torrent, filepath):
     path1 = os.path.abspath(filepath)
     path1_files = {}
     if os.path.isdir(path1):
-        for root, _, filenames in os.walk(path1, followlinks=True):
+        for root, _, filenames in os.walk(path1.encode('UTF-8'), followlinks=True):
             for filename in filenames:
-                realpath = os.path.join(root, filename).replace(os.path.dirname(path1) + os.sep, '')
+                realpath = os.path.join(root, filename).replace(os.path.dirname(path1.decode('UTF-8')) + os.sep, '')
                 path1_files[realpath] = os.path.getsize(os.path.join(root, filename))
     elif os.path.isfile(path1):
         path1_files[path1.replace(os.path.dirname(path1) + os.sep, '')] = os.path.getsize(path1)
