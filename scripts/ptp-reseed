@@ -46,12 +46,12 @@ def match_by_torrent(torrent, filepath):
     """Attempt matching against a torrent ID"""
     LOGGER.info(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent['ReleaseName']))
 
-    path1 = os.path.abspath(filepath)
+    path1 = unicode(os.path.abspath(filepath))
     path1_files = {}
     if os.path.isdir(path1):
-        for root, _, filenames in os.walk(path1.encode('UTF-8'), followlinks=True):
+        for root, _, filenames in os.walk(path1.encode('utf8'), followlinks=True):
             for filename in filenames:
-                realpath = os.path.join(root, filename).replace(os.path.dirname(path1.decode('UTF-8')) + os.sep, '')
+                realpath = unicode(os.path.join(root, filename).replace(os.path.dirname(path1) + os.sep, ''))
                 path1_files[realpath] = os.path.getsize(os.path.join(root, filename))
     elif os.path.isfile(path1):
         path1_files[path1.replace(os.path.dirname(path1) + os.sep, '')] = os.path.getsize(path1)
@@ -291,7 +291,7 @@ def main():
                     if match:
                         break
                 except Exception:
-                    print "Error while attempting to match file '{0}'".format(arg_file)
+                    print u"Error while attempting to match file '{0}'".format(arg_file)
                     raise
 
         # Make sure we have the minimum information required

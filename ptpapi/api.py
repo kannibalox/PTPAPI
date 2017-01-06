@@ -8,8 +8,8 @@ import pickle
 import logging
 import HTMLParser
 
-from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
-import requests # pylint: disable=import-error
+from bs4 import BeautifulSoup as bs4
+import requests
 
 from config import config
 from session import session
@@ -121,7 +121,7 @@ class API(object):
             ret_array.append((cell.find_all('td')[1].get_text(), cell.find_all('td')[2].get_text()))
         return ret_array
 
-    def collage(self, coll_id, search_terms):
+    def collage(self, coll_id, search_terms={}):
         """Simplistic representation of a collage, might be split out later"""
         search_terms['id'] = coll_id
         req = session.base_get('collages.php', params=search_terms)
@@ -135,7 +135,7 @@ class API(object):
 
     def log(self):
         """Gets the PTP log"""
-        soup = bs4(session.base_get('/log.php').content, "html.parser")
+        soup = bs4(session.base_get('log.php').content, "html.parser")
         ret_array = []
         for message in soup.find('table').find('tbody').find_all('tr'):
             ret_array.append((message.find('span', class_='time')['title'],
@@ -151,7 +151,7 @@ class Util(object):
         soup = bs4(text, "html.parser")
         if soup.find(class_="cf-error-overview") is not None:
             msg = '-'.join(soup.find(class_="cf-error-overview").get_text().splitlines())
-            raise PTPAPIException("Encountered Cloudflare error page: %s", msg)
+            raise PTPAPIException("Encountered Cloudflare error page: ", msg)
 
     @staticmethod
     def snarf_cover_view_data(text):
