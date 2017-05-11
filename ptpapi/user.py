@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
 import api
 from session import session
 from movie import Movie
-
+from torrent import Torrent
 
 class User(object):
     """A primitive class to represent a user"""
@@ -34,14 +34,16 @@ class User(object):
             movie['Torrents'] = []
             for group in movie['GroupingQualities']:
                 for torrent in group['Torrents']:
-                    torrent_re = r'&#(\d*);.*title="(.*?)">(.*?) / (.*?) / (.*?) / (.*?)[ <]' # pylint: disable=line-too-long
-                    match = re.search(torrent_re, torrent['Title'])
-                    torrent['GoldenPopcorn'] = (match.group(1) == '10047') # 10047 = Unicode GP symbol pylint: disable=line-too-long
-                    torrent['ReleaseName'] = HTMLParser.HTMLParser().unescape(match.group(2))
-                    torrent['Codec'] = match.group(3)
-                    torrent['Container'] = match.group(4)
-                    torrent['Source'] = match.group(5)
-                    torrent['Resolution'] = match.group(6)
+                    soup = bs4(torrent['Title'], "html.parser")
+                    match = re.search(r'(.*?) / (.*?) / (.*?) / (.*?)', soup.a.text)
+                    torrent['Codec'] = match.group(1)
+                    torrent['Container'] = match.group(2)
+                    torrent['Source'] = match.group(3)
+                    torrent['Resolution'] = match.group(4)
+                    torrent['GoldenPopcorn'] = (soup.contents[0].string.strip(' ') == u'\u10047') # 10047 = Unicode GP symbol pylint: disable=line-too-long
+                    torrent['ReleaseName'] = soup.a['title'].split('\n')[-1]
+                    match = re.search(r'torrents.php\?id=(\d+)&torrentid=(\d+)', soup.a['href'])
+                    torrent['Id'] = match.group(2)
                     movie['Torrents'].append(torrent)
             movies.append(Movie(data=movie))
         return movies
