@@ -35,11 +35,7 @@ class User(object):
             for group in movie['GroupingQualities']:
                 for torrent in group['Torrents']:
                     soup = bs4(torrent['Title'], "html.parser")
-                    match = re.search(r'(.*?) / (.*?) / (.*?) / (.*?)', soup.a.text)
-                    torrent['Codec'] = match.group(1)
-                    torrent['Container'] = match.group(2)
-                    torrent['Source'] = match.group(3)
-                    torrent['Resolution'] = match.group(4)
+                    torrent['Codec'], torrent['Container'], torrent['Source'], torrent['Resolution'] = [item.strip() for item in soup.a.text.split('/')[0:4]]
                     torrent['GoldenPopcorn'] = (soup.contents[0].string.strip(' ') == u'\u10047') # 10047 = Unicode GP symbol pylint: disable=line-too-long
                     torrent['ReleaseName'] = soup.a['title'].split('\n')[-1]
                     match = re.search(r'torrents.php\?id=(\d+)&torrentid=(\d+)', soup.a['href'])
