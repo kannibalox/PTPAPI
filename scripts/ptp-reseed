@@ -11,7 +11,7 @@ from urlparse import urlparse, parse_qs
 
 from pyrobase import bencode
 from pyrocore import config
-from pyrocore.util import load_config, metafile
+from pyrocore.util import load_config, metafile, xmlrpc
 
 import ptpapi
 
@@ -204,7 +204,7 @@ def load_torrent(proxy, ID, path):
         LOGGER.debug(u"Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True)))
         LOGGER.error(u"Hash {0} already exists in rtorrent as {1}, cannot load.".format(thash, proxy.d.name(thash)))
         return
-    except xmlrpclib.Fault:
+    except (xmlrpclib.Fault, xmlrpc.HashNotFound):
         pass
     proxy.load_raw(xmlrpclib.Binary(torrent_data))
     # Wait until the torrent is loaded and available
