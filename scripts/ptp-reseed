@@ -219,6 +219,22 @@ def load_torrent(proxy, ID, path):
     proxy.d.directory.set(thash, path)
     proxy.d.check_hash(thash)
 
+
+def find_existing_torrents(proxy):
+    """Filter out a list of path for all PTP torrents"""
+    paths = []
+    for torrent in proxy.d.multicall('main', 'd.directory=', 'd.is_multi_file=', 'd.name=', "t.multicall='',t.get_url="):
+        basedir, is_multi, name, trackers = torrent
+        for tracker in trackers:
+            if 'passthepopcorn' in tracker[0]:
+                # http://rtorrent-docs.readthedocs.io/en/latest/cmd-ref.html#term-d-directory-set
+                if is_multi == 1:
+                    paths.append(basedir)
+                else:
+                    paths.append(os.path.join(basedir, name))
+    return paths
+
+
 def define_parser():
     """Define the arguments for the CLI"""
     parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
@@ -233,7 +249,8 @@ def define_parser():
     parser.add_argument('-v', '--verbose', help='Be verbose', action="store_const", dest="loglevel", const=logging.INFO)
     parser.add_argument('-q', '--quiet', help='Don\'t show any messages', action="store_const", dest="loglevel", const=logging.CRITICAL)
     parser.add_argument('-s', '--summary', help='Show a summary of all actions', action="store_true")
-    parser.add_argument('--movie-limit', help='Limit the number of movies checked for each file (if applicable)', type=int, default=5)
+    parser.add_argument('--movie-limit', help='Limit the maximum number of movies checked for each file', type=int, default=5)
+    parser.add_argument('--compare-paths', help='Check rtorrent for path matches before checking the site (experimental)', action="store_true")
     return parser
 
 def main():
@@ -253,7 +270,6 @@ def main():
     # Load PTP API
     ptp = ptpapi.login()
 
-    match = Match(None)
 
     loaded = []
     would_load = []
@@ -265,7 +281,13 @@ def main():
     else:
         filelist = args.files
 
+    if args.compare_paths:
+        loaded_paths = find_existing_torrents(proxy)
+    else:
+        loaded_paths = []
+
     for filename in filelist:
+        match = Match(None)
         arg_file = filename.strip('\n').decode('UTF-8')
         LOGGER.info('Starting reseed attempt on file {0}'.format(arg_file.encode('UTF-8')))
 
@@ -283,7 +305,11 @@ def main():
             for match_type in ptpapi.config.config.get('Reseed', 'findBy').split(','):
                 try:
                     if match_type == 'filename':
-                        match = match_against_file(ptp, arg_file, args.movie_limit)
+                        if os.path.abspath(arg_file) in loaded_paths:
+                            LOGGER.info('Path {0} already in rtorrent, skipping'.format(os.path.abspath(arg_file)))
+                        else:
+                            LOGGER.info('Path {0} not in rtorrent, proceeding'.format(os.path.abspath(arg_file)))
+                            match = match_against_file(ptp, arg_file, args.movie_limit)
                     elif match_type == 'title':
                         match = match_by_guessed_name(ptp, arg_file)
                     else:
