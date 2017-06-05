@@ -308,7 +308,6 @@ def main():
                         if os.path.abspath(arg_file) in loaded_paths:
                             LOGGER.info('Path {0} already in rtorrent, skipping'.format(os.path.abspath(arg_file)))
                         else:
-                            LOGGER.info('Path {0} not in rtorrent, proceeding'.format(os.path.abspath(arg_file)))
                             match = match_against_file(ptp, arg_file, args.movie_limit)
                     elif match_type == 'title':
                         match = match_by_guessed_name(ptp, arg_file)
