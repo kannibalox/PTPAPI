@@ -15,8 +15,6 @@ from pyrocore.util import load_config, metafile, xmlrpc
 
 import ptpapi
 
-LOGGER = logging.getLogger(__name__)
-
 
 # A tiny class to make code cleaner,
 # as well as possibly making adding something like a confidence indicator easier
@@ -44,7 +42,8 @@ class Match(object):
 
 def match_by_torrent(torrent, filepath):
     """Attempt matching against a torrent ID"""
-    LOGGER.info(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent['ReleaseName']))
+    logger = logging.getLogger(__name__)
+    logger.info(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent['ReleaseName']))
 
     path1 = unicode(os.path.abspath(filepath))
     path1_files = {}
@@ -59,19 +58,19 @@ def match_by_torrent(torrent, filepath):
     path2_files = dict((f, int(s)) for f, s in torrent['Filelist'].items())
 
     if len(path1_files) < len(path2_files):
-        LOGGER.debug("Too little files to match torrent ({0} locally, {1} in torrent)".format(len(path1_files), len(path2_files)))
+        logger.debug("Too little files to match torrent ({0} locally, {1} in torrent)".format(len(path1_files), len(path2_files)))
         return Match(None)
 
     matched_files = {}
-    LOGGER.debug("Looking for exact matches")
+    logger.debug("Looking for exact matches")
     for filename, size in path1_files.items():
         if filename in path2_files.keys() and path2_files[filename] == size:
             matched_files[filename] = filename
             del path1_files[filename]
             del path2_files[filename]
-    LOGGER.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
-    LOGGER.debug("Looking for matches with same size and name but different root folder")
+    logger.debug("Looking for matches with same size and name but different root folder")
     for filename1, size1 in path1_files.items():
         no_root1 = os.sep.join(os.path.normpath(filename1).split(os.sep)[1:])
         for filename2, size2 in path2_files.items():
@@ -81,9 +80,9 @@ def match_by_torrent(torrent, filepath):
                 del path1_files[filename1]
                 del path2_files[filename2]
                 break
-    LOGGER.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
-    LOGGER.debug("Looking for matches with same base name and size")
+    logger.debug("Looking for matches with same base name and size")
     for filename1, size1 in path1_files.items():
         for filename2, size2 in path2_files.items():
             if os.path.basename(filename1) == os.path.basename(filename2) and size1 == size2:
@@ -92,29 +91,30 @@ def match_by_torrent(torrent, filepath):
                     del path1_files[filename1]
                     del path2_files[filename2]
                     break
-    LOGGER.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
-    LOGGER.debug("Looking for matches by size only")
+    logger.debug("Looking for matches by size only")
     for filename1, size1 in path1_files.items():
         for filename2, size2 in path2_files.items():
-            LOGGER.debug("Comparing size of {0} ({1}) to size of {2} ({3})".format(filename1.encode('UTF-8'), size1, filename2.encode('UTF-8'), size2))
+            logger.debug("Comparing size of {0} ({1}) to size of {2} ({3})".format(filename1.encode('UTF-8'), size1, filename2.encode('UTF-8'), size2))
             if size1 == size2:
-                LOGGER.debug("Matched {0} to {1}".format(filename1.encode('UTF-8'), filename2.encode('UTF-8')))
+                logger.debug("Matched {0} to {1}".format(filename1.encode('UTF-8'), filename2.encode('UTF-8')))
                 matched_files[filename1] = filename2
                 del path1_files[filename1]
                 del path2_files[filename2]
                 break
-    LOGGER.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
+    logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
     if len(path2_files) > 0:
-        LOGGER.info("Not all files could be matched, returning...")
+        logger.info("Not all files could be matched, returning...")
         return Match(None)
     return Match(torrent.ID, os.path.dirname(path1), matched_files)
 
 
 def match_by_movie(movie, filepath):
     """Tries to match a torrent against a single movie"""
-    LOGGER.info(u"Attempting to match against movie {0} ({1})".format(movie.ID, movie['Title']))
+    logger = logging.getLogger(__name__)
+    logger.info(u"Attempting to match against movie {0} ({1})".format(movie.ID, movie['Title']))
 
     movie.load_html_data()
     for torrent in movie['Torrents']:
@@ -126,13 +126,14 @@ def match_by_movie(movie, filepath):
 
 def match_by_guessed_name(ptp, filepath, name=None):
     """Use guessit to find the movie by metadata scraped from the filename"""
+    logger = logging.getLogger(__name__)
     filepath = os.path.abspath(filepath)
     try:
         import guessit # pylint: disable=import-error
     except ImportError:
-        LOGGER.warn("Error importing 'guessit' module, skipping name guess")
+        logger.warn("Error importing 'guessit' module, skipping name guess")
         return Match(None)
-    LOGGER.info("Guessing name from filepath with guessit")
+    logger.info("Guessing name from filepath with guessit")
     if not name:
         name = os.path.basename(filepath)
     guess = guessit.guessit(name)
@@ -144,7 +145,7 @@ def match_by_guessed_name(ptp, filepath, name=None):
         if len(movies) == 0:
             movies = ptp.search({'searchstr': guess['title'], 'inallakas': '1'})
         if len(movies) == 0:
-            LOGGER.debug("Could not find any movies by search with a guessed name")
+            logger.debug("Could not find any movies by search with a guessed name")
         for movie in movies:
             match = match_by_movie(movie, filepath)
             if match:
@@ -154,8 +155,9 @@ def match_by_guessed_name(ptp, filepath, name=None):
 
 def match_against_file(ptp, filepath, movie_limit):
     """Use's PTP's file search feature to match a filename to a movie"""
+    logger = logging.getLogger(__name__)
     filepath = os.path.abspath(filepath)
-    LOGGER.info("Searching movies by file list")
+    logger.info("Searching movies by file list")
     for movie in ptp.search({'filelist': os.path.basename(filepath)})[:movie_limit]:
         match = match_by_movie(movie, filepath)
         if match:
@@ -165,8 +167,9 @@ def match_against_file(ptp, filepath, movie_limit):
 
 def create_matched_files(match, directory=None, action='hard', dry_run=False):
     """Intelligently create any necessary files or directories by different methods"""
+    logger = logging.getLogger(__name__)
     if dry_run:
-        LOGGER.info("Dry run, no files or directories will be created")
+        logger.info("Dry run, no files or directories will be created")
     for origin_file, matched_file in match.matched_files.items():
         origin_file = os.path.join(match.path, origin_file)
         if directory is None:
@@ -174,7 +177,7 @@ def create_matched_files(match, directory=None, action='hard', dry_run=False):
         file_to_create = os.path.join(directory, matched_file)
         path_to_create = os.path.dirname(file_to_create)
         try:
-            LOGGER.debug(u"Creating directory '{0}'".format(path_to_create))
+            logger.debug(u"Creating directory '{0}'".format(path_to_create))
             if not dry_run:
                 os.makedirs(path_to_create)
         except OSError as exc:
@@ -182,9 +185,9 @@ def create_matched_files(match, directory=None, action='hard', dry_run=False):
             if exc.errno != 17:
                 raise
         if os.path.lexists(file_to_create):
-            LOGGER.debug(u"File '{0}' already exists, skipping creation".format(file_to_create))
+            logger.debug(u"File '{0}' already exists, skipping creation".format(file_to_create))
             continue
-        LOGGER.info(u"Creating file '{0}' from '{1}' via action '{2}'".format(file_to_create, origin_file, action))
+        logger.info(u"Creating file '{0}' from '{1}' via action '{2}'".format(file_to_create, origin_file, action))
         if not dry_run:
             if action == 'soft':
                 os.symlink(origin_file, file_to_create)
@@ -196,13 +199,14 @@ def create_matched_files(match, directory=None, action='hard', dry_run=False):
 
 def load_torrent(proxy, ID, path):
     """Send a torrent to rtorrent and kick off the hash recheck"""
+    logger = logging.getLogger(__name__)
     torrent = ptpapi.Torrent(ID=ID)
     torrent_data = torrent.download()
     data = bencode.bdecode(torrent_data)
     thash = metafile.info_hash(data)
     try:
-        LOGGER.debug(u"Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True)))
-        LOGGER.error(u"Hash {0} already exists in rtorrent as {1}, cannot load.".format(thash, proxy.d.name(thash)))
+        logger.debug(u"Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True)))
+        logger.error(u"Hash {0} already exists in rtorrent as {1}, cannot load.".format(thash, proxy.d.name(thash)))
         return
     except (xmlrpclib.Fault, xmlrpc.HashNotFound):
         pass
@@ -215,7 +219,7 @@ def load_torrent(proxy, ID, path):
             break
         except xmlrpclib.Fault:
             pass
-    LOGGER.info(u"Torrent loaded at {0}".format(path))
+    logger.info(u"Torrent loaded at {0}".format(path))
     proxy.d.directory.set(thash, path)
     proxy.d.check_hash(thash)
 
@@ -257,6 +261,7 @@ def main():
     """The entrypoint"""
     parser = define_parser()
     args = parser.parse_args()
+    logger = logging.getLogger('ptp-reseed')
 
     logging.basicConfig(level=args.loglevel)
 
@@ -289,10 +294,10 @@ def main():
     for filename in filelist:
         match = Match(None)
         arg_file = filename.strip('\n').decode('UTF-8')
-        LOGGER.info('Starting reseed attempt on file {0}'.format(arg_file.encode('UTF-8')))
+        logger.info('Starting reseed attempt on file {0}'.format(arg_file.encode('UTF-8')))
 
         if not os.path.exists(arg_file):
-            LOGGER.error(u"File/directory {0} does not exist".format(arg_file.encode('UTF-8')))
+            logger.error(u"File/directory {0} does not exist".format(arg_file.encode('UTF-8')))
             continue
 
         if args.url:
@@ -306,13 +311,13 @@ def main():
                 try:
                     if match_type == 'filename':
                         if os.path.abspath(arg_file) in loaded_paths:
-                            LOGGER.info('Path {0} already in rtorrent, skipping'.format(os.path.abspath(arg_file)))
+                            logger.info('Path {0} already in rtorrent, skipping'.format(os.path.abspath(arg_file)))
                         else:
                             match = match_against_file(ptp, arg_file, args.movie_limit)
                     elif match_type == 'title':
                         match = match_by_guessed_name(ptp, arg_file)
                     else:
-                        LOGGER.error("Match type {0} not recognized for {1}, skipping".format(match_type, filename))
+                        logger.error("Match type {0} not recognized for {1}, skipping".format(match_type, filename))
                     if match:
                         break
                 except Exception:
@@ -322,7 +327,7 @@ def main():
         # Make sure we have the minimum information required
         if not match:
             not_found.append(filename)
-            LOGGER.error("Could not find an associated torrent for {0}, cannot reseed".format(filename.strip()))
+            logger.error("Could not find an associated torrent for {0}, cannot reseed".format(filename.strip()))
             continue
 
         if args.create_in_directory:
@@ -332,10 +337,10 @@ def main():
         else:
             create_in = None
         match = create_matched_files(match, directory=create_in, action=args.action, dry_run=args.dry_run)
-        LOGGER.info(u"Found match, now loading torrent {0} to path {1}".format(match.ID, match.path))
+        logger.info(u"Found match, now loading torrent {0} to path {1}".format(match.ID, match.path))
         if args.dry_run:
             would_load.append(filename)
-            LOGGER.debug("Dry-run: Stopping before actual load")
+            logger.debug("Dry-run: Stopping before actual load")
             continue
         if load_torrent(proxy, match.ID, match.path):
             loaded.append(filename)
@@ -352,8 +357,8 @@ def main():
         print '==> Not found:'
         print '\n'.join(not_found)
 
-    LOGGER.debug("Total session tokens consumed: %s", ptpapi.session.session.consumed_tokens)
-    LOGGER.debug("Exiting...")
+    logger.debug("Total session tokens consumed: %s", ptpapi.session.session.consumed_tokens)
+    logger.debug("Exiting...")
 
 if __name__ == '__main__':
     main()
