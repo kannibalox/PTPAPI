@@ -89,7 +89,7 @@ def parse_terms(termlist):
             else:
                 term_map = {
                     'taglist': ['genre', 'genres', 'tags'],
-                    'name': ['searchstr']
+                    'searchstr': ['name', 'title']
                 }
                 for key, value in term_map.items():
                     if term[0] in value:
