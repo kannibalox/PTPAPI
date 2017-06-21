@@ -217,7 +217,7 @@ def load_torrent(proxy, ID, path):
         try:
             proxy.d.hash(thash, fail_silently=True)
             break
-        except xmlrpclib.Fault:
+        except (xmlrpclib.Fault, xmlrpc.HashNotFound):
             pass
     logger.info(u"Torrent loaded at {0}".format(path))
     proxy.d.directory.set(thash, path)
