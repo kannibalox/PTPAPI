@@ -38,13 +38,12 @@ This is only the minimum required configuration. See `ptpapi.conf.example` for a
 Filters were designed as a way to take a full movie group, and narrow it down to a single torrent. A filter consists of multiple sub-filters, where the first sub-filter to match will download the torrent, and if not, the next sub-filter will be checked. If none of the sub-filters match, no download will occur. 
 
 The full list of possible values for picking encodes is:
-* `GP`
-* `Scene`
+* `GP` or `Scene`
 * `576p` or `720p` or `1080p`
 * `HD` or `SD`
 * `Remux`
 
-Note that it's possible to have two incompatible values, e.g. `GP` and `Scene`, but this simply means the sub-filter won't ever match a torrent, and it will always be skipped over.
+Note that it's possible to have two incompatible values, e.g. `GP` and `Scene`, but this simply means the sub-filter won't ever match a torrent, and will always be skipped over.
 
 The possible values for sorting are:
 * `most recent` (the default if none are specified)
@@ -55,12 +54,6 @@ The possible values for sorting are:
 #### Examples
 
 For instance, the filter `smallest GP,720p scene,largest` would attempt to download the smallest GP. If there are no GPs, it will try to find a 720p scene encode. If it can't find either of those, it will just pick the largest torrent available.
-
-Other examples:
-
-``
-
-Download 
 
 ## Usage
 
