@@ -30,17 +30,6 @@ class User(object):
         req = session.base_get('bookmarks.php', params=search_terms)
         movies = []
         for movie in api.Util.snarf_cover_view_data(req.text):
-            movie['Title'] = HTMLParser.HTMLParser().unescape(movie['Title'])
-            movie['Torrents'] = []
-            for group in movie['GroupingQualities']:
-                for torrent in group['Torrents']:
-                    soup = bs4(torrent['Title'], "html.parser")
-                    torrent['Codec'], torrent['Container'], torrent['Source'], torrent['Resolution'] = [item.strip() for item in soup.a.text.split('/')[0:4]]
-                    torrent['GoldenPopcorn'] = (soup.contents[0].string.strip(' ') == u'\u10047') # 10047 = Unicode GP symbol pylint: disable=line-too-long
-                    torrent['ReleaseName'] = soup.a['title'].split('\n')[-1]
-                    match = re.search(r'torrents.php\?id=(\d+)&torrentid=(\d+)', soup.a['href'])
-                    torrent['Id'] = match.group(2)
-                    movie['Torrents'].append(torrent)
             movies.append(Movie(data=movie))
         return movies
 
