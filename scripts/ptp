@@ -9,9 +9,6 @@ import tempita
 
 import ptpapi
 
-LOGGER = logging.getLogger(__name__)
-
-
 def ellipsize(string, length):
     if len(string) > length:
         return string[:length-3] + '...'
@@ -99,6 +96,7 @@ def parse_terms(termlist):
 
 
 def do_search(api, args):
+    logger = logging.getLogger(__name__)
     (target, movies, torrents, terms) = parse_terms(args.search_terms)
     if args.movie_format == "":
         movie_template = None # Just to make linting happy
@@ -117,7 +115,7 @@ def do_search(api, args):
 
     # If we haven't found any URL-looking things
     if not movies and not torrents:
-        LOGGER.debug('Attempting to search target "%s" with terms %s', target, terms)
+        logger.debug('Attempting to search target "%s" with terms %s', target, terms)
         if target == 'torrents':
             movies = api.search(terms)
         elif target == 'bookmarks':
@@ -136,16 +134,16 @@ def do_search(api, args):
                     print torrent_template.substitute(match)
                 match.download_to_file(args.output_directory)
             elif args.dry_run:
-                LOGGER.info("Dry-run, not downloading %s", match)
+                logger.info("Dry-run, not downloading %s", match)
             else:
-                LOGGER.info("No match found for for movie %s (%s)", movie['Title'], movie['Year'])
+                logger.info("No match found for for movie %s (%s)", movie['Title'], movie['Year'])
         for torrent in torrents:
             if args.download and not args.dry_run:
                 if torrent_template:
                     print torrent_template.substitute(torrent)
                 torrent.download_to_file(args.output_directory)
             elif args.dry_run:
-                LOGGER.info("Dry-run, not downloading %s", torrent)
+                logger.info("Dry-run, not downloading %s", torrent)
     else:
         for movie in movies[:args.limit]:
             if movie_template:
