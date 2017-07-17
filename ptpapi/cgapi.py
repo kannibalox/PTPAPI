@@ -2,8 +2,8 @@ import re
 
 from bs4 import BeautifulSoup
 
-from config import config
-from session import session
+from ptpapi.config import config
+from ptpapi.session import session
 
 
 class CGAPI:
@@ -20,13 +20,13 @@ class CGAPI:
                                 data={"username": username,
                                       "password": password}).text
         if response.find('action="takelogin.php"') != -1:
-            print response
             raise CGAPIException("Failed to log in")
         self.loggedIn = True
 
     def search(self, search_args):
         search_string = '&'.join(["%s=%s" % (key, value) for (key, value) in search_args.items()])
         soup = self.__httpRequest('/browse.php?%s' % search_string)
+        #print soup
         return self.getTorrentListInfo(soup)
 
     def getTorrentListInfo(self, soup):
@@ -36,17 +36,17 @@ class CGAPI:
         retArray = []
         for r in rows:
             data = {}
-            data['Title'] = r.find('a', href=re.compile('details.php\?id=[0-9]+$'))['title']
-            data['Size'] = r.find(text=re.compile('[0-9]+\.[0-9]+ [A-Z]B'))
+            data['Title'] = r.find('a', href=re.compile(r'details.php\?id=[0-9]+$'))['title']
+            data['BinaryHumanSize'] = r.find(text=re.compile(r'[0-9]+\.[0-9]+ [A-Z]B')).replace('B', 'iB').replace('k', 'K')
             data['Seeders'] = re.match(r'([0-9]+)', r.find(title=re.compile('[0-9]+ seeders?'))['title']).group(1)
-            data['ID'] = re.match(r'details.php\?id=([0-9]+)$', r.find('a', href=re.compile('details.php\?id=[0-9]+$'))['href']).group(1)
+            data['ID'] = re.match(r'details.php\?id=([0-9]+)$', r.find('a', href=re.compile(r'details.php\?id=[0-9]+$'))['href']).group(1)
             retArray.append(data)
         return retArray
 
     def downloadTorrent(self, tID, name=None):
         r = session.get(self.baseURL + '/download.php', params={'id': tID})
         if not name:
-            name = str(tID) + '.torrent'
+            name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
         with open(name.replace('/', '_'), 'wb') as fh:
             fh.write(r.content)
 
@@ -74,4 +74,4 @@ class CGAPIException(Exception):
 if __name__ == '__main__':
     cg = CGAPI()
     cg.login()
-    print cg.search({'search': 'tt0111512'})
+    print cg.search({'search': 'tt0054650'})

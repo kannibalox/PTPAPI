@@ -11,7 +11,7 @@ class KGAPI:
     HttpHeader = {"User-Agent": "Wget/1.13.4"}
 
     def __init__(self):
-        self.baseURL = "https://karagarga.net"
+        self.baseURL = "https://karagarga.in"
         self.loggedIn = False
 
     def login(self, username=None, password=None, passkey=None):
@@ -44,7 +44,7 @@ class KGAPI:
                 'Year': cells[3].get_text(),
                 'Seeders': cells[12].get_text(),
                 'Leechers': cells[13].get_text(),
-                'Size': cells[10].get_text(),
+                'BinaryHumanSize': re.sub(r'([a-zA-Z])B', r' \1iB', cells[10].get_text()).replace('k', 'K')
             }
             infoDict['ID'] = re.search(r'\d+', cells[1].a['href']).group(0)
             retArray.append(infoDict)
@@ -89,4 +89,4 @@ class KGAPIException(Exception):
 if __name__ == '__main__':
     kg = KGAPI()
     kg.login()
-    print kg.download(kg.search({'search_type': 'imdb', 'search': 'tt0126237'})[0]['ID'])
+    print kg.search({'search_type': 'imdb', 'search': '0207295'})
