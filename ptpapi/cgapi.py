@@ -55,7 +55,7 @@ class CGAPI:
             print "Not logged in"
             return None
         html = self.__request(self.baseURL + url, data)
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "html5lib")
         return soup
 
     def __request(self, url, data=None):
