@@ -1,18 +1,19 @@
 import os
 import re
 
+import humanize
 from bs4 import BeautifulSoup
 
-from config import config
-from session import session
+from ptpapi.config import config
+from ptpapi.session import session
+from ptpapi.sites.base import BaseSiteAPI
 
-
-class KGAPI:
+class KGAPI(BaseSiteAPI):
     HttpHeader = {"User-Agent": "Wget/1.13.4"}
 
     def __init__(self):
         self.baseURL = "https://karagarga.in"
-        self.loggedIn = False
+        super(KGAPI, self).__init__()
 
     def login(self, username=None, password=None, passkey=None):
         password = (password or config.get('KG', 'password'))
@@ -23,7 +24,6 @@ class KGAPI:
         if response.find('action="takelogin.php"') != -1:
             print response
             raise KGAPIException("Failed to log in")
-        self.loggedIn = True
 
     def search(self, search_args):
         search_string = '&'.join(["%s=%s" % (key, value) for (key, value) in search_args.items()])
@@ -55,7 +55,7 @@ class KGAPI:
         downloadName = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
         return (downloadName, r.content)
 
-    def downloadTorrent(self, ID, dest=None, name=None):
+    def download_torrent(self, ID, dest=None, name=None):
         if not dest:
             dest = os.getcwd()
         r = session.get(self.baseURL + "/down.php/%s/file.torrent" % ID)
@@ -65,10 +65,16 @@ class KGAPI:
             fh.write(r.content)
         return os.path.join(dest, name)
 
+    def find_ptp_movie(self, movie):
+        return self.search({'search_type': 'imdb', 'search': movie['ImdbId']})
+
+    def bytes_to_site_size(self, byte_num):
+        humanized = humanize.naturalsize(byte_num, format='%.2f', binary=True)
+        if 'MiB' in humanized or 'KiB' in humanized:
+            humanized = humanize.naturalsize(byte_num, format='%d', binary=True)
+        return humanized
+
     def __httpRequest(self, url, data=None):
-        if not self.loggedIn:
-            print "Not logged in"
-            return None
         html = self.__request(self.baseURL + url, data)
         soup = BeautifulSoup(html, "html.parser")
         return soup
@@ -77,16 +83,11 @@ class KGAPI:
         return session.get(url, data=data).text
 
     def __jsonRequest(self, url, data=None):
-        if not self.loggedIn:
-            print "Not logged in"
-            return None
         return session.get(url, data=data).json()
-
 
 class KGAPIException(Exception):
     pass
 
 if __name__ == '__main__':
     kg = KGAPI()
-    kg.login()
     print kg.search({'search_type': 'imdb', 'search': '0207295'})

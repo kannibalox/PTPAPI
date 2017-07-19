@@ -1,33 +1,43 @@
 import re
 
+import humanize
 from bs4 import BeautifulSoup
 
 from ptpapi.config import config
 from ptpapi.session import session
+from ptpapi.sites.base import BaseSiteAPI
 
-
-class CGAPI:
+class CGAPI(BaseSiteAPI):
     HttpHeader = {"User-Agent": "Wget/1.13.4"}
 
     def __init__(self):
         self.baseURL = "http://cinemageddon.net"
-        self.loggedIn = False
+        super(CGAPI, self).__init__()
 
     def login(self, username=None, password=None, passkey=None):
         password = (password or config.get('CG', 'password'))
         username = (username or config.get('CG', 'username'))
         response = session.post(self.baseURL + "/takelogin.php",
                                 data={"username": username,
-                                      "password": password}).text
-        if response.find('action="takelogin.php"') != -1:
+                                      "password": password})
+        response.raise_for_status()
+        if response.text.find('action="takelogin.php"') != -1:
             raise CGAPIException("Failed to log in")
-        self.loggedIn = True
 
     def search(self, search_args):
         search_string = '&'.join(["%s=%s" % (key, value) for (key, value) in search_args.items()])
         soup = self.__httpRequest('/browse.php?%s' % search_string)
-        #print soup
         return self.getTorrentListInfo(soup)
+
+    def find_ptp_movie(self, movie):
+        return self.search({'search': 'tt{0}'.format(movie['ImdbId'])})
+
+    def bytes_to_site_size(self, byte_num):
+        humanized = humanize.naturalsize(byte_num, format='%.2f', binary=True)
+        if 'KiB' in humanized:
+            humanized = humanize.naturalsize(byte_num, format='%d', binary=True)
+        return humanized
+
 
     def getTorrentListInfo(self, soup):
         if not soup.find('table', class_='torrenttable'):
@@ -43,7 +53,7 @@ class CGAPI:
             retArray.append(data)
         return retArray
 
-    def downloadTorrent(self, tID, name=None):
+    def download_torrent(self, tID, name=None):
         r = session.get(self.baseURL + '/download.php', params={'id': tID})
         if not name:
             name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
@@ -51,9 +61,6 @@ class CGAPI:
             fh.write(r.content)
 
     def __httpRequest(self, url, data=None):
-        if not self.loggedIn:
-            print "Not logged in"
-            return None
         html = self.__request(self.baseURL + url, data)
         soup = BeautifulSoup(html, "html5lib")
         return soup
@@ -62,9 +69,6 @@ class CGAPI:
         return session.get(url, data=data).text
 
     def __jsonRequest(self, url, data=None):
-        if not self.loggedIn:
-            print "Not logged in"
-            return None
         return session.get(url, data=data).json()
 
 
