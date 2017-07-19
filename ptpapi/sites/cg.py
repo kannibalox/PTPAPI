@@ -11,7 +11,7 @@ class CGAPI(BaseSiteAPI):
     HttpHeader = {"User-Agent": "Wget/1.13.4"}
 
     def __init__(self):
-        self.baseURL = "http://cinemageddon.net"
+        self.baseURL = "https://cinemageddon.net"
         super(CGAPI, self).__init__()
 
     def login(self, username=None, password=None, passkey=None):
