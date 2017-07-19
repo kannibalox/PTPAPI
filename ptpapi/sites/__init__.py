@@ -1,1 +1,2 @@
-__all__ = ["cg", "kg"]
+from ptpapi.sites.cg import CGAPI
+from ptpapi.sites.kg import KGAPI
