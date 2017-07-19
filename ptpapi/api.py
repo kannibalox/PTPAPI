@@ -107,10 +107,15 @@ class API(object):
             ret_array.append(Movie(data=movie))
         return ret_array
 
-    def need_for_seed(self):
+    def need_for_seed(self, filters={}):
         """List torrents that need seeding"""
-        data = Util.snarf_cover_view_data(session.base_get("needforseed.php").content)
-        return [t['GroupingQualities'][0]['Torrents'][0] for t in data]
+        data = Util.snarf_cover_view_data(session.base_get("needforseed.php", params=filters).content)
+        torrents = []
+        for m in data:
+            torrent = m['GroupingQualities'][0]['Torrents'][0]
+            torrent['Link'] = config.get('Main', 'baseURL') + bs4(torrent['Title']).find('a')['href']
+            torrents.append(torrent)
+        return torrents
 
     def contest_leaders(self):
         """Get data on who's winning"""
