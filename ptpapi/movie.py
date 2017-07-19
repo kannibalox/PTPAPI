@@ -28,6 +28,10 @@ class Movie(object):
                 'Year',
                 'Cover',
                 'Tags'
+            ],
+            'inferred': [
+                'Link',
+                'Id'
             ]
         }
 
@@ -60,6 +64,10 @@ class Movie(object):
 
     def __setitem__(self, key, value):
         self.data[key] = value
+
+    def load_inferred_data(self):
+        self.data['Id'] = self.ID
+        self.data['Link'] = 'https://passthepopcorn.me/torrents.php?id=' + self.ID
 
     def load_json_data(self):
         """Load movie JSON data"""
