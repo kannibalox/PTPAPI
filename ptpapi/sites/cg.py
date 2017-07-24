@@ -55,6 +55,7 @@ class CGAPI(BaseSiteAPI):
 
     def download_torrent(self, tID, name=None):
         r = session.get(self.baseURL + '/download.php', params={'id': tID})
+        r.raise_for_status()
         if not name:
             name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
         with open(name.replace('/', '_'), 'wb') as fh:
