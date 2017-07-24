@@ -287,6 +287,7 @@ def main():
         filelist = args.files
 
     if args.compare_paths:
+        logger.debug('Loading existing torrents for pre-matching')
         loaded_paths = find_existing_torrents(proxy)
     else:
         loaded_paths = []
@@ -311,13 +312,14 @@ def main():
                 try:
                     if match_type == 'filename':
                         if os.path.abspath(arg_file) in loaded_paths:
-                            logger.info('Path {0} already in rtorrent, skipping'.format(os.path.abspath(arg_file)))
+                            logger.info(u'Path {0} already in rtorrent, skipping'.format(os.path.abspath(arg_file)))
                         else:
+                            logger.debug(u'Path {0} not in rtorrent'.format(os.path.abspath(arg_file)))
                             match = match_against_file(ptp, arg_file, args.movie_limit)
                     elif match_type == 'title':
                         match = match_by_guessed_name(ptp, arg_file)
                     else:
-                        logger.error("Match type {0} not recognized for {1}, skipping".format(match_type, filename))
+                        logger.error(u"Match type {0} not recognized for {1}, skipping".format(match_type, filename))
                     if match:
                         break
                 except Exception:
