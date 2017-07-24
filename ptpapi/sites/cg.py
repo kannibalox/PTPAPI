@@ -47,7 +47,7 @@ class CGAPI(BaseSiteAPI):
         for r in rows:
             data = {}
             data['Title'] = r.find('a', href=re.compile(r'details.php\?id=[0-9]+$'))['title']
-            data['BinaryHumanSize'] = r.find(text=re.compile(r'[0-9]+\.[0-9]+ [A-Z]B')).replace('B', 'iB').replace('k', 'K')
+            data['BinaryHumanSize'] = r.find(text=re.compile(r'[0-9]+\.[0-9]+ [kA-Z]B')).replace('B', 'iB').replace('k', 'K')
             data['Seeders'] = re.match(r'([0-9]+)', r.find(title=re.compile('[0-9]+ seeders?'))['title']).group(1)
             data['ID'] = re.match(r'details.php\?id=([0-9]+)$', r.find('a', href=re.compile(r'details.php\?id=[0-9]+$'))['href']).group(1)
             retArray.append(data)
