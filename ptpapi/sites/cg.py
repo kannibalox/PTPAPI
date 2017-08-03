@@ -4,7 +4,7 @@ import humanize
 from bs4 import BeautifulSoup
 
 from ptpapi.config import config
-from ptpapi.session import session
+from ptpapi.session import TokenSession
 from ptpapi.sites.base import BaseSiteAPI
 
 class CGAPI(BaseSiteAPI):
@@ -12,14 +12,16 @@ class CGAPI(BaseSiteAPI):
 
     def __init__(self):
         self.baseURL = "https://cinemageddon.net"
+        self.session = TokenSession(3, 0.5)
+        self.session.headers.update({"User-Agent": "Wget/1.13.4"})
         super(CGAPI, self).__init__()
 
     def login(self, username=None, password=None, passkey=None):
         password = (password or config.get('CG', 'password'))
         username = (username or config.get('CG', 'username'))
-        response = session.post(self.baseURL + "/takelogin.php",
-                                data={"username": username,
-                                      "password": password})
+        response = self.session.post(self.baseURL + "/takelogin.php",
+                                     data={"username": username,
+                                           "password": password})
         response.raise_for_status()
         if response.text.find('action="takelogin.php"') != -1:
             raise CGAPIException("Failed to log in")
@@ -54,7 +56,7 @@ class CGAPI(BaseSiteAPI):
         return retArray
 
     def download_torrent(self, tID, name=None):
-        r = session.get(self.baseURL + '/download.php', params={'id': tID})
+        r = self.session.get(self.baseURL + '/download.php', params={'id': tID})
         r.raise_for_status()
         if not name:
             name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
@@ -67,10 +69,10 @@ class CGAPI(BaseSiteAPI):
         return soup
 
     def __request(self, url, data=None):
-        return session.get(url, data=data).text
+        return self.session.get(url, data=data).text
 
     def __jsonRequest(self, url, data=None):
-        return session.get(url, data=data).json()
+        return self.session.get(url, data=data).json()
 
 
 class CGAPIException(Exception):

@@ -5,7 +5,7 @@ import humanize
 from bs4 import BeautifulSoup
 
 from ptpapi.config import config
-from ptpapi.session import session
+from ptpapi.session import TokenSession
 from ptpapi.sites.base import BaseSiteAPI
 
 class KGAPI(BaseSiteAPI):
@@ -13,12 +13,14 @@ class KGAPI(BaseSiteAPI):
 
     def __init__(self):
         self.baseURL = "https://karagarga.in"
+        self.session = TokenSession(3, 0.5)
+        self.session.headers.update({"User-Agent": "Wget/1.13.4"})
         super(KGAPI, self).__init__()
 
     def login(self, username=None, password=None, passkey=None):
         password = (password or config.get('KG', 'password'))
         username = (username or config.get('KG', 'username'))
-        response = session.post(self.baseURL + "/takelogin.php",
+        response = self.session.post(self.baseURL + "/takelogin.php",
                                 data={"username": username,
                                       "password": password}).text
         if response.find('action="takelogin.php"') != -1:
@@ -51,14 +53,14 @@ class KGAPI(BaseSiteAPI):
         return retArray
 
     def download(self, ID):
-        r = session.get(self.baseURL + "/down.php/%s/file.torrent" % ID)
+        r = self.session.get(self.baseURL + "/down.php/%s/file.torrent" % ID)
         downloadName = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
         return (downloadName, r.content)
 
     def download_torrent(self, ID, dest=None, name=None):
         if not dest:
             dest = os.getcwd()
-        r = session.get(self.baseURL + "/down.php/%s/file.torrent" % ID)
+        r = self.session.get(self.baseURL + "/down.php/%s/file.torrent" % ID)
         if not name:
             name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
         with open(os.path.join(dest, name), 'wb') as fh:
@@ -80,10 +82,10 @@ class KGAPI(BaseSiteAPI):
         return soup
 
     def __request(self, url, data=None):
-        return session.get(url, data=data).text
+        return self.session.get(url, data=data).text
 
     def __jsonRequest(self, url, data=None):
-        return session.get(url, data=data).json()
+        return self.session.get(url, data=data).json()
 
 class KGAPIException(Exception):
     pass
