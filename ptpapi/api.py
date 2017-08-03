@@ -113,7 +113,7 @@ class API(object):
         torrents = []
         for m in data:
             torrent = m['GroupingQualities'][0]['Torrents'][0]
-            torrent['Link'] = config.get('Main', 'baseURL') + bs4(torrent['Title']).find('a')['href']
+            torrent['Link'] = config.get('Main', 'baseURL') + bs4(torrent['Title'], 'lxml').find('a')['href']
             torrents.append(torrent)
         return torrents
 
