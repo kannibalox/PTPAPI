@@ -1,4 +1,6 @@
 class BaseSiteAPI(object):
+    Name = "BS"
+
     def __init__(self):
         self.login()
 

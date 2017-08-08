@@ -10,6 +10,7 @@ from ptpapi.sites.base import BaseSiteAPI
 
 class CGAPI(BaseSiteAPI):
     HttpHeader = {"User-Agent": "Wget/1.13.4"}
+    Name = "CG"
 
     def __init__(self):
         self.baseURL = "https://cinemageddon.net"

@@ -10,6 +10,7 @@ from ptpapi.sites.base import BaseSiteAPI
 
 class KGAPI(BaseSiteAPI):
     HttpHeader = {"User-Agent": "Wget/1.13.4"}
+    Name = "KG"
 
     def __init__(self):
         self.baseURL = "https://karagarga.in"
