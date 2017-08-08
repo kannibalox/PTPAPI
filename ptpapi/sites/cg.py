@@ -1,3 +1,4 @@
+import os
 import re
 
 import humanize
@@ -55,12 +56,16 @@ class CGAPI(BaseSiteAPI):
             retArray.append(data)
         return retArray
 
-    def download_torrent(self, tID, name=None):
-        r = self.session.get(self.baseURL + '/download.php', params={'id': tID})
+    def download_to_file(self, ID, dest=None, name=None):
+        r = self.session.get(self.baseURL + '/download.php', params={'id': ID})
         r.raise_for_status()
+        if not dest:
+            dest = config.get('Main', 'downloadDirectory')
+        # TODO: CG sets Content-Disposition to be the same as a certain URL parameter (???)
+        # so we figure out the name from the metafile instead
         if not name:
-            name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
-        with open(name.replace('/', '_'), 'wb') as fh:
+            name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1).replace('/', '_')
+        with open(os.path.join(dest, name), 'wb') as fh:
             fh.write(r.content)
 
     def __httpRequest(self, url, data=None):
