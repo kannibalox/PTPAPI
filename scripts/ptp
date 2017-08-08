@@ -226,7 +226,7 @@ def main():
     search_parser.add_argument('-d', '--download', help="Download any movies found", action="store_true")
     search_parser.set_defaults(func=do_search)
 
-    download_parser = subparsers.add_parser('download', help='An alias for search -d', add_help=False, parents=[search_parent])
+    download_parser = subparsers.add_parser('download', help='An alias for `search -d`', add_help=False, parents=[search_parent])
     download_parser.add_argument('-d', '--download', help="Download any movies found", action="store_true", default=True)
     download_parser.set_defaults(func=do_search)
 
