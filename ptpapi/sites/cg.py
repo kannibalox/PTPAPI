@@ -3,6 +3,7 @@ import re
 
 import humanize
 from bs4 import BeautifulSoup
+from pyrobase import bencode
 
 from ptpapi.config import config
 from ptpapi.session import TokenSession
@@ -58,14 +59,15 @@ class CGAPI(BaseSiteAPI):
         return retArray
 
     def download_to_file(self, ID, dest=None, name=None):
+        logger = logging.getLogger(__name__)
         r = self.session.get(self.baseURL + '/download.php', params={'id': ID})
         r.raise_for_status()
+        # TODO: Why separate name and dest?
         if not dest:
             dest = config.get('Main', 'downloadDirectory')
-        # TODO: CG sets Content-Disposition to be the same as a certain URL parameter (???)
-        # so we figure out the name from the metafile instead
         if not name:
-            name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1).replace('/', '_')
+            name = bencode.bdencode(r.content)['info']['name'].replace('//', '_')
+        logger.debug('Downloading ID {} to {}', ID, os.path.join(dest, name))
         with open(os.path.join(dest, name), 'wb') as fh:
             fh.write(r.content)
 
