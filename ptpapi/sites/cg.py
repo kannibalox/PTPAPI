@@ -58,17 +58,15 @@ class CGAPI(BaseSiteAPI):
             retArray.append(data)
         return retArray
 
-    def download_to_file(self, ID, dest=None, name=None):
+    def download_to_file(self, ID, dest=None):
         logger = logging.getLogger(__name__)
         r = self.session.get(self.baseURL + '/download.php', params={'id': ID})
         r.raise_for_status()
-        # TODO: Why separate name and dest?
         if not dest:
-            dest = config.get('Main', 'downloadDirectory')
-        if not name:
-            name = bencode.bdencode(r.content)['info']['name'].replace('//', '_')
-        logger.debug('Downloading ID {} to {}', ID, os.path.join(dest, name))
-        with open(os.path.join(dest, name), 'wb') as fh:
+            name = bencode.bdencode(r.content)['info']['name'].replace('/', '_')
+            dest = os.path.join(config.get('Main', 'downloadDirectory'), name)
+        logger.debug('Downloading ID {} to {}', ID, dest)
+        with open(dest, 'wb') as fh:
             fh.write(r.content)
 
     def __httpRequest(self, url, data=None):

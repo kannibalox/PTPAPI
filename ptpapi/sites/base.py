@@ -7,7 +7,7 @@ class BaseSiteAPI(object):
     def login(self, username=None, password=None, passkey=None):
         raise NotImplementedError
 
-    def download_to_file(self, ID, dest=None, name=None):
+    def download_to_file(self, ID, dest=None):
         raise NotImplementedError
 
     def find_ptp_movie(self, movie):

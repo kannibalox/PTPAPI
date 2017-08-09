@@ -137,15 +137,14 @@ class Torrent(object):
                                        'id': self.ID})
         return req.content
 
-    def download_to_file(self, dest=None, name=None):
+    def download_to_file(self, dest=None):
         """Convenience method to download directly to a file"""
         req = session.base_get("torrents.php",
                                params={'action': 'download',
                                        'id': self.ID})
         if not dest:
-            dest = config.get('Main', 'downloadDirectory')
-        if not name:
             name = re.search(r'filename="(.*)"', req.headers['Content-Disposition']).group(1)
-        with open(os.path.join(dest, name), 'wb') as fileh:
+            dest = os.path.join(config.get('Main', 'downloadDirectory'), name)
+        with open(dest, 'wb') as fileh:
             fileh.write(req.content)
-        return os.path.join(dest, name)
+        return dest

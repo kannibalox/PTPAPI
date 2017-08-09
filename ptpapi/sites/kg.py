@@ -58,16 +58,13 @@ class KGAPI(BaseSiteAPI):
         downloadName = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1)
         return (downloadName, r.content)
 
-    def download_to_file(self, ID, dest=None, name=None):
+    def download_to_file(self, ID, dest=None):
         r = self.session.get(self.baseURL + "/down.php/%s/file.torrent" % ID)
         r.raise_for_status()
         if not dest:
-            dest = config.get('Main', 'downloadDirectory')
-        # TODO: CG sets Content-Disposition to be the same as a certain URL parameter (???)
-        # so we figure out the name from the metafile instead
-        if not name:
             name = re.search(r'filename="(.*)"', r.headers['Content-Disposition']).group(1).replace('/', '_')
-        with open(os.path.join(dest, name), 'wb') as fh:
+            dest = os.path.join(config.get('Main', 'downloadDirectory'), name)
+        with open(dest, 'wb') as fh:
             fh.write(r.content)
 
     def find_ptp_movie(self, movie):
