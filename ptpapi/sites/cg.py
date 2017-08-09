@@ -1,5 +1,6 @@
 import os
 import re
+import logging
 
 import humanize
 from bs4 import BeautifulSoup
@@ -63,7 +64,7 @@ class CGAPI(BaseSiteAPI):
         r = self.session.get(self.baseURL + '/download.php', params={'id': ID})
         r.raise_for_status()
         if not dest:
-            name = bencode.bdencode(r.content)['info']['name'].replace('/', '_')
+            name = bencode.bdecode(r.content)['info']['name'].replace('/', '_') + '.torrent'
             dest = os.path.join(config.get('Main', 'downloadDirectory'), name)
         logger.debug('Downloading ID {} to {}', ID, dest)
         with open(dest, 'wb') as fh:
