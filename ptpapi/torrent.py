@@ -138,7 +138,7 @@ class Torrent(object):
         return req.content
 
     def download_to_file(self, dest=None, name=None):
-        """Convience method to download directly to a file"""
+        """Convenience method to download directly to a file"""
         req = session.base_get("torrents.php",
                                params={'action': 'download',
                                        'id': self.ID})
