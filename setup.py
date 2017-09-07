@@ -18,5 +18,6 @@ setup(
     scripts=[
         'scripts/ptp',
         'scripts/ptp-reseed',
+        'scripts/ptp-reseed-machine',
     ],
 )
