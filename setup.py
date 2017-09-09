@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="PTPAPI",
-    version="0.3",
+    version="0.4",
     install_requires=[
         "requests",
         "beautifulsoup4",
