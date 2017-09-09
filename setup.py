@@ -14,6 +14,7 @@ setup(
     },
     packages=[
         'ptpapi',
+        'ptpapi.sites',
     ],
     scripts=[
         'scripts/ptp',
