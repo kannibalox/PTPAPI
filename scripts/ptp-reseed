@@ -6,7 +6,7 @@ import os.path
 import xmlrpclib
 import argparse
 import logging
-from time import sleep
+from time import sleep, time
 from urlparse import urlparse, parse_qs
 
 from pyrobase import bencode
@@ -220,6 +220,7 @@ def load_torrent(proxy, ID, path):
         except (xmlrpclib.Fault, xmlrpc.HashNotFound):
             pass
     logger.info(u"Torrent loaded at {0}".format(path))
+    proxy.d.custom.set(thash, 'tm_completed', str(int(time())))
     proxy.d.directory.set(thash, path)
     proxy.d.check_hash(thash)
 
