@@ -219,8 +219,8 @@ def main():
     search_parent.add_argument('-l', '--limit', help="Limit search results to N movies", default=100, type=int)
     search_parent.add_argument('-f', '--filter', help="Define a filter to download movies with",
                                default=ptpapi.config.config.get('Main', 'filter'))
-    search_parent.add_argument('--movie-format', help="Set the output for movies", default=None)
-    search_parent.add_argument('--torrent-format', help="Set the output for torrents", default=None)
+    search_parent.add_argument('-m', '--movie-format', help="Set the output for movies", default=None)
+    search_parent.add_argument('-t', '--torrent-format', help="Set the output for torrents", default=None)
     search_parent.add_argument('-o', '--output-directory', help="Location for any downloaded files", default=None)
 
     search_parser = subparsers.add_parser('search', help='Search for or download movies', add_help=False, parents=[search_parent])
