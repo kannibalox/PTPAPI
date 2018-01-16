@@ -110,8 +110,8 @@ def do_search(api, args):
     elif args.torrent_format is not None:
         torrent_template = tempita.Template(args.torrent_format)
     else:
-        torrent_template = tempita.Template("- {{Codec}}/{{Container}}/{{Source}}/{{Resolution}} - {{ReleaseName}} - "
-                                            "{{Snatched}}/{{Seeders}}/{{Leechers}}")
+        torrent_template = tempita.Template(u"{{if GoldenPopcorn}}\u2606{{else}}-{{endif}} {{Codec}}/{{Container}}/{{Source}}/{{Resolution}}"
+                                            " - {{ReleaseName}} - {{Snatched}}/{{Seeders}}/{{Leechers}}")
 
     # If we haven't found any URL-looking things
     if not movies and not torrents:
