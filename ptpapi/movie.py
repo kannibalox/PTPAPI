@@ -80,6 +80,9 @@ class Movie(object):
         """Util function to normalize data"""
         if self.data['Torrents']:
             torrents = self.data['Torrents']
+            for t in torrents:
+                if 'RemasterTitle' not in t:
+                    t['RemasterTitle'] = ''
             self.data['Torrents'] = [Torrent(data=t) for t in torrents]
 
     def load_html_data(self):

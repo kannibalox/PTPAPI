@@ -115,7 +115,8 @@ class Torrent(object):
             if int(tor['Id']) == int(self.ID):
                 # Fill in any optional fields
                 for key in ['RemasterTitle']:
-                    self.data[key] = ''
+                    if key not in self.data:
+                        self.data[key] = ''
                 self.data.update(tor)
                 break
 
