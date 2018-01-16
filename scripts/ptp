@@ -129,12 +129,13 @@ def do_search(api, args):
             if movie_template:
                 print movie_template.substitute(movie)
             match = movie.best_match(args.filter)
-            if match and not args.dry_run:
+            if match:
                 if torrent_template:
                     print torrent_template.substitute(match)
-                match.download_to_file(args.output_directory)
-            elif args.dry_run:
-                logger.info("Dry-run, not downloading %s", match)
+                if not args.dry_run:
+                    match.download_to_file(args.output_directory)
+                else:
+                    logger.info("Dry-run, not downloading %s", match)
             else:
                 logger.info("No match found for for movie %s (%s)", movie['Title'], movie['Year'])
         for torrent in torrents:
