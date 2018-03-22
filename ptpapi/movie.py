@@ -21,7 +21,8 @@ class Movie(object):
                 'ImdbId',
                 'ImdbRating',
                 'ImdbVoteCount',
-                'Torrents'
+                'Torrents',
+                'CoverImage'
             ],
             'html': [
                 'Title',
@@ -31,7 +32,8 @@ class Movie(object):
             ],
             'inferred': [
                 'Link',
-                'Id'
+                'Id',
+                'GroupId'
             ]
         }
 
@@ -67,6 +69,7 @@ class Movie(object):
 
     def load_inferred_data(self):
         self.data['Id'] = self.ID
+        self.data['GroupId'] = self.ID
         self.data['Link'] = 'https://passthepopcorn.me/torrents.php?id=' + self.ID
 
     def load_json_data(self):
