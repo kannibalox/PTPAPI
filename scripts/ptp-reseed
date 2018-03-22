@@ -22,14 +22,11 @@ import ptpapi
 class Match(object):
     """A tiny class to make matching easiter"""
     # pylint: disable=too-few-public-methods
-    def __init__(self, ID=None, path=None, matched_files=None):
+    def __init__(self, ID=None, path=None, matched_files={}):
         """A defined match"""
         self.ID = ID
         self.path = path
-        if matched_files is None:
-            self.matched_files = {}
-        else:
-            self.matched_files = matched_files
+        self.matched_files = matched_files
 
     def __nonzero__(self):
         if self.ID is not None and self.path is not None:
