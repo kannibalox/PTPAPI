@@ -13,7 +13,7 @@ from error import PTPAPIException
 LOGGER = logging.getLogger(__name__)
 
 class Torrent(object):
-    """Represent as single torrent"""
+    """Represent a single torrent"""
     def __init__(self, ID=None, data=None):
         self.key_finder = {
             'movie_json': [
