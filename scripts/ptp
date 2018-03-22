@@ -207,6 +207,7 @@ def add_verbosity_args(parser):
 
 
 def main():
+    logger = logging.getLogger(__name__)
     parser = argparse.ArgumentParser(description='Extensible command line utility for PTP')
     add_verbosity_args(parser)
     subparsers = parser.add_subparsers()
@@ -264,6 +265,8 @@ def main():
     api = ptpapi.login()
 
     args.func(api, args)
+    logger.debug("Total session tokens consumed: %s", ptpapi.session.session.consumed_tokens)
+    logger.debug("Exiting...")
 
 if __name__ == '__main__':
     main()
