@@ -100,7 +100,7 @@ class Movie(object):
                 self.data['Tags'].append(tag.find('a').string)
         self.data['Directors'] = []
         for director in soup.find('h2', class_='page__title').find_all('a', class_='artist-info-link'):
-            self.data['Directors'].append({'Name': director.string})
+            self.data['Directors'].append({'Name': director.string.strip()})
         # File list & trumpability
         for tor in self['Torrents']:
             # Get file list
