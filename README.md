@@ -42,13 +42,14 @@ The full list of possible values for picking encodes is:
 * `576p` or `720p` or `1080p`
 * `HD` or `SD`
 * `Remux`
+* `seeded` (the number of seeds is greater than 0)
 
 Note that it's possible to have two incompatible values, e.g. `GP` and `Scene`, but this simply means the sub-filter won't ever match a torrent, and will always be skipped over.
 
 The possible values for sorting are:
 * `most recent` (the default if none are specified)
 * `smallest`
-* `seeded` (the number of seeds)
+* `seeders`
 * `largest`
 
 #### Examples

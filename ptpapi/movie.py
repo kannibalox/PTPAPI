@@ -153,7 +153,7 @@ class Movie(object):
             sort_dict = {
                 'most recent': (True, (lambda t: datetime.strptime(t['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
                 'smallest': (True, (lambda t: t['Size'])),
-                'seeded': (True, (lambda t: t['Seeders'])),
+                'seeders': (True, (lambda t: t['Seeders'])),
                 'largest': (False, (lambda t: t['Size'])),
             }
             if len(matches) == 1:
