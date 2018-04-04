@@ -27,7 +27,7 @@ def main():
             conv_html = bs4(ptpapi.session.session.base_get('inbox.php', params={'action':'viewconv', 'id': m['ID']}).text, "html.parser")
             new_link = conv_html.find('a', text='here')['href']
             t = ptpapi.Torrent(parse_qs(urlparse(new_link).query)['torrentid'][0])
-            t.download_to_file()
+            t.download_to_dir()
             
             
 
