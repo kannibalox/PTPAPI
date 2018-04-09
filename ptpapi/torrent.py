@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
 from config import config
 from session import session
 from error import PTPAPIException
+import movie
 
 LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +41,13 @@ class Torrent(object):
             ],
             'movie_html': [
                 'Filelist'
+            ],
+            'inferred': [
+                'Link',
+                'Id'
+            ],
+            'parent': [
+                'Movie' # Would be 'inferred' if it didn't have a chance to trigger a request
             ]
         }
 
@@ -119,6 +127,13 @@ class Torrent(object):
                         self.data[key] = ''
                 self.data.update(tor)
                 break
+
+    def load_inferred_data(self):
+        self.data['Id'] = self.ID
+        self.data['Link'] = 'https://passthepopcorn.me/torrents.php?torrentid=' + self.ID
+
+    def load_parent_data(self):
+        self.data['Movie'] = movie.Movie(ID=self['GroupId'])
 
     def load_torrent_json_data(self):
         """Load torrent data from a JSON call"""
