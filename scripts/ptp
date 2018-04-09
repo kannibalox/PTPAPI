@@ -103,8 +103,8 @@ def do_search(api, args):
     elif args.movie_format is not None:
         movie_template = tempita.Template(args.movie_format)
     else:
-        movie_template = tempita.Template("{{Title}} ({{Year}}) - {{','.join([d['Name'].strip() for d in Directors])}} - "
-                                          "[{{'/'.join(Tags)}}] - [PTP {{GroupId}}, IMDB tt{{ImdbId}}]")
+        movie_template = tempita.Template("{{Title}} ({{Year}}) - {{if Directors}}{{','.join([d['Name'].strip() for d in Directors])}} -{{endif}} "
+                                          "[{{'/'.join(Tags)}}] - [PTP {{GroupId}}{{if ImdbId}}, IMDB tt{{ImdbId}}{{endif}}]")
     if args.torrent_format == "":
         torrent_template = None
     elif args.torrent_format is not None:
