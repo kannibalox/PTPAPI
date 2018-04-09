@@ -28,7 +28,8 @@ class Movie(object):
                 'Title',
                 'Year',
                 'Cover',
-                'Tags'
+                'Tags',
+                'Directors'
             ],
             'inferred': [
                 'Link',
@@ -77,6 +78,10 @@ class Movie(object):
         self.data.update(session.base_get("torrents.php",
                                           params={'id': self.ID,
                                                   'json': '1'}).json())
+        if 'ImdbId' not in self.data:
+            self.data['ImdbId'] = ''
+        if 'Directors' not in self.data:
+            self.data['Directors'] = []
         self.conv_json_torrents()
 
     def conv_json_torrents(self):
