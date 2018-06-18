@@ -202,6 +202,20 @@ def do_fields(api, args):
         for val in values:
             print "- {0}".format(val)
 
+def do_search_fields(api, args):
+    soup = bs4(ptpapi.session.session.base_get('torrents.php', params={'action': 'advanced'}).content, 'lxml')
+    for e in soup.find(id='filter_torrents_form')('input'):
+        if (e['type'] in ['submit', 'button'] or e['name'].startswith('filter_cat')
+            or e['name'].startswith('tags_type') or e['name'].startswith('country_type')
+            or e['name'] == 'action'):
+            continue
+        str = e['name']
+        if 'placeholder' in e.attrs.keys():
+            str += ' - ' + e['placeholder']
+        if 'title' in e.attrs.keys():
+            str += ' - ' + e['title']
+        print(str)
+
 def add_verbosity_args(parser):
     """Helper function to improve DRY"""
     parser.add_argument('--debug', help='Print lots of debugging statements',
@@ -255,6 +269,10 @@ def main():
     field_parser = subparsers.add_parser('fields', help='List the fields available for each PTPAPI resource')
     add_verbosity_args(field_parser)
     field_parser.set_defaults(func=do_fields)
+
+    search_field_parser = subparsers.add_parser('search-fields', help='List the fields available when searching')
+    add_verbosity_args(search_field_parser)
+    search_field_parser.set_defaults(func=do_search_fields)
 
     log_parser = subparsers.add_parser('log', help='Show the log of recent events')
     add_verbosity_args(log_parser)
