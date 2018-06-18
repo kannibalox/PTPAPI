@@ -42,7 +42,10 @@ The full list of possible values for picking encodes is:
 * `576p` or `720p` or `1080p`
 * `HD` or `SD`
 * `Remux`
-* `seeded` (the number of seeds is greater than 0)
+* `seeded` - the number of seeds is greater than 0
+* `not-trumpable` - ignore any trumpable torrents
+* `unseen` - ignores all torrents if you've marked the movie as seen or rated it
+* `unsnatched` - ignore all torrents unless you've never snatched one before (note that seeding counts as "snatched", but leeching doesn't
 
 Note that it's possible to have two incompatible values, e.g. `GP` and `Scene`, but this simply means the sub-filter won't ever match a torrent, and will always be skipped over.
 
@@ -76,7 +79,7 @@ An alias for `ptp-search -d`
 
 #### `ptp search`
 
-This subcommand lets you search the site for movies. It can take movie and permalinks, as well as search by arbitrary parameters. For instance, `ptp search year=1980-2000 taglist=sci.fi` or `ptp search "Star Wars"`. It can also accept URLs for torrents and collages, e.g. `ptp search "https://passthepopcorn.me/torrents.php?id=68148"` or `ptp search https://passthepopcorn.me/collages.php?id=2438`
+This subcommand lets you search the site for movies. It can take movie and permalinks, as well as search by arbitrary parameters. For instance, `ptp search year=1980-2000 taglist=sci.fi` or `ptp search "Star Wars"`. It can also accept URLs for torrents and collages, e.g. `ptp search "https://passthepopcorn.me/torrents.php?id=68148"` or `ptp search https://passthepopcorn.me/collages.php?id=2438`, and regular search URLs, e.g. `https://passthepopcorn.me/torrents.php?action=advanced&year=1980-2000&taglist=action`.
 
 There are a couple aliases to make life easier:
 
