@@ -29,7 +29,12 @@ class Movie(object):
                 'Year',
                 'Cover',
                 'Tags',
-                'Directors'
+                'Directors',
+                'PtpRating',
+                'PtpVoteCount',
+                'PtpYourRating',
+                'Seen',
+                'Snatched'
             ],
             'inferred': [
                 'Link',
@@ -106,10 +111,30 @@ class Movie(object):
         for tagbox in soup.find_all('div', class_="box_tags"):
             for tag in tagbox.find_all("li"):
                 self.data['Tags'].append(tag.find('a').string)
+        # Directors
         self.data['Directors'] = []
         for director in soup.find('h2', class_='page__title').find_all('a', class_='artist-info-link'):
             self.data['Directors'].append({'Name': director.string.strip()})
-        # File list & trumpability
+        # Ratings
+        rating = soup.find(id='ptp_rating_td')
+        self.data['PtpRating'] = rating.find(id='user_rating').text.strip('%')
+        self.data['PtpRatingCount'] = re.sub("\D","",rating.find(id='user_total').text)
+        your_rating = rating.find(id='ptp_your_rating').text
+        if '?' in your_rating:
+            self.data['PtpYourRating'] = None
+            self.data['Seen'] = False
+        elif re.sub("\D", "", your_rating) == '':
+            self.data['PtpYourRating'] = None
+            self.data['Seen'] = True
+        else:
+            self.data['PtpYourRating'] = re.sub("\D", "", your_rating)
+            self.data['Seen'] = True
+        # Have we snatched this
+        self.data['Snatched'] = False
+        if soup.find(class_='torrent-info-link--user-snatched') or soup.find(class_='torrent-info-link--user-seeding'):
+            self.data['Snatched'] = True
+
+        # File list & trumpability for torrents
         for tor in self['Torrents']:
             # Get file list
             filediv = soup.find("div", id="files_%s" % tor.ID)
@@ -139,21 +164,24 @@ class Movie(object):
             LOGGER.debug("Attempting to match movie to profile '%s'", profile)
             matches = self.data['Torrents']
             filter_dict = {
-                'gp': (lambda t: t['GoldenPopcorn']),
-                'scene': (lambda t: t['Scene']),
-                '576p': (lambda t: t['Resolution'] == '576p'),
-                '480p': (lambda t: t['Resolution'] == '480p'),
-                '720p': (lambda t: t['Resolution'] == '720p'),
-                '1080p': (lambda t: t['Resolution'] == '1080p'),
-                'HD': (lambda t: t['Quality'] == 'High Definition'),
-                'SD': (lambda t: t['Quality'] == 'Standard Definition'),
-                'remux': (lambda t: 'remux' in t['RemasterTitle'].lower()),
-                'x264': (lambda t: t['Codec'] == 'x264'),
-                'seeded': (lambda t: t['Seeders'] > 0),
+                'gp': (lambda t, _: t['GoldenPopcorn']),
+                'scene': (lambda t, _: t['Scene']),
+                '576p': (lambda t, _: t['Resolution'] == '576p'),
+                '480p': (lambda t, _: t['Resolution'] == '480p'),
+                '720p': (lambda t, _: t['Resolution'] == '720p'),
+                '1080p': (lambda t, _: t['Resolution'] == '1080p'),
+                'HD': (lambda t, _: t['Quality'] == 'High Definition'),
+                'SD': (lambda t, _: t['Quality'] == 'Standard Definition'),
+                'remux': (lambda t, _: 'remux' in t['RemasterTitle'].lower()),
+                'x264': (lambda t, _: t['Codec'] == 'x264'),
+                'seeded': (lambda t, _: t['Seeders'] > 0),
+                'not-trumpable': (lambda t, _: not t['Trumpable']),
+                'unseen': (lambda t, m: not m['Seen']),
+                'unsnatched': (lambda t, m: not m['Snatched'])
             }
             for (name, func) in filter_dict.items():
                 if name.lower() in profile:
-                    matches = [t for t in matches if func(t)]
+                    matches = [t for t in matches if func(t, self)]
                     LOGGER.debug("%i matches after filtering by parameter '%s'", len(matches), name)
             sort_dict = {
                 'most recent': (True, (lambda t: datetime.strptime(t['UploadTime'], "%Y-%m-%d %H:%M:%S"))),

@@ -66,7 +66,7 @@ class CGAPI(BaseSiteAPI):
         if not dest:
             name = bencode.bdecode(r.content)['info']['name'].replace('/', '_') + '.torrent'
             dest = os.path.join(config.get('Main', 'downloadDirectory'), name)
-        logger.debug('Downloading ID {} to {}'.format(ID, dest))
+        logger.debug('Downloading ID {} to {}'.format(ID, dest.encode('utf-8')))
         with open(dest, 'wb') as fh:
             fh.write(r.content)
 
