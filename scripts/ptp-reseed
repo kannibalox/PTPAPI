@@ -207,7 +207,7 @@ def load_torrent(proxy, ID, path):
         return
     except (xmlrpclib.Fault, xmlrpc.HashNotFound):
         pass
-    proxy.load.raw(xmlrpclib.Binary(torrent_data))
+    proxy.load.raw('', xmlrpclib.Binary(torrent_data))
     # Wait until the torrent is loaded and available
     while True:
         sleep(1)
