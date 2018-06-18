@@ -6,6 +6,7 @@ from time import sleep
 
 import argparse
 import tempita
+from bs4 import BeautifulSoup as bs4
 
 import ptpapi
 
@@ -69,13 +70,16 @@ def parse_terms(termlist):
         if url.path == '/collages.php':
             target = 'collage'
             terms = url_args
-        elif 'torrentid' in url_args:
-            torrents.append(ptpapi.Torrent(url_args['torrentid'][0]))
-        elif 'id' in url_args:
-            if 'action' in url_args and url_args['action'][0] == 'download':
-                torrents.append(ptpapi.Torrent(url_args['id'][0]))
+        elif url.path == '/torrents.php':
+            if 'torrentid' in url_args:
+                torrents.append(ptpapi.Torrent(url_args['torrentid'][0]))
+            elif 'id' in url_args:
+                if 'action' in url_args and url_args['action'][0] == 'download':
+                    torrents.append(ptpapi.Torrent(url_args['id'][0]))
+                else:
+                    movies.append(ptpapi.Movie(url_args['id'][0]))
             else:
-                movies.append(ptpapi.Movie(url_args['id'][0]))
+                terms = url_args
         else:
             term = arg.partition('=')
             if not term[2]:
