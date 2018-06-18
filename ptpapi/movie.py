@@ -174,6 +174,7 @@ class Movie(object):
                 'SD': (lambda t, _: t['Quality'] == 'Standard Definition'),
                 'remux': (lambda t, _: 'remux' in t['RemasterTitle'].lower()),
                 'x264': (lambda t, _: t['Codec'] == 'x264'),
+                'xvid': (lambda t, _: t['Codec'] == 'XviD'),
                 'seeded': (lambda t, _: int(t['Seeders']) > 0),
                 'not-trumpable': (lambda t, _: not t['Trumpable']),
                 'unseen': (lambda t, m: not m['Seen']),

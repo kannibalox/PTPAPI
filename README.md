@@ -40,6 +40,7 @@ Filters were designed as a way to take a full movie group, and narrow it down to
 The full list of possible values for picking encodes is:
 * `GP` or `Scene`
 * `576p` or `720p` or `1080p`
+* `XviD` or `x264`
 * `HD` or `SD`
 * `Remux`
 * `seeded` - the number of seeds is greater than 0
