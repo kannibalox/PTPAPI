@@ -2,8 +2,9 @@
 """Hold config values"""
 import os
 import os.path
-import StringIO
-import ConfigParser
+
+from six.moves import configparser
+from six import StringIO
 
 confFile = os.path.join(os.environ['HOME'], '.ptpapi.conf')
 
@@ -18,6 +19,6 @@ filter=
 action=hard
 findBy=filename,title
 """
-config = ConfigParser.ConfigParser()
-config.readfp(StringIO.StringIO(default))
+config = configparser.ConfigParser()
+config.readfp(StringIO(default))
 config.read(confFile)

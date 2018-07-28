@@ -1,21 +1,20 @@
 #!/bin/env python
 """The entrypoint module for access the API"""
-import ConfigParser
 import re
 import os
 import json
 import pickle
 import logging
-import HTMLParser
 
 from bs4 import BeautifulSoup as bs4
+from six.moves import configparser, html_parser
 import requests
 
-from config import config
-from session import session
-from movie import Movie
-from user import CurrentUser
-from error import PTPAPIException
+from .config import config
+from .session import session
+from .movie import Movie
+from .user import CurrentUser
+from .error import PTPAPIException
 
 LOGGER = logging.getLogger(__name__)
 
@@ -78,13 +77,13 @@ class API(object):
 
     def __save_cookie(self):
         """Save requests' cookies to a file"""
-        with open(self.cookies_file, 'w') as fileh:
+        with open(self.cookies_file, 'wb') as fileh:
             LOGGER.debug("Pickling HTTP cookies to %s", self.cookies_file)
             pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fileh)
 
     def __load_cookies(self):
         """Reload requests' cookies"""
-        with open(self.cookies_file) as fileh:
+        with open(self.cookies_file, 'rb') as fileh:
             LOGGER.debug("Unpickling HTTP cookies from file %s", self.cookies_file)
             session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fileh))
 
@@ -103,7 +102,7 @@ class API(object):
                 movie['Directors'] = []
             if 'ImdbId' not in movie:
                 movie['ImdbId'] = '0'
-            movie['Title'] = HTMLParser.HTMLParser().unescape(movie['Title'])
+            movie['Title'] = html_parser.HTMLParser().unescape(movie['Title'])
             ret_array.append(Movie(data=movie))
         return ret_array
 
@@ -152,7 +151,9 @@ class Util(object):
     """A class for misc. utilities"""
     @staticmethod
     def raise_for_cloudflare(text):
-        """Raises an exception if a CloudFlare error page is detected"""
+        """Raises an exception if a CloudFlare error page is detected
+
+        :param text: a raw html string"""
         soup = bs4(text, "html.parser")
         if soup.find(class_="cf-error-overview") is not None:
             msg = '-'.join(soup.find(class_="cf-error-overview").get_text().splitlines())
@@ -188,7 +189,7 @@ class Util(object):
 
         :param filename: an absolute filename
         :rtype: a diction of the username, password and passkey"""
-        config_file = ConfigParser.ConfigParser()
+        config_file = configparser.ConfigParser()
         config_file.read(filename)
         return {'username': config_file.get('PTP', 'username'),
                 'password': config_file.get('PTP', 'password'),

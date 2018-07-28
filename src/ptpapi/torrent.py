@@ -2,14 +2,14 @@
 import re
 import os
 import logging
-from urlparse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
+from six.moves.urllib.parse import parse_qs, urlparse
 
-from config import config
-from session import session
-from error import PTPAPIException
-import movie
+from .config import config
+from .session import session
+from .error import PTPAPIException
+from . import movie
 
 LOGGER = logging.getLogger(__name__)
 

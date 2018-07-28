@@ -6,9 +6,9 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
 
-from session import session
-from torrent import Torrent
-from error import PTPAPIException
+from .session import session
+from .torrent import Torrent
+from .error import PTPAPIException
 
 LOGGER = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ class Movie(object):
         soup = bs4(session.base_get("torrents.php", params={'id': self.ID}).text, "html.parser")
         self.data['Cover'] = soup.find('img', class_='sidebar-cover-image')['src']
         # Title and Year
-        match = re.match(r'(.*) \[(\d{4})\]', soup.find('h2', class_='page__title').encode_contents())
+        match = re.match(br'(.*) \[(\d{4})\]', soup.find('h2', class_='page__title').encode_contents())
         self.data['Title'] = match.group(1)
         self.data['Year'] = match.group(2)
         # Genre tags

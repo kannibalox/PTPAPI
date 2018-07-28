@@ -1,13 +1,13 @@
 """Represent a user"""
 import re
-import HTMLParser
 
 from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
+from six.moves import configparser, html_parser
 
-import api
-from session import session
-from movie import Movie
-from torrent import Torrent
+from . import api
+from .session import session
+from .movie import Movie
+from .torrent import Torrent
 
 class User(object):
     """A primitive class to represent a user"""

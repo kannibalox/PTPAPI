@@ -3,15 +3,15 @@
 import sys
 import os
 import os.path
-import xmlrpclib
 import argparse
 import logging
 from time import sleep, time
-from urlparse import urlparse, parse_qs
 
 from pyrobase import bencode
 from pyrocore import config
 from pyrocore.util import load_config, metafile, xmlrpc
+from six.moves import xmlrpc_client
+from six.moves.urllib.parse import parse_qs, urlparse
 
 import ptpapi
 
@@ -33,6 +33,9 @@ class Match(object):
             return True
         return False
 
+    def __bool__(self):
+        return self.__nonzero__()
+
     def __str__(self):
         return "<Match {0}:{1}>".format(self.ID, self.path)
 
@@ -42,7 +45,7 @@ def match_by_torrent(torrent, filepath):
     logger = logging.getLogger(__name__)
     logger.info(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent['ReleaseName']))
 
-    path1 = unicode(os.path.abspath(filepath))
+    path1 = os.path.abspath(filepath)
     path1_files = {}
     if os.path.isdir(path1):
         for root, _, filenames in os.walk(path1.encode('utf8'), followlinks=True):
@@ -60,7 +63,7 @@ def match_by_torrent(torrent, filepath):
 
     matched_files = {}
     logger.debug("Looking for exact matches")
-    for filename, size in path1_files.items():
+    for filename, size in list(path1_files.items()):
         if filename in path2_files.keys() and path2_files[filename] == size:
             matched_files[filename] = filename
             del path1_files[filename]
@@ -68,9 +71,9 @@ def match_by_torrent(torrent, filepath):
     logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
     logger.debug("Looking for matches with same size and name but different root folder")
-    for filename1, size1 in path1_files.items():
+    for filename1, size1 in list(path1_files.items()):
         no_root1 = os.sep.join(os.path.normpath(filename1).split(os.sep)[1:])
-        for filename2, size2 in path2_files.items():
+        for filename2, size2 in list(list(path2_files.items())):
             no_root2 = os.sep.join(os.path.normpath(filename2).split(os.sep)[1:])
             if no_root1 == no_root2 and size1 == size2:
                 matched_files[filename1] = filename2
@@ -80,8 +83,8 @@ def match_by_torrent(torrent, filepath):
     logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
     logger.debug("Looking for matches with same base name and size")
-    for filename1, size1 in path1_files.items():
-        for filename2, size2 in path2_files.items():
+    for filename1, size1 in list(path1_files.items()):
+        for filename2, size2 in list(path2_files.items()):
             if os.path.basename(filename1) == os.path.basename(filename2) and size1 == size2:
                 if os.path.basename(filename1) not in [os.path.basename(p) for p in path2_files.keys()]:
                     matched_files[filename1] = filename2
@@ -91,8 +94,8 @@ def match_by_torrent(torrent, filepath):
     logger.debug("{0} of {1} files matched".format(len(matched_files), len(path2_files) + len(matched_files)))
 
     logger.debug("Looking for matches by size only")
-    for filename1, size1 in path1_files.items():
-        for filename2, size2 in path2_files.items():
+    for filename1, size1 in list(path1_files.items()):
+        for filename2, size2 in list(path2_files.items()):
             logger.debug(u"Comparing size of {0} ({1}) to size of {2} ({3})".format(filename1, size1, filename2, size2))
             if size1 == size2:
                 logger.debug(u"Matched {0} to {1}".format(filename1, filename2))
@@ -205,9 +208,9 @@ def load_torrent(proxy, ID, path):
         logger.debug(u"Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True)))
         logger.error(u"Hash {0} already exists in rtorrent as {1}, cannot load.".format(thash, proxy.d.name(thash)))
         return
-    except (xmlrpclib.Fault, xmlrpc.HashNotFound):
+    except (xmlrpc_client.Fault, xmlrpc.HashNotFound):
         pass
-    proxy.load.raw('', xmlrpclib.Binary(torrent_data))
+    proxy.load.raw('', xmlrpc_client.Binary(torrent_data))
     # Wait until the torrent is loaded and available
     while True:
         sleep(1)
@@ -292,7 +295,7 @@ def main():
 
     for filename in filelist:
         match = Match(None)
-        filename = filename.strip("\n").decode('UTF-8')
+        filename = filename.strip("\n")
 
         logger.info(u'Starting reseed attempt on file {0}'.format(filename))
 
@@ -322,7 +325,7 @@ def main():
                     if match:
                         break
                 except Exception:
-                    print u"Error while attempting to match file '{0}'".format(filename)
+                    print(u"Error while attempting to match file '{0}'".format(filename))
                     raise
 
         # Make sure we have the minimum information required
@@ -337,7 +340,7 @@ def main():
             create_in = ptpapi.config.config.get('Reseed', 'createInDirectory')
         else:
             create_in = None
-        match = create_matched_files(match, directory=create_in, action=args.action, dry_run=args.dry_run)
+        create_matched_files(match, directory=create_in, action=args.action, dry_run=args.dry_run)
         logger.info(u"Found match, now loading torrent {0} to path {1}".format(match.ID, match.path))
         if args.dry_run:
             would_load.append(filename)
@@ -349,14 +352,14 @@ def main():
             already_loaded.append(filename)
 
     if args.summary:
-        print '==> Loaded:'
-        print '\n'.join(loaded)
-        print '==> Would have loaded:'
-        print '\n'.join(would_load)
-        print '==> Already loaded:'
-        print '\n'.join(already_loaded)
-        print '==> Not found:'
-        print '\n'.join(not_found)
+        print('==> Loaded:')
+        print('\n'.join(loaded))
+        print('==> Would have loaded:')
+        print('\n'.join(would_load))
+        print('==> Already loaded:')
+        print('\n'.join(already_loaded))
+        print('==> Not found:')
+        print('\n'.join(not_found))
 
     logger.debug("Total session tokens consumed: %s", ptpapi.session.session.consumed_tokens)
     logger.debug("Exiting...")
