@@ -216,6 +216,20 @@ def do_search_fields(api, args):
             str += ' - ' + e['title']
         print(str)
 
+def do_userstats(api, args):
+    if args.user_id:
+        user = ptpapi.User(args.user_id)
+    else:
+        user = api.current_user()
+    if args.hummingbird:
+        # '[ oddbondboris ] :: [ Power User ] :: [ Uploaded: 107.241 TiB | Downloaded: 41.448 TiB | Points: 79,782,506 | Ratio: 2.58 ] :: [ https://passthepopcorn.me/user.php?id=36605 ]'
+        stats = user.stats()
+        stats['Id'] = user.ID
+        print "[ {{Username}} ] :: [ {Class} ] :: [ Uploaded: {Uploaded} | Downloaded: {Downloaded} | Points: {Points} | Ratio: {Ratio} ] :: [ https://passthepopcorn.me/user.php?id={Id} ]".format(**stats)
+    else:
+        for stat, value in user.stats().items():
+            print(stat + u": " + value)
+
 def add_verbosity_args(parser):
     """Helper function to improve DRY"""
     parser.add_argument('--debug', help='Print lots of debugging statements',
@@ -265,6 +279,12 @@ def main():
     add_verbosity_args(raw_parser)
     raw_parser.add_argument('url', help="A list of urls to download", nargs='+')
     raw_parser.set_defaults(func=do_raw)
+
+    userstats_parser = subparsers.add_parser('userstats', help='Fetch the userstats HTML of pages')
+    add_verbosity_args(userstats_parser)
+    userstats_parser.add_argument('-i', '--user-id', help="The user to look at", nargs='?', default=None)
+    userstats_parser.add_argument('--hummingbird', help="Imitate Hummingbird's format", action="store_true")
+    userstats_parser.set_defaults(func=do_userstats)
 
     field_parser = subparsers.add_parser('fields', help='List the fields available for each PTPAPI resource')
     add_verbosity_args(field_parser)

@@ -49,6 +49,48 @@ class User(object):
             ratings.append((movie_id, rating))
         return ratings
 
+    def __parse_stat(self, stat_line):
+            stat, _, value = stat_line.partition(':')
+            stat = stat.title().replace(' ', '').strip()
+            value = re.sub(r'\t.*', '', value).replace("[View]", "").strip()
+            return stat, value
+
+    def stats(self):
+        """
+        Return all stats associated with a user
+
+        :rtype: A dictionary of stat names and their values, both in string format.
+        """
+        soup = bs4(session.base_get(
+            'user.php',
+            params={'id': self.ID}
+        ).text, "lxml")
+        stats = {}
+        for li in soup.find('span', text='Stats').parent.parent.find_all('li'):
+            stat, value = self.__parse_stat(li.text)
+            stats[stat] = value
+        for li in soup.find('span', text='Personal').parent.parent.find_all('li'):
+            stat, value = self.__parse_stat(li.text)
+            if value:
+                stats[stat] = value
+        for li in soup.find('span', text='Community').parent.parent.find_all('li'):
+            stat, value = self.__parse_stat(li.text)
+            if stat == "Uploaded":
+                match = re.search(r'(.*) \((.*)\)', value)
+                stats["UploadedTorrentsWithDeleted"] = match.group(1)
+                value = match.group(2)
+                stat = "UploadedTorrents"
+            elif stat == "Downloaded":
+                stat = "DownloadedTorrents"
+            elif stat == "SnatchesFromUploads":
+                match = re.search(r'(.*) \((.*)\)', value)
+                stats["SnatchesFromUploadsWithDeleted"] = match.group(1)
+                value = match.group(2)
+            elif stat == "AverageSeedTime(Active)":
+                stat = "AverageSeedTimeActive"
+            stats[stat] = value
+        return stats
+
 
 class CurrentUser(User):
     """Defines some additional methods that only apply to the logged in user."""
