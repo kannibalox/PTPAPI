@@ -6,10 +6,10 @@ import logging
 from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
 from six.moves.urllib.parse import parse_qs, urlparse
 
+import ptpapi
 from .config import config
 from .session import session
 from .error import PTPAPIException
-from . import movie
 
 LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class Torrent(object):
 
     def __getitem__(self, name):
         if name not in self.data or self.data[name] is None:
-            for k, value in self.key_finder.iteritems():
+            for k, value in self.key_finder.items():
                 if name in value:
                     getattr(self, "load_%s_data" % k)()
         return self.data[name]
@@ -133,7 +133,7 @@ class Torrent(object):
         self.data['Link'] = 'https://passthepopcorn.me/torrents.php?torrentid=' + self.ID
 
     def load_parent_data(self):
-        self.data['Movie'] = movie.Movie(ID=self['GroupId'])
+        self.data['Movie'] = ptpapi.Movie(ID=self['GroupId'])
 
     def load_torrent_json_data(self):
         """Load torrent data from a JSON call"""

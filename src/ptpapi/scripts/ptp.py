@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 import logging
 import os.path
-from urlparse import urlparse, parse_qs
 from time import sleep
 
 import argparse
 import tempita
 from bs4 import BeautifulSoup as bs4
+from six.moves.urllib.parse import parse_qs, urlparse
 
 import ptpapi
 
@@ -20,7 +20,7 @@ def do_inbox(api, args):
     page = args.page
     user = api.current_user()
     if args.mark_all_read:
-        print "Clearing out {0} messages".format(user.get_num_messages())
+        print("Clearing out {0} messages".format(user.get_num_messages()))
         while user.new_messages > 0:
             for msg in api.current_user().inbox(page=page):
                 if msg['Unread'] is False:
@@ -29,27 +29,27 @@ def do_inbox(api, args):
             page += 1
     elif args.conversation:
         conv = user.inbox_conv(args.conversation)
-        print conv['Subject']
+        print(conv['Subject'])
         for msg in conv['Message']:
-            print "{0} - {1}\n".format(msg['User'], msg['Time'])
-            print msg['Text']
-            print '----------------------------'
+            print("{0} - {1}\n".format(msg['User'], msg['Time']))
+            print(msg['Text'])
+            print('----------------------------')
     elif args.mark_read:
         for conv in args.mark_read:
             user.inbox_conv(conv)
     else:
         msgs = list(user.inbox())
-        print "ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9
-        print '-'*55
+        print("ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9)
+        print('-'*55)
         for msg in msgs:
             if args.unread and msg['Unread'] is False:
                 continue
             if args.user is not None and msg['Sender'] != args.user:
                 continue
-            print "{0: <8}{1: <32}{2: <15}".format(
+            print("{0: <8}{1: <32}{2: <15}".format(
                 msg['ID'],
                 ellipsize(msg['Subject'], 30),
-                ellipsize(msg['Sender'], 15))
+                ellipsize(msg['Sender'], 15)))
 
 
 def parse_terms(termlist):
@@ -131,11 +131,11 @@ def do_search(api, args):
     if args.download:
         for movie in movies[:args.limit]:
             if movie_template:
-                print movie_template.substitute(movie)
+                print(movie_template.substitute(movie))
             match = movie.best_match(args.filter)
             if match:
                 if torrent_template:
-                    print torrent_template.substitute(match)
+                    print(torrent_template.substitute(match))
                 if not args.dry_run:
                     match.download_to_dir(args.output_directory)
                 else:
@@ -145,20 +145,20 @@ def do_search(api, args):
         for torrent in torrents:
             if args.download and not args.dry_run:
                 if torrent_template:
-                    print torrent_template.substitute(torrent)
+                    print(torrent_template.substitute(torrent))
                 torrent.download_to_dir(args.output_directory)
             elif args.dry_run:
                 logger.info("Dry-run, not downloading %s", torrent)
     else:
         for movie in movies[:args.limit]:
             if movie_template:
-                print movie_template.substitute(movie)
+                print(movie_template.substitute(movie))
             for torrent in movie['Torrents']:
                 if torrent_template:
-                    print torrent_template.substitute(torrent)
+                    print(torrent_template.substitute(torrent))
         for torrent in torrents:
             if torrent_template:
-                print torrent_template.substitute(torrent)
+                print(torrent_template.substitute(torrent))
 
 
 def do_raw(_, args):
@@ -181,7 +181,7 @@ def do_log(api, args):
             msgs.reverse()
         for time, msg in msgs:
             if lastmsg is None or printmsg:
-                print time, '-', msg
+                print(time, '-', msg)
                 lastmsg = msg
             if lastmsg == msg:
                 printmsg = True
@@ -191,16 +191,16 @@ def do_log(api, args):
             break
 
 def do_fields(api, args):
-    print "Movie:"
+    print("Movie:")
     m = ptpapi.Movie(ID=1)
     for values in m.key_finder.values():
         for val in values:
-            print "- {0}".format(val)
-    print "Torrent:"
+            print("- {0}".format(val))
+    print("Torrent:")
     t = ptpapi.Torrent(ID=1)
     for values in t.key_finder.values():
         for val in values:
-            print "- {0}".format(val)
+            print("- {0}".format(val))
 
 def do_search_fields(api, args):
     soup = bs4(ptpapi.session.session.base_get('torrents.php', params={'action': 'advanced'}).content, 'lxml')
@@ -225,7 +225,7 @@ def do_userstats(api, args):
         # '[ oddbondboris ] :: [ Power User ] :: [ Uploaded: 107.241 TiB | Downloaded: 41.448 TiB | Points: 79,782,506 | Ratio: 2.58 ] :: [ https://passthepopcorn.me/user.php?id=36605 ]'
         stats = user.stats()
         stats['Id'] = user.ID
-        print "[ {{Username}} ] :: [ {Class} ] :: [ Uploaded: {Uploaded} | Downloaded: {Downloaded} | Points: {Points} | Ratio: {Ratio} ] :: [ https://passthepopcorn.me/user.php?id={Id} ]".format(**stats)
+        print("[ {{Username}} ] :: [ {Class} ] :: [ Uploaded: {Uploaded} | Downloaded: {Downloaded} | Points: {Points} | Ratio: {Ratio} ] :: [ https://passthepopcorn.me/user.php?id={Id} ]".format(**stats))
     else:
         for stat, value in user.stats().items():
             print(stat + u": " + value)

@@ -10,11 +10,11 @@ from bs4 import BeautifulSoup as bs4
 from six.moves import configparser, html_parser
 import requests
 
-from .config import config
-from .session import session
-from .movie import Movie
-from .user import CurrentUser
-from .error import PTPAPIException
+import ptpapi
+from ptpapi.config import config
+from ptpapi.session import session
+from ptpapi.user import CurrentUser
+from ptpapi.error import PTPAPIException
 
 LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class API(object):
             self.__save_cookie()
             # Get some information that will be useful for later
             req = session.base_get('index.php')
-        Util.raise_for_cloudflare(req.text)
+        ptpapi.util.raise_for_cloudflare(req.text)
         LOGGER.info("Login successful.")
         self.current_user_id = re.search(r'user.php\?id=(\d+)', req.text).group(1)
         self.auth_key = re.search(r'auth=([0-9a-f]{32})', req.text).group(1)
@@ -103,12 +103,12 @@ class API(object):
             if 'ImdbId' not in movie:
                 movie['ImdbId'] = '0'
             movie['Title'] = html_parser.HTMLParser().unescape(movie['Title'])
-            ret_array.append(Movie(data=movie))
+            ret_array.append(ptpapi.Movie(data=movie))
         return ret_array
 
     def need_for_seed(self, filters={}):
         """List torrents that need seeding"""
-        data = Util.snarf_cover_view_data(session.base_get("needforseed.php", params=filters).content)
+        data = util.snarf_cover_view_data(session.base_get("needforseed.php", params=filters).content)
         torrents = []
         for m in data:
             torrent = m['GroupingQualities'][0]['Torrents'][0]
@@ -130,11 +130,11 @@ class API(object):
         search_terms['id'] = coll_id
         req = session.base_get('collages.php', params=search_terms)
         movies = []
-        for movie in Util.snarf_cover_view_data(req.text):
+        for movie in ptpapi.util.snarf_cover_view_data(req.text):
             movie['Torrents'] = []
             for group in movie['GroupingQualities']:
                 movie['Torrents'].extend(group['Torrents'])
-            movies.append(Movie(data=movie))
+            movies.append(ptpapi.Movie(data=movie))
         return movies
 
     def log(self):
@@ -147,50 +147,3 @@ class API(object):
         return ret_array
 
 
-class Util(object):
-    """A class for misc. utilities"""
-    @staticmethod
-    def raise_for_cloudflare(text):
-        """Raises an exception if a CloudFlare error page is detected
-
-        :param text: a raw html string"""
-        soup = bs4(text, "html.parser")
-        if soup.find(class_="cf-error-overview") is not None:
-            msg = '-'.join(soup.find(class_="cf-error-overview").get_text().splitlines())
-            raise PTPAPIException("Encountered Cloudflare error page: ", msg)
-
-    @staticmethod
-    def snarf_cover_view_data(text):
-        """Grab cover view data directly from an html source
-        and parse out any relevant infomation we can
-
-        :param text: a raw html string
-        :rtype: a dictionary of movie data"""
-        data = []
-        for json_data in re.finditer(r'coverViewJsonData\[\s*\d+\s*\]\s*=\s*({.*});', text):
-            data.extend(json.loads(json_data.group(1))['Movies'])
-            for movie in data:
-                movie['Title'] = HTMLParser.HTMLParser().unescape(movie['Title'])
-                movie['Torrents'] = []
-                for group in movie['GroupingQualities']:
-                    for torrent in group['Torrents']:
-                        soup = bs4(torrent['Title'], "html.parser")
-                        torrent['Codec'], torrent['Container'], torrent['Source'], torrent['Resolution'] = [item.strip() for item in soup.a.text.split('/')[0:4]]
-                        torrent['GoldenPopcorn'] = (soup.contents[0].string.strip(' ') == u'\u10047') # 10047 = Unicode GP symbol pylint: disable=line-too-long
-                        torrent['ReleaseName'] = soup.a['title'].split('\n')[-1]
-                        match = re.search(r'torrents.php\?id=(\d+)&torrentid=(\d+)', soup.a['href'])
-                        torrent['Id'] = match.group(2)
-                        movie['Torrents'].append(torrent)
-        return data
-
-    @staticmethod
-    def creds_from_conf(filename):
-        """Pull user, password, and passkey information from a file
-
-        :param filename: an absolute filename
-        :rtype: a diction of the username, password and passkey"""
-        config_file = configparser.ConfigParser()
-        config_file.read(filename)
-        return {'username': config_file.get('PTP', 'username'),
-                'password': config_file.get('PTP', 'password'),
-                'passkey': config_file.get('PTP', 'passkey')}

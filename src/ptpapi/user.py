@@ -4,7 +4,7 @@ import re
 from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
 from six.moves import configparser, html_parser
 
-from . import api
+from .util import snarf_cover_view_data
 from .session import session
 from .movie import Movie
 from .torrent import Torrent
@@ -29,7 +29,7 @@ class User(object):
         search_terms.update({'userid': self.ID})
         req = session.base_get('bookmarks.php', params=search_terms)
         movies = []
-        for movie in api.Util.snarf_cover_view_data(req.text):
+        for movie in snarf_cover_view_data(req.text):
             movies.append(Movie(data=movie))
         return movies
 

@@ -61,7 +61,7 @@ class Movie(object):
 
     def __getitem__(self, name):
         if name not in self.data or self.data[name] is None:
-            for key, val in self.key_finder.iteritems():
+            for key, val in self.key_finder.items():
                 if name in val:
                     getattr(self, "load_%s_data" % key)()
         return self.data[name]
