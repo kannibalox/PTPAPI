@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="PTPAPI",
-    version="0.4",
+    version="0.5",
     author="kannibalox",
     url="https://github.com/kannibalox/PTPAPI",
     install_requires=[
