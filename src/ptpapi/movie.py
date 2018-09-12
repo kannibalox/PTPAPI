@@ -2,6 +2,7 @@
 import re
 import logging
 import os.path
+import operator
 from datetime import datetime
 
 from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
@@ -9,6 +10,7 @@ from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
 from .session import session
 from .torrent import Torrent
 from .error import PTPAPIException
+from .util import human_to_bytes
 
 LOGGER = logging.getLogger(__name__)
 
@@ -163,7 +165,7 @@ class Movie(object):
         for profile in profiles:
             LOGGER.debug("Attempting to match movie to profile '%s'", profile)
             matches = self.data['Torrents']
-            filter_dict = {
+            simple_filter_dict = {
                 'gp': (lambda t, _: t['GoldenPopcorn']),
                 'scene': (lambda t, _: t['Scene']),
                 '576p': (lambda t, _: t['Resolution'] == '576p'),
@@ -180,14 +182,32 @@ class Movie(object):
                 'unseen': (lambda t, m: not m['Seen']),
                 'unsnatched': (lambda t, m: not m['Snatched'])
             }
-            for (name, func) in filter_dict.items():
+            for (name, func) in simple_filter_dict.items():
                 if name.lower() in profile:
                     matches = [t for t in matches if func(t, self)]
+                    LOGGER.debug("%i matches after filtering by parameter '%s'", len(matches), name)
+            # lambdas that take a torrent, a function for comparison, and a value-as-a-string
+            comparative_filter_dict = {
+                'seeders': (lambda t, f, v: f(int(t['Seeders']), int(v))),
+                'size': (lambda t, f, v: f(int(t['Size']), human_to_bytes(v)))
+            }
+            comparisons = {
+                '>': operator.gt, '>=': operator.ge,
+                '=': operator.eq, '==': operator.eq,
+                '!=': operator.ne, '<>': operator.ne,
+                '<': operator.lt, '<=': operator.le,
+            }
+            for (name, func) in comparative_filter_dict.items():
+                match = re.search(r"\b%s([<>=!]+)(.+?)\b" % name, profile)
+                if match is not None:
+                    comp_func = comparisons[match.group(1)]
+                    value = match.group(2)
+                    matches = [t for t in matches if func(t, comp_func, value)]
                     LOGGER.debug("%i matches after filtering by parameter '%s'", len(matches), name)
             sort_dict = {
                 'most recent': (True, (lambda t: datetime.strptime(t['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
                 'smallest': (False, (lambda t: int(t['Size']))),
-                'seeders': (True, (lambda t: int(t['Seeders']))),
+                'most seeders': (True, (lambda t: int(t['Seeders']))),
                 'largest': (True, (lambda t: int(t['Size']))),
             }
             if len(matches) == 1:

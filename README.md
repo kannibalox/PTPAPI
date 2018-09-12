@@ -43,22 +43,27 @@ The full list of possible values for picking encodes is:
 * `XviD` or `x264`
 * `HD` or `SD`
 * `Remux`
-* `seeded` - the number of seeds is greater than 0
+* `seeded` - the number of seeds is greater than 0 (deprecated, use `seeders>0`)
 * `not-trumpable` - ignore any trumpable torrents
 * `unseen` - ignores all torrents if you've marked the movie as seen or rated it
 * `unsnatched` - ignore all torrents unless you've never snatched one before (note that seeding counts as "snatched", but leeching doesn't
+There are also values that allow for simple comparisons, e.g. `size>1400M`.
+* `seeders`
+* `size`
 
 Note that it's possible to have two incompatible values, e.g. `GP` and `Scene`, but this simply means the sub-filter won't ever match a torrent, and will always be skipped over.
 
 The possible values for sorting are:
 * `most recent` (the default if none are specified)
 * `smallest`
-* `seeders`
+* `most seeders`
 * `largest`
 
 #### Examples
 
 For instance, the filter `smallest GP,720p scene,largest` would attempt to download the smallest GP. If there are no GPs, it will try to find a 720p scene encode. If it can't find either of those, it will just pick the largest torrent available.
+
+As another example, if you wanted to filter for encodes that are less than 200MiB with only one seeder, you could use `seeders=1 size<200M`.
 
 ## Usage
 

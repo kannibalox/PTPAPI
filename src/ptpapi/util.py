@@ -13,6 +13,27 @@ def raise_for_cloudflare(text):
         msg = '-'.join(soup.find(class_="cf-error-overview").get_text().splitlines())
         raise PTPAPIException("Encountered Cloudflare error page: ", msg)
 
+# Adapted from https://gist.github.com/leepro/9694638
+def human_to_bytes(s):
+    try:
+        return int(s)
+    except ValueError:
+        pass
+
+    init = s
+    num = ""
+    while s and s[0:1].isdigit() or s[0:1] == '.':
+        num += s[0]
+        s = s[1:]
+    num = float(num)
+    letter = s.strip()
+    symbols = ('b', 'k', 'm', 'g', 't')
+    prefix = {symbols:1}
+    for i, s in enumerate(symbols[1:]):
+        prefix[s] = 1 << (i+1)*10
+    return int(num * prefix[letter])
+
+
 def snarf_cover_view_data(text):
     """Grab cover view data directly from an html source
     and parse out any relevant infomation we can
