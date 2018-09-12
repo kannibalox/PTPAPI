@@ -1,4 +1,8 @@
+import re
+import json
+
 from bs4 import BeautifulSoup as bs4
+from six.moves import html_parser
 
 def raise_for_cloudflare(text):
     """Raises an exception if a CloudFlare error page is detected
@@ -19,7 +23,7 @@ def snarf_cover_view_data(text):
     for json_data in re.finditer(r'coverViewJsonData\[\s*\d+\s*\]\s*=\s*({.*});', text):
         data.extend(json.loads(json_data.group(1))['Movies'])
         for movie in data:
-            movie['Title'] = HTMLParser.HTMLParser().unescape(movie['Title'])
+            movie['Title'] = html_parser.HTMLParser().unescape(movie['Title'])
             movie['Torrents'] = []
             for group in movie['GroupingQualities']:
                 for torrent in group['Torrents']:

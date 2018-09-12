@@ -2,7 +2,6 @@
 """The entrypoint module for access the API"""
 import re
 import os
-import json
 import pickle
 import logging
 
@@ -108,7 +107,7 @@ class API(object):
 
     def need_for_seed(self, filters={}):
         """List torrents that need seeding"""
-        data = util.snarf_cover_view_data(session.base_get("needforseed.php", params=filters).content)
+        data = ptpapi.util.snarf_cover_view_data(session.base_get("needforseed.php", params=filters).content)
         torrents = []
         for m in data:
             torrent = m['GroupingQualities'][0]['Torrents'][0]

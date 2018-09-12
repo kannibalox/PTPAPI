@@ -12,17 +12,20 @@ Welcome to PTPAPI's documentation!
 
 .. automodule:: ptpapi.api
                 :members:
-                    
+
+.. automodule:: ptpapi.user
+                :members:
+
 .. automodule:: ptpapi.movie
                 :members:
 
 .. automodule:: ptpapi.torrent
                 :members:
 
-.. automodule:: ptpapi.user
+.. automodule:: ptpapi.session
                 :members:
-                
-                    
+
+
 Indices and tables
 ==================
 
