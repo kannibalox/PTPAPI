@@ -100,8 +100,15 @@ def parse_terms(termlist):
 
 
 def do_search(api, args):
-    logger = logging.getLogger(__name__)
     (target, movies, torrents, terms) = parse_terms(args.search_terms)
+    if 'page' not in terms:
+        terms['page'] = 1
+    for _ in range(args.pages):
+        search_page(api, args, target, movies, torrents, terms.copy())
+        terms['page'] =+ 1
+
+def search_page(api, args, target, movies, torrents, terms):
+    logger = logging.getLogger(__name__)
     if args.movie_format == "":
         movie_template = None # Just to make linting happy
     elif args.movie_format is not None:
@@ -255,6 +262,7 @@ def main():
     search_parent.add_argument('-m', '--movie-format', help="Set the output for movies", default=None)
     search_parent.add_argument('-t', '--torrent-format', help="Set the output for torrents", default=None)
     search_parent.add_argument('-o', '--output-directory', help="Location for any downloaded files", default=None)
+    search_parent.add_argument('-p', '--pages', help="The number of pages to download", default=1, type=int)
 
     search_parser = subparsers.add_parser('search', help='Search for or download movies', add_help=False, parents=[search_parent])
     search_parser.add_argument('-d', '--download', help="Download any movies found", action="store_true")
@@ -280,7 +288,7 @@ def main():
     raw_parser.add_argument('url', help="A list of urls to download", nargs='+')
     raw_parser.set_defaults(func=do_raw)
 
-    userstats_parser = subparsers.add_parser('userstats', help='Fetch the userstats HTML of pages')
+    userstats_parser = subparsers.add_parser('userstats', help='Gather users\' stats from profile pages')
     add_verbosity_args(userstats_parser)
     userstats_parser.add_argument('-i', '--user-id', help="The user to look at", nargs='?', default=None)
     userstats_parser.add_argument('--hummingbird', help="Imitate Hummingbird's format", action="store_true")
