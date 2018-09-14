@@ -102,10 +102,10 @@ def parse_terms(termlist):
 def do_search(api, args):
     (target, movies, torrents, terms) = parse_terms(args.search_terms)
     if 'page' not in terms:
-        terms['page'] = 1
+        terms['page'] = '1'
     for _ in range(args.pages):
         search_page(api, args, target, movies, torrents, terms.copy())
-        terms['page'] =+ 1
+        terms['page'] = str(int(terms['page']) + 1)
 
 def search_page(api, args, target, movies, torrents, terms):
     logger = logging.getLogger(__name__)
