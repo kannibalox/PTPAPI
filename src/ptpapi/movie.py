@@ -105,9 +105,9 @@ class Movie(object):
         soup = bs4(session.base_get("torrents.php", params={'id': self.ID}).text, "html.parser")
         self.data['Cover'] = soup.find('img', class_='sidebar-cover-image')['src']
         # Title and Year
-        match = re.match(br'(.*) \[(\d{4})\]', soup.find('h2', class_='page__title').encode_contents())
+        match = re.match(br'(.*)(:? \[(\d{4})\])?', soup.find('h2', class_='page__title').encode_contents())
         self.data['Title'] = match.group(1)
-        self.data['Year'] = match.group(2)
+        self.data['Year'] = '0' if match.group(2) is None else match.group(2)
         # Genre tags
         self.data['Tags'] = []
         for tagbox in soup.find_all('div', class_="box_tags"):
