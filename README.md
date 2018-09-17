@@ -5,16 +5,13 @@ A small API for a mildly popular movie site. The goal was to be able to collect 
 ## Dependencies
 
 * Python 2.7
- * BeautifulSoup 4
- * pyroscope
- * requests
-* PIP
+* pip
 
 ## Installation
 
-`pip install https://github.com/kannibalox/PTPAPI/archive/master.zip`
+Use of a [virtualenv](https://virtualenv.readthedocs.org/en/latest/userguide.html#usage) is highly recommended.
 
-Use [virtualenv](https://virtualenv.readthedocs.org/en/latest/userguide.html#usage) if you don't have root access.
+`pip install -U https://github.com/kannibalox/PTPAPI/archive/master.zip`
 
 ## Configuration
 
