@@ -25,7 +25,6 @@ class KGAPI(BaseSiteAPI):
                                 data={"username": username,
                                       "password": password}).text
         if response.find('action="takelogin.php"') != -1:
-            print response
             raise KGAPIException("Failed to log in")
 
     def search(self, search_args):
@@ -92,4 +91,4 @@ class KGAPIException(Exception):
 
 if __name__ == '__main__':
     kg = KGAPI()
-    print kg.search({'search_type': 'imdb', 'search': '0207295'})
+    print(kg.search({'search_type': 'imdb', 'search': '0207295'}))

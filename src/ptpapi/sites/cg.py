@@ -88,4 +88,4 @@ class CGAPIException(Exception):
 if __name__ == '__main__':
     cg = CGAPI()
     cg.login()
-    print cg.search({'search': 'tt0054650'})
+    prin(cg.search({'search': 'tt0054650'}))

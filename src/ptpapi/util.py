@@ -20,7 +20,6 @@ def human_to_bytes(s):
     except ValueError:
         pass
 
-    init = s
     num = ""
     while s and s[0:1].isdigit() or s[0:1] == '.':
         num += s[0]
@@ -41,8 +40,8 @@ def snarf_cover_view_data(text):
     :param text: a raw html string
     :rtype: a dictionary of movie data"""
     data = []
-    for json_data in re.finditer(r'coverViewJsonData\[\s*\d+\s*\]\s*=\s*({.*});', text):
-        data.extend(json.loads(json_data.group(1))['Movies'])
+    for json_data in re.finditer(br'coverViewJsonData\[\s*\d+\s*\]\s*=\s*({.*});', text):
+        data.extend(json.loads(json_data.group(1).decode())['Movies'])
         for movie in data:
             movie['Title'] = html_parser.HTMLParser().unescape(movie['Title'])
             movie['Torrents'] = []
