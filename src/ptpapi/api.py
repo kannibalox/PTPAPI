@@ -14,6 +14,7 @@ from ptpapi.config import config
 from ptpapi.session import session
 from ptpapi.user import CurrentUser
 from ptpapi.error import PTPAPIException
+from ptpapi.movie import Movie
 
 LOGGER = logging.getLogger(__name__)
 
@@ -105,6 +106,17 @@ class API(object):
             ret_array.append(ptpapi.Movie(data=movie))
         return ret_array
 
+    def search_single(self, filters):
+        """If you know ahead of time that a filter will redirect to a single movie,
+        you can use this method to avoid an exception until that behaivor is
+        fixed upstream."""
+        if 'name' in filters:
+            filters['searchstr'] = filters['name']
+        filters['json'] = 'noredirect'
+        resp = session.base_get('torrents.php', params=filters)
+        return Movie(ID=re.search(r'id=([0-9]+)', resp.url).group(1))
+
+
     def need_for_seed(self, filters={}):
         """List torrents that need seeding"""
         data = ptpapi.util.snarf_cover_view_data(session.base_get("needforseed.php", params=filters).content)
@@ -144,5 +156,3 @@ class API(object):
             ret_array.append((message.find('span', class_='time')['title'],
                               message.find('span', class_='log__message').get_text().lstrip().encode('UTF-8')))
         return ret_array
-
-
