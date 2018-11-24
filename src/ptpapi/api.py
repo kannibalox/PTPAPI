@@ -141,7 +141,7 @@ class API(object):
         search_terms['id'] = coll_id
         req = session.base_get('collages.php', params=search_terms)
         movies = []
-        for movie in ptpapi.util.snarf_cover_view_data(req.text):
+        for movie in ptpapi.util.snarf_cover_view_data(req.content):
             movie['Torrents'] = []
             for group in movie['GroupingQualities']:
                 movie['Torrents'].extend(group['Torrents'])
