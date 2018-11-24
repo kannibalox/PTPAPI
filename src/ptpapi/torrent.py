@@ -44,7 +44,8 @@ class Torrent(object):
             ],
             'inferred': [
                 'Link',
-                'Id'
+                'Id',
+                'HumanSize'
             ],
             'parent': [
                 'Movie' # Would be 'inferred' if it didn't have a chance to trigger a request
@@ -131,6 +132,7 @@ class Torrent(object):
     def load_inferred_data(self):
         self.data['Id'] = self.ID
         self.data['Link'] = 'https://passthepopcorn.me/torrents.php?torrentid=' + self.ID
+        self.data['HumanSize'] = util.bytes_to_human(int(self.data['Size']))
 
     def load_parent_data(self):
         self.data['Movie'] = ptpapi.Movie(ID=self['GroupId'])

@@ -32,6 +32,12 @@ def human_to_bytes(s):
         prefix[s] = 1 << (i+1)*10
     return int(num * prefix[letter])
 
+def bytes_to_human(b, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.2f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.2f%s%s" % (num, 'Yi', suffix)
 
 def snarf_cover_view_data(text):
     """Grab cover view data directly from an html source
