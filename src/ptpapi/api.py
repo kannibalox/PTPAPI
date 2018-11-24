@@ -114,7 +114,11 @@ class API(object):
             filters['searchstr'] = filters['name']
         filters['json'] = 'noredirect'
         resp = session.base_get('torrents.php', params=filters)
-        return Movie(ID=re.search(r'id=([0-9]+)', resp.url).group(1))
+        id = re.search(r'id=([0-9]+)', resp.url)
+        if id is not None:
+            return Movie(ID=id.group(1))
+        else:
+            return None
 
 
     def need_for_seed(self, filters={}):
