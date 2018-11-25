@@ -206,9 +206,9 @@ class Movie(object):
                     LOGGER.debug("%i matches after filtering by parameter '%s'", len(matches), name)
             sort_dict = {
                 'most recent': (True, (lambda t: datetime.strptime(t['UploadTime'], "%Y-%m-%d %H:%M:%S"))),
-                'smallest': (False, (lambda t: int(t['Size']))),
+                'smallest': (False, (lambda t: human_to_bytes(t['Size']))),
                 'most seeders': (True, (lambda t: int(t['Seeders']))),
-                'largest': (True, (lambda t: int(t['Size']))),
+                'largest': (True, (lambda t: human_to_bytes(t['Size']))),
             }
             if len(matches) == 1:
                 return matches[0]
