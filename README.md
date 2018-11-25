@@ -4,7 +4,7 @@ A small API for a mildly popular movie site. The goal was to be able to collect 
 
 ## Dependencies
 
-* Python 2.7
+* Python 2.7 (3.X support is planned but not complete)
 * pip
 
 ## Installation
