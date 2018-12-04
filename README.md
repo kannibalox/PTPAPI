@@ -21,12 +21,11 @@ Open the file `~/.ptpapi.conf` for editing, and make sure it looks like the foll
 [Main]
 
 [PTP]
-username=<username>
-password=<password>
-passkey=<passkey>
+ApiUser=<ApiUser>
+ApiKey=<ApiKey>
 ```
 
-This is only the minimum required configuration. See `ptpapi.conf.example` for a full-futured config file with comments.
+Both values can be found in the "Security" section of your profile. This is only the minimum required configuration. See `ptpapi.conf.example` for a full-futured config file with comments.
 
 ## Concepts
 
@@ -111,3 +110,18 @@ By default the script looks for exact matches against file names and sizes. If y
 ### Notes
 
 I did this mostly for fun and to serve my limited needs, which is why it's not as polished as it could be, and will probably change frequently.  Pull requests are welcomed.
+
+#### Deprecated Configuration
+
+The new ApiUser/ApiKey system is preferred, however if you find bugs or limitations, the old cookie-based method can be used as seen here.
+
+Open the file `~/.ptpapi.conf` for editing, and make sure it looks like the following:
+
+```ini
+[Main]
+
+[PTP]
+username=<username>
+password=<password>
+passkey=<passkey>
+```

@@ -30,21 +30,30 @@ class API(object):
         j = None
         self.cookies_file = os.path.expanduser(config.get('Main', 'cookiesFile'))
         LOGGER.info("Initiating login sequence.")
-        password = (password or config.get('PTP', 'password'))
-        username = (username or config.get('PTP', 'username'))
-        passkey = (passkey or config.get('PTP', 'passkey'))
-        if os.path.isfile(self.cookies_file):
+        req = None
+        if config.has_option('PTP', 'ApiUser'):
+            session.headers.update({
+                'ApiUser': config.get('PTP', 'ApiUser'),
+                'ApiKey': config.get('PTP', 'ApiKey')
+            })
+            req = session.base_get('index.php')
+        elif os.path.isfile(self.cookies_file):
             self.__load_cookies()
             # A really crude test to see if we're logged in
             session.max_redirects = 1
             try:
                 req = session.base_get('torrents.php')
+                ptpapi.util.raise_for_cloudflare(req.text)
             except requests.exceptions.TooManyRedirects:
                 if os.path.isfile(self.cookies_file):
                     os.remove(self.cookies_file)
                 session.cookies = requests.cookies.RequestsCookieJar()
             session.max_redirects = 3
-        if not os.path.isfile(self.cookies_file):
+        # If we're not using the new method and we don't have a cookie, get one
+        if not config.has_option('PTP', 'ApiUser') and not os.path.isfile(self.cookies_file):
+            password = (password or config.get('PTP', 'password'))
+            username = (username or config.get('PTP', 'username'))
+            passkey = (passkey or config.get('PTP', 'passkey'))
             if not password or not passkey or not username:
                 raise PTPAPIException("Not enough info provided to log in.")
             try:
@@ -65,10 +74,14 @@ class API(object):
             self.__save_cookie()
             # Get some information that will be useful for later
             req = session.base_get('index.php')
-        ptpapi.util.raise_for_cloudflare(req.text)
+            ptpapi.util.raise_for_cloudflare(req.text)
         LOGGER.info("Login successful.")
         self.current_user_id = re.search(r'user.php\?id=(\d+)', req.text).group(1)
         self.auth_key = re.search(r'auth=([0-9a-f]{32})', req.text).group(1)
+
+    def is_api():
+        """Helper function to check for the use of ApiUser"""
+        return config.has_option('PTP', 'ApiUser')
 
     def logout(self):
         """Forces a logout."""

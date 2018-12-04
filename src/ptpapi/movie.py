@@ -102,7 +102,7 @@ class Movie(object):
 
     def load_html_data(self):
         """Scrape all data from a movie's HTML page"""
-        soup = bs4(session.base_get("torrents.php", params={'id': self.ID}).text, "html.parser")
+        soup = bs4(session.base_get("torrents.php", params={'id': self.ID, 'json': 0}).text, "html.parser")
         self.data['Cover'] = soup.find('img', class_='sidebar-cover-image')['src']
         # Title and Year
         match = re.match(br'(.*)(:? \[(\d{4})\])?', soup.find('h2', class_='page__title').encode_contents())

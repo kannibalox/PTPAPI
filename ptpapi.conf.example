@@ -13,12 +13,18 @@
 #filter=
 
 [PTP]
+# Your ApiUser value
+ApiUser=
+# Your ApiKey value
+ApiKey=
+
+## Deprecated
 # Your site username
-username=
+#username=
 # Your site password
-password=
+#password=
 # Your passkey (can be found on upload.php, it's that random string of number and letters inside the announce URL)
-passkey=
+#passkey=
 
 [Reseed]
 # The action to use when creating new files to seed
