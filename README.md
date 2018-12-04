@@ -61,6 +61,10 @@ Using the `-d` flag will download one torrent from each of the matched torrents 
 
 The `-p/--pages [int]` option can be used to scrape multiple pages at once. N.B.: If any `page` parameter is in the original search query, paging will start from that page.
 
+#### `ptp fields`
+
+Simply list fields that can be used for the `ptp search` formatting.
+
 ### `ptp-reseed`
 
 This script automatically matches up files to movies on PTP. It's most basic usage is `ptp-reseed <file path>`. This will search PTP for any movies matching that filename, and if it finds a match, will automatically download the torrent and add it to rtorrent. It can do some basic file manipulation if it finds a close enough match.
