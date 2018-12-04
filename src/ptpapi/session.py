@@ -37,9 +37,7 @@ class TokenSession(requests.Session):
             LOGGER.debug("Waiting for token bucket to refill...")
             sleep(1)
         req = requests.Session.request(self, *args, **kwargs)
-        if req.status_code not in [400, 401, 403]:
-            # TODO: Any reason to not raise on all bad statuses?
-            req.raise_for_status()
+        req.raise_for_status()
         return req
 
     def get_tokens(self):
