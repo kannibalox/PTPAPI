@@ -27,6 +27,7 @@ def login(**kwargs):
 class API(object):
     """Used for instantiating an object that can access the API"""
     def __init__(self, username=None, password=None, passkey=None):
+        self.current_user_id = None
         j = None
         self.cookies_file = os.path.expanduser(config.get('Main', 'cookiesFile'))
         LOGGER.info("Initiating login sequence.")
@@ -36,7 +37,6 @@ class API(object):
                 'ApiUser': config.get('PTP', 'ApiUser'),
                 'ApiKey': config.get('PTP', 'ApiKey')
             })
-            req = session.base_get('index.php')
         elif os.path.isfile(self.cookies_file):
             self.__load_cookies()
             # A really crude test to see if we're logged in
@@ -76,15 +76,15 @@ class API(object):
             req = session.base_get('index.php')
             ptpapi.util.raise_for_cloudflare(req.text)
         LOGGER.info("Login successful.")
-        self.current_user_id = re.search(r'user.php\?id=(\d+)', req.text).group(1)
-        self.auth_key = re.search(r'auth=([0-9a-f]{32})', req.text).group(1)
 
     def is_api():
         """Helper function to check for the use of ApiUser"""
         return config.has_option('PTP', 'ApiUser')
 
     def logout(self):
-        """Forces a logout."""
+        """Forces a logout. In ApiUser mode, essentially a waste of two request tokens."""
+        req = session.base_get('index.php')
+        self.auth_key = re.search(r'auth=([0-9a-f]{32})', req.text).group(1)
         os.remove(self.cookies_file)
         return session.base_get('logout.php', params={'auth': self.auth_key})
 
@@ -101,7 +101,11 @@ class API(object):
             session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fileh))
 
     def current_user(self):
-        """Helper function to get the current user"""
+        """Function to get the current user"""
+        # TODO: See if it can be scraped earlier without an extra request
+        if self.current_user_id is None:
+            req = session.base_get('index.php')
+            self.current_user_id = re.search(r'user.php\?id=(\d+)', req.text).group(1)
         return CurrentUser(self.current_user_id)
 
     def search(self, filters):
