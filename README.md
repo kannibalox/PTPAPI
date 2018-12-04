@@ -27,11 +27,57 @@ ApiKey=<ApiKey>
 
 Both values can be found in the "Security" section of your profile. This is only the minimum required configuration. See `ptpapi.conf.example` for a full-futured config file with comments.
 
+## Usage
+
+The three CLI commands are `ptp`, `ptp-reseed`, and `ptp-bookmarks`
+
+### `ptp`
+
+This is a generally utility to do various things inside PTP. As of right now it can download files, search the site for movies, and list message in your inbox.
+
+See `ptp help` for more information.
+
+#### `ptp inbox`
+
+A small utility to read messages in your inbox. No reply capability currently.
+
+#### `ptp download`
+
+An alias for `ptp-search -d`
+
+#### `ptp search`
+
+This subcommand lets you search the site for movies. It can take movie and permalinks, as well as search by arbitrary parameters. For instance, `ptp search year=1980-2000 taglist=sci.fi` or `ptp search "Star Wars"`. It can also accept URLs for torrents and collages, e.g. `ptp search "https://passthepopcorn.me/torrents.php?id=68148"` or `ptp search "https://passthepopcorn.me/collages.php?id=2438"`, and regular search URLs, e.g. `ptp search "https://passthepopcorn.me/torrents.php?action=advanced&year=1980-2000&taglist=action"`.
+
+There are a couple aliases to make life easier:
+
+* `genre`, `genres`, `tags` -> `taglist`
+* `name` -> `searchstr`
+* `bookmarks` -> Search only your bookmarks
+
+In addition, [Tempita](http://pythonpaste.org/tempita/) can be used for custom formatting. For instance, `ptp search --movie-format="" --torrent-format="{{UploadTime}} - {{ReleaseName}}" year=1980-2000 taglist=sci.fi grouping=no`.
+
+Using the `-d` flag will download one torrent from each of the matched torrents (deciding which one to download is done via [filters](#filters)) to the [downloadDirectory](ptpapi.conf.example#L9).
+
+The `-p/--pages [int]` option can be used to scrape multiple pages at once. N.B.: If any `page` parameter is in the original search query, paging will start from that page.
+
+### `ptp-reseed`
+
+This script automatically matches up files to movies on PTP. It's most basic usage is `ptp-reseed <file path>`. This will search PTP for any movies matching that filename, and if it finds a match, will automatically download the torrent and add it to rtorrent. It can do some basic file manipulation if it finds a close enough match.
+
+For instance, if you have the file `Movie.2000.mkv`, and the torrent contains `Movie (2000)/Movie.2000.mkv`, the script will try to automatically create the folder `Movie (2000)` and hard link the file inside of it before attempting to seed it.
+
+See `ptp-reseed -h` and `ptpapi.conf.example` for more information and configuration options.
+
+#### guessit
+
+By default the script looks for exact matches against file names and sizes. If you'd like the name matching to be less strict, you can install the guessit library (`pip install guessit`), and if the filename search fails, the script will attempt to parse the movie name out of the file with guessit.
+
 ## Concepts
 
 ### Filters
 
-Filters were designed as a way to take a full movie group, and narrow it down to a single torrent. A filter consists of multiple sub-filters, where the first sub-filter to match will download the torrent, and if not, the next sub-filter will be checked. If none of the sub-filters match, no download will occur. 
+Filters were designed as a way to take a full movie group, and narrow it down to a single torrent. A filter consists of multiple sub-filters, where the first sub-filter to match will download the torrent, and if not, the next sub-filter will be checked. If none of the sub-filters match, no download will occur. Filters are separate from the actual search parameters sent to the site
 
 The full list of possible values for picking encodes is:
 * `GP` or `Scene`
@@ -61,57 +107,11 @@ For instance, the filter `smallest GP,720p scene,largest` would attempt to downl
 
 As another example, if you wanted to filter for encodes that are less than 200MiB with only one seeder, you could use `seeders=1 size<200M`.
 
-## Usage
-
-The three CLI commands are `ptp`, `ptp-reseed`, and `ptp-bookmarks`
-
-### `ptp`
-
-This is a generally utility to do various things inside PTP. As of right now it can download files, search the site for movies, and list message in your inbox.
-
-See `ptp help` for more information.
-
-#### `ptp inbox`
-
-A small utility to read messages in your inbox. No reply capability currently.
-
-#### `ptp download`
-
-An alias for `ptp-search -d`
-
-#### `ptp search`
-
-This subcommand lets you search the site for movies. It can take movie and permalinks, as well as search by arbitrary parameters. For instance, `ptp search year=1980-2000 taglist=sci.fi` or `ptp search "Star Wars"`. It can also accept URLs for torrents and collages, e.g. `ptp search "https://passthepopcorn.me/torrents.php?id=68148"` or `ptp search https://passthepopcorn.me/collages.php?id=2438`, and regular search URLs, e.g. `https://passthepopcorn.me/torrents.php?action=advanced&year=1980-2000&taglist=action`.
-
-There are a couple aliases to make life easier:
-
-* `genre`, `genres`, `tags` -> `taglist`
-* `name` -> `searchstr`
-* `bookmarks` -> Search only your bookmarks
-
-In addition, [Tempita](http://pythonpaste.org/tempita/) can be used for custom formatting. For instance, `ptp search --movie-format="" --torrent-format="{{UploadTime}} - {{ReleaseName}}" year=1980-2000 taglist=sci.fi grouping=no`.
-
-Using the `-d` flag will download one torrent from each of the matched torrents (via filters) to the [downloadDirectory](ptpapi.conf.example#L9).
-
-The `-p/--pages [int]` option can be used to scrape multiple pages at once. N.B.: If any `page` parameter is in the original search query, paging will start from that page.
-
-### `ptp-reseed`
-
-This script automatically matches up files to movies on PTP. It's most basic usage is `ptp-reseed <file path>`. This will search PTP for any movies matching that filename, and if it finds a match, will automatically download the torrent and add it to rtorrent. It can do some basic file manipulation if it finds a close enough match.
-
-For instance, if you have the file `Movie.2000.mkv`, and the torrent contains `Movie (2000)/Movie.2000.mkv`, the script will try to automatically create the folder `Movie (2000)` and hard link the file inside of it before attempting to seed it.
-
-See `ptp-reseed -h` and `ptpapi.conf.example` for more information and configuration options.
-
-#### guessit
-
-By default the script looks for exact matches against file names and sizes. If you'd like the name matching to be less strict, you can install the guessit library (`pip install guessit`), and if the filename search fails, the script will attempt to parse the movie name out of the file with guessit.
-
-### Notes
+## Notes
 
 I did this mostly for fun and to serve my limited needs, which is why it's not as polished as it could be, and will probably change frequently.  Pull requests are welcomed.
 
-#### Deprecated Configuration
+### Deprecated Configuration
 
 The new ApiUser/ApiKey system is preferred, however if you find bugs or limitations, the old cookie-based method can be used as seen here.
 
