@@ -92,7 +92,7 @@ The full list of possible values for picking encodes is:
 * `seeded` - the number of seeds is greater than 0 (deprecated, use `seeders>0`)
 * `not-trumpable` - ignore any trumpable torrents
 * `unseen` - ignores all torrents if you've marked the movie as seen or rated it
-* `unsnatched` - ignore all torrents unless you've never snatched one before (note that seeding counts as "snatched", but leeching doesn't
+* `unsnatched` - ignore all torrents unless you've never snatched one before (note that seeding counts as "snatched", but leeching doesn't)
 There are also values that allow for simple comparisons, e.g. `size>1400M`.
 * `seeders`
 * `size`
