@@ -30,7 +30,17 @@ class API(object):
         self.current_user_id = None
         j = None
         self.cookies_file = os.path.expanduser(config.get('Main', 'cookiesFile'))
+        logger = logging.getLogger(__name__)
         LOGGER.info("Initiating login sequence.")
+
+        if config.has_option('PTP', 'ApiUser') and config.has_option('PTP', 'ApiKey'):
+            pass
+        elif config.has_option('PTP', 'password') and config.has_option('PTP', 'username') and config.has_option('PTP', 'passkey'):
+            logger.warn("Using your password/passkey to access the site is deprecated, see README.md for instructions on using the new ApiUser/ApiKey.")
+        else:
+            logger.critical("No credentials found! Exiting...")
+            sys.exit(78) # EX_CONFIG
+
         req = None
         if config.has_option('PTP', 'ApiUser'):
             session.headers.update({
