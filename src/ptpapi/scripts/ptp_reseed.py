@@ -20,7 +20,7 @@ import ptpapi
 # as well as possibly making adding something like a confidence indicator easier
 # ID is an integer-as-a-string, and path is filepath
 class Match(object):
-    """A tiny class to make matching easiter"""
+    """A tiny class to make matching easier"""
     # pylint: disable=too-few-public-methods
     def __init__(self, ID=None, path=None, matched_files={}):
         """A defined match"""
