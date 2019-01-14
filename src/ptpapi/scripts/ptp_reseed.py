@@ -361,8 +361,17 @@ def main():
         print('==> Not found:')
         print('\n'.join(not_found))
 
+    exit_code = 0
+    if len(not_found) == 1:
+        exit_code = 1
+    elif len(not_found) > 1:
+        exit_code = 2
+    elif len(already_loaded) > 0:
+        exit_code = 3
+
     logger.debug("Total session tokens consumed: %s", ptpapi.session.session.consumed_tokens)
     logger.debug("Exiting...")
+    sys.exit(exit_code)
 
 if __name__ == '__main__':
     main()
