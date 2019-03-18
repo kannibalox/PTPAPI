@@ -174,7 +174,7 @@ def do_raw(_, args):
         url = urlparse(url_str)
         data = ptpapi.session.session.base_get('?'.join([url.path, url.query])).content
         with open(os.path.basename(url.path), 'w') as fileh:
-            fileh.write(data)
+            fileh.write(data.decode())
 
 
 def do_log(api, args):
@@ -229,7 +229,7 @@ def do_userstats(api, args):
     else:
         user = api.current_user()
     if args.hummingbird:
-        # '[ oddbondboris ] :: [ Power User ] :: [ Uploaded: 107.241 TiB | Downloaded: 41.448 TiB | Points: 79,782,506 | Ratio: 2.58 ] :: [ https://passthepopcorn.me/user.php?id=36605 ]'
+        # e.g. '[ Example ] :: [ Power User ] :: [ Uploaded: 10.241 TiB | Downloaded: 1.448 TiB | Points: 79,76g2,506 | Ratio: 2.58 ] :: [ https://passthepopcorn.me/user.php?id=XXXXX ]'
         stats = user.stats()
         stats['Id'] = user.ID
         print("[ {{Username}} ] :: [ {Class} ] :: [ Uploaded: {Uploaded} | Downloaded: {Downloaded} | Points: {Points} | Ratio: {Ratio} ] :: [ https://passthepopcorn.me/user.php?id={Id} ]".format(**stats))
