@@ -88,6 +88,7 @@ def parse_terms(termlist):
                 else:
                     terms['searchstr'] = term[0]
             else:
+                # Provide aliases for commonly used terms
                 term_map = {
                     'taglist': ['genre', 'genres', 'tags'],
                     'searchstr': ['name', 'title']

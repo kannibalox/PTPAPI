@@ -1,4 +1,4 @@
-"""Represent a movie"""
+"""Represents a movie"""
 import re
 import logging
 import os.path
