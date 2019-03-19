@@ -46,7 +46,7 @@ def do_inbox(api, args):
                 continue
             if args.user is not None and msg['Sender'] != args.user:
                 continue
-            print("{0: <8}{1: <32}{2: <15}".format(
+            print("{0: <10}{1: <32}{2: <15}".format(
                 msg['ID'],
                 ellipsize(msg['Subject'], 30),
                 ellipsize(msg['Sender'], 15)))
