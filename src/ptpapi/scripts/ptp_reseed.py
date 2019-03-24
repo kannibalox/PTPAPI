@@ -295,7 +295,7 @@ def main():
 
     for filename in filelist:
         match = Match(None)
-        filename = filename.strip("\n")
+        filename = filename.strip("\n").decode('utf-8')
 
         logger.info(u'Starting reseed attempt on file {0}'.format(filename))
 
@@ -306,9 +306,9 @@ def main():
         if args.url:
             parsed_url = parse_qs(urlparse(args.url).query)
             if 'torrentid' in parsed_url:
-                match = match_by_torrent(ptpapi.Torrent(ID=parsed_url['torrentid'][0]), filename)
+                match = match_by_torrent(ptpapi.Torrent(ID=parsed_url['torrentid'][0]), filename.encode())
             elif 'id' in parsed_url:
-                match = match_by_movie(ptpapi.Movie(ID=parsed_url['id'][0]), filename)
+                match = match_by_movie(ptpapi.Movie(ID=parsed_url['id'][0]), filename.encode())
         elif filename:
             for match_type in ptpapi.config.config.get('Reseed', 'findBy').split(','):
                 try:
