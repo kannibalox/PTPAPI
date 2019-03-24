@@ -38,7 +38,7 @@ def do_inbox(api, args):
         for conv in args.mark_read:
             user.inbox_conv(conv)
     else:
-        msgs = list(user.inbox())
+        msgs = list(user.inbox(page=page))
         print("ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9)
         print('-'*55)
         for msg in msgs:
@@ -46,9 +46,9 @@ def do_inbox(api, args):
                 continue
             if args.user is not None and msg['Sender'] != args.user:
                 continue
-            print("{0: <10}{1: <32}{2: <15}".format(
+            print("{0: <10}{1: <80}{2: <15}".format(
                 msg['ID'],
-                ellipsize(msg['Subject'], 30),
+                ellipsize(msg['Subject'], 78),
                 ellipsize(msg['Sender'], 15)))
 
 
