@@ -137,7 +137,7 @@ def match_by_guessed_name(ptp, filepath, limit, name=None):
     if not name:
         name = os.path.basename(filepath)
     guess = guessit.guessit(name)
-    if guess['title']:
+    if 'title' in guess and guess['title']:
         search_params = {'searchstr': guess['title']}
         if 'year' in guess:
             search_params['year'] = guess['year']
@@ -217,7 +217,7 @@ def load_torrent(proxy, ID, path):
         try:
             proxy.d.hash(thash, fail_silently=True)
             break
-        except (xmlrpclib.Fault, xmlrpc.HashNotFound):
+        except (xmlrpc_client.Fault, xmlrpc.HashNotFound):
             pass
     logger.info(u"Torrent loaded at {0}".format(path))
     proxy.d.custom.set(thash, 'tm_completed', str(int(time())))
