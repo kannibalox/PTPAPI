@@ -4,7 +4,7 @@ import re
 from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
 from six.moves import configparser, html_parser
 
-from .util import snarf_cover_view_data
+from .util import snarf_cover_view_data, human_to_bytes
 from .session import session
 from .movie import Movie
 from .torrent import Torrent
@@ -97,6 +97,49 @@ class CurrentUser(User):
     def __init__(self, ID):
         self.ID = ID
         self.new_messages = 0
+
+    def archive_container(self, ID):
+        """Fetch info about a containers from the archive project
+
+        :returns: A list of dictionaries"""
+        torrents = []
+        params = {
+            'action': 'container',
+            'UserID': self.ID,
+            'containerid': ID
+        }
+        soup = bs4(session.base_get('archive.php', params=params).text, "html.parser")
+        headers = [h.text for h in soup.find(class_='table').find('thead').find('tr').find_all('th')]
+        rows = soup.find(class_='table').find('tbody').find_all('tr')
+        for r in rows:
+            # Get as much info as possible from the pages
+            row_dict = dict(zip(headers, [f.text for f in r.find_all('td')]))
+            # Also add in a Torrent object for creating torrent objects
+            if 'Torrent Deleted' not in row_dict['Torrent']:
+                row_dict['TorrentId'] = re.search(r'torrentid=([0-9]*)', r.find_all('td')[0].find('a')['href']).group(1)
+        return torrents
+
+
+    def archive_containers(self):
+        """Fetch a list of containers from the archive project
+
+        :returns: A list of dictionaries"""
+        containers = []
+        soup = bs4(session.base_get('archive.php').text, "html.parser")
+        for row in soup.find(class_='table').find('tbody').find_all('tr'):
+            cont = {
+                'name': row[0].text,
+                'link': r[0].find('a')['href'],
+                'size': ptpapi.util.human_to_bytes(r[1].text),
+                'max_size': ptpapi.util.human_to_bytes(r[2].text),
+                'last_fetch': r[3].text, # TODO: convert this to actual time object
+            }
+            for field in row:
+                if field.find('label'):
+                    l = field.find('label')
+                    cont[l['title'].lower()] = int(l.text.replace(',', ''))
+            containers.appent(cont)
+        return containers
 
     def __parse_new_messages(self, soup):
         """Parse the number of messages from a soup of html"""

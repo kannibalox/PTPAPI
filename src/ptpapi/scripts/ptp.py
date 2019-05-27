@@ -238,6 +238,16 @@ def do_userstats(api, args):
         for stat, value in user.stats().items():
             print(stat + u": " + value)
 
+def do_archive(api, args):
+    if args.fetch_downloaded:
+        for t in api.current_user().archive_container(args.container_id):
+            print t['Torrent']
+    else:
+        print(api.current_user().archive_containers())
+
+def do_archive_check(api, args):
+    pass
+
 def add_verbosity_args(parser):
     """Helper function to improve DRY"""
     parser.add_argument('--debug', help='Print lots of debugging statements',
@@ -272,6 +282,11 @@ def main():
     download_parser = subparsers.add_parser('download', help='An alias for `search -d`', add_help=False, parents=[search_parent])
     download_parser.add_argument('-d', '--download', help="Download any movies found", action="store_true", default=True)
     download_parser.set_defaults(func=do_search)
+
+    archive_parser = subparsers.add_parser('archive', help='Commands related to the archive project.')
+    archive_parser.add_argument('-c', '--container-id', help="Specify which container to act on when fetching", type=int)
+    archive_parser.add_argument('-d', '--fetch-downloaded', help="Fetch all list of all movies marked as 'Downloaded'", action="store_true")
+    archive_parser.set_defaults(func=do_archive)
 
     inbox_parser = subparsers.add_parser('inbox', help='Reads messages in your inbox')
     add_verbosity_args(inbox_parser)
