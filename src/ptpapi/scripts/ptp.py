@@ -241,7 +241,7 @@ def do_userstats(api, args):
 def do_archive(api, args):
     if args.fetch_downloaded:
         for t in api.current_user().archive_container(args.container_id):
-            print t['Torrent']
+            print(t['Torrent'])
     else:
         print(api.current_user().archive_containers())
 

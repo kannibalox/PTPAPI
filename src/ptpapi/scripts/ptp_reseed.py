@@ -16,11 +16,12 @@ from six.moves.urllib.parse import parse_qs, urlparse
 import ptpapi
 
 
-# A tiny class to make code cleaner,
-# as well as possibly making adding something like a confidence indicator easier
-# ID is an integer-as-a-string, and path is filepath
 class Match(object):
-    """A tiny class to make matching easier"""
+    """A tiny class to make matching easier
+
+    Could be expanded to introduce a confidence indicator
+
+    ID is an integer-as-a-string, and path is filepath"""
     # pylint: disable=too-few-public-methods
     def __init__(self, ID=None, path=None, matched_files={}):
         """A defined match"""
