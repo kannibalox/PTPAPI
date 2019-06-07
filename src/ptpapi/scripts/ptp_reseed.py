@@ -229,7 +229,7 @@ def load_torrent(proxy, ID, path):
 def find_existing_torrents(proxy):
     """Filter out a list of path for all PTP torrents"""
     paths = []
-    for torrent in proxy.d.multicall('main', 'd.directory=', 'd.is_multi_file=', 'd.name=', "t.multicall='',t.get_url="):
+    for torrent in proxy.d.multicall('main', 'd.directory=', 'd.is_multi_file=', 'd.name=', "t.multicall='',t.url="):
         basedir, is_multi, name, trackers = torrent
         for tracker in trackers:
             if 'passthepopcorn' in tracker[0]:
