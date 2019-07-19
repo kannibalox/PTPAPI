@@ -1,5 +1,6 @@
 import logging
 from time import time, sleep
+from urllib3.util.retry import Retry
 
 import requests
 
@@ -7,9 +8,9 @@ from .config import config
 
 LOGGER = logging.getLogger(__name__)
 
-
 class TokenSession(requests.Session):
     """Allows rate-limiting requests to the site"""
+
     def __init__(self, tokens, fill_rate):
         """tokens is the total tokens in the bucket. fill_rate is the
         rate in tokens/second that the bucket will be refilled."""
@@ -51,13 +52,22 @@ class TokenSession(requests.Session):
     tokens = property(get_tokens)
 
     def base_get(self, url_path, *args, **kwargs):
-        return self.get(config.get('Main', 'baseURL') + url_path, *args, **kwargs)
+        return self.get(config.get("Main", "baseURL") + url_path, *args, **kwargs)
 
     def base_post(self, url_path, *args, **kwargs):
-        return self.post(config.get('Main', 'baseURL') + url_path, *args, **kwargs)
+        return self.post(config.get("Main", "baseURL") + url_path, *args, **kwargs)
 
 
 LOGGER.debug("Initializing token session")
 # If you change this and get in trouble, don't blame me
 session = TokenSession(3, 0.5)
+if config.get("Main", "retry").lower() == "true":
+    LOGGER.debug("Setting up automatic retry")
+    retry_config = Retry(10,
+        connect = 4,
+        status = 4,
+        backoff_factor = 0.5,
+        status_forcelist = [502]
+    )
+    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=retry_config))
 session.headers.update({"User-Agent": "Wget/1.13.4"})
