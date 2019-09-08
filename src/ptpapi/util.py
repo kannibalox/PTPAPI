@@ -98,14 +98,14 @@ def human_to_bytes(s):
         prefix[s] = 1 << (i+1)*10
     return int(num * prefix[letter])
 
-def snarf_cover_view_data(text):
+def snarf_cover_view_data(text, key=br'coverViewJsonData\[\s*\d+\s*\]'):
     """Grab cover view data directly from an html source
     and parse out any relevant infomation we can
 
     :param text: a raw html string
     :rtype: a dictionary of movie data"""
     data = []
-    for json_data in re.finditer(br'coverViewJsonData\[\s*\d+\s*\]\s*=\s*({.*});', text):
+    for json_data in re.finditer(key + br'\s*=\s*({.*});', text):
         data.extend(json.loads(json_data.group(1).decode())['Movies'])
         for movie in data:
             movie['Title'] = html_parser.HTMLParser().unescape(movie['Title'])

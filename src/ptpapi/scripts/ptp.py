@@ -70,6 +70,9 @@ def parse_terms(termlist):
         if url.path == '/collages.php':
             target = 'collage'
             terms = url_args
+        elif url.path == "/artist.php":
+            target = 'artist'
+            terms = url_args
         elif url.path == '/torrents.php':
             if 'torrentid' in url_args:
                 torrents.append(ptpapi.Torrent(url_args['torrentid'][0]))
@@ -134,6 +137,8 @@ def search_page(api, args, target, movies, torrents, terms):
             movies = api.current_user().bookmarks(search_terms=terms)
         elif target == 'collage':
             movies = api.collage(terms['id'], terms)
+        elif target == 'artist':
+            movies = api.artist(terms['id'], terms)
         movies = movies[:args.limit]
 
     if args.download:

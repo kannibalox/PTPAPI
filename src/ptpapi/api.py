@@ -179,6 +179,18 @@ class API(object):
             movies.append(ptpapi.Movie(data=movie))
         return movies
 
+    def artist(self, art_id, search_terms={}):
+        """Simplistic representation of an artist page, might be split out later"""
+        search_terms['id'] = art_id
+        req = session.base_get('artist.php', params=search_terms)
+        movies = []
+        for movie in ptpapi.util.snarf_cover_view_data(req.content, key=b'ungroupedCoverViewJsonData'):
+            movie['Torrents'] = []
+            for group in movie['GroupingQualities']:
+                movie['Torrents'].extend(group['Torrents'])
+            movies.append(ptpapi.Movie(data=movie))
+        return movies
+
     def log(self):
         """Gets the PTP log"""
         soup = bs4(session.base_get('log.php').content, "html.parser")
