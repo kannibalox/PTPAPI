@@ -76,6 +76,7 @@ def human_to_bytes(s):
         return int(s)
     except ValueError:
         pass
+    s = s.replace(',', '')
     init = s
     num = ""
     while s and s[0:1].isdigit() or s[0:1] == '.':
