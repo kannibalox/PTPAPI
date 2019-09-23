@@ -165,6 +165,45 @@ class API(object):
         else:
             return None
 
+    def upload_info(self):
+        """Scrape as much info as possible from upload.php"""
+        data = {}
+        soup = bs4(session.base_get("upload.php").content, "html.parser")
+        data["announce"] = soup.find_all(
+            "input",
+            type="text",
+            value=re.compile("http://please.passthepopcorn.me:2710/.*/announce"),
+        )[0]["value"]
+        data["subtitles"] = {}
+        label_list = [
+            u.find_all("label") for u in soup.find_all(class_="languageselector")
+        ]
+        labels = [item for sublist in label_list for item in sublist]
+        for l in labels:
+            data["subtitles"][l["for"].lstrip("subtitle_")] = l.get_text().strip()
+        data["remaster_title"] = [
+            a.get_text() for a in soup.find(id="remaster_tags").find_all("a")
+        ]
+        data["resolutions"] = [
+            o.get_text() for o in soup.find(id="resolution").find_all("option")
+        ]
+        data["containers"] = [
+            o.get_text() for o in soup.find(id="container").find_all("option")
+        ]
+        data["sources"] = [
+            o.get_text() for o in soup.find(id="source").find_all("option")
+        ]
+        data["codecs"] = [
+            o.get_text() for o in soup.find(id="codec").find_all("option")
+        ]
+        data["tags"] = [
+            o.get_text() for o in soup.find(id="genre_tags").find_all("option")
+        ]
+        data["categories"] = [
+            o.get_text() for o in soup.find(id="categories").find_all("option")
+        ]
+        return data
+
     def need_for_seed(self, filters={}):
         """List torrents that need seeding"""
         data = ptpapi.util.snarf_cover_view_data(
