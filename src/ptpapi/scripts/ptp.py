@@ -12,7 +12,7 @@ import ptpapi
 
 def ellipsize(string, length):
     if len(string) > length:
-        return string[:length-3] + '...'
+        return string[:length-3] + u'...'
     return string
 
 
@@ -39,16 +39,16 @@ def do_inbox(api, args):
             user.inbox_conv(conv)
     else:
         msgs = list(user.inbox(page=page))
-        print("ID" + ' '*6 + "Subject" + ' '*25 + 'Sender' + ' '*9)
+        print("ID" + ' '*8 + "Subject" + ' '*25 + 'Sender' + ' '*9)
         print('-'*55)
         for msg in msgs:
             if args.unread and msg['Unread'] is False:
                 continue
             if args.user is not None and msg['Sender'] != args.user:
                 continue
-            print("{0: <10}{1: <80}{2: <15}".format(
+            print(u"{0: <10}{1: <32}{2: <15}".format(
                 msg['ID'],
-                ellipsize(msg['Subject'], 78),
+                ellipsize(msg['Subject'].decode('utf-8'), 31),
                 ellipsize(msg['Sender'], 15)))
 
 
