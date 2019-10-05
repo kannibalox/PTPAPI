@@ -54,7 +54,7 @@ def match_by_torrent(torrent, filepath):
                 realpath = os.path.join(root.decode('utf8'), filename.decode('utf8')).replace(os.path.dirname(path1) + os.sep, '')
                 path1_files[realpath] = os.path.getsize(os.path.join(root, filename))
     elif os.path.isfile(path1):
-        path1_files[path1.replace(os.path.dirname(path1) + os.sep, '')] = os.path.getsize(path1)
+        path1_files[path1.replace(os.path.dirname(path1) + os.sep, u'')] = os.path.getsize(path1)
 
     path2_files = dict((f, int(s)) for f, s in torrent['Filelist'].items())
 
@@ -296,7 +296,7 @@ def main():
 
     for filename in filelist:
         match = Match(None)
-        filename = filename.strip("\n").decode('utf-8')
+        filename = filename.strip("\n").encode('utf-8')
 
         logger.info(u'Starting reseed attempt on file {0}'.format(filename))
 
