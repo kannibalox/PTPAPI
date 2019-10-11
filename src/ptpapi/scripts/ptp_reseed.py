@@ -296,9 +296,9 @@ def main():
 
     for filename in filelist:
         match = Match(None)
-        filename = filename.strip("\n").encode('utf-8')
+        filename = filename.strip("\n")
 
-        logger.info(u'Starting reseed attempt on file {0}'.format(filename))
+        logger.info(u'Starting reseed attempt on file "{0}"'.format(filename))
 
         if not os.path.exists(filename):
             logger.error(u"File/directory {0} does not exist".format(filename))
