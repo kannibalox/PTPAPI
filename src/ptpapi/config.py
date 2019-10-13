@@ -6,7 +6,7 @@ import os.path
 from six.moves import configparser
 from six import StringIO
 
-conf_file = os.path.join(os.environ["HOME"], ".ptpapi.conf")
+conf_file = os.path.expanduser(os.path.join("~", ".ptpapi.conf"))
 
 default = """
 [Main]
