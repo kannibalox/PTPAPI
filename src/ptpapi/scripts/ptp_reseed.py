@@ -49,12 +49,12 @@ def match_by_torrent(torrent, filepath):
     path1 = os.path.abspath(filepath)
     path1_files = {}
     if os.path.isdir(path1):
-        for root, _, filenames in os.walk(path1.encode('utf8'), followlinks=True):
+        for root, _, filenames in os.walk(path1.encode('utf-8'), followlinks=True):
             for filename in filenames:
-                realpath = os.path.join(root.decode('utf8'), filename.decode('utf8')).replace(os.path.dirname(path1) + os.sep, '')
+                realpath = os.path.join(root.decode('utf8'), filename.decode('utf8')).replace(os.path.dirname(path1) + str(os.sep), '')
                 path1_files[realpath] = os.path.getsize(os.path.join(root, filename))
     elif os.path.isfile(path1):
-        path1_files[path1.replace(os.path.dirname(path1) + os.sep, u'')] = os.path.getsize(path1)
+        path1_files[path1.replace(os.path.dirname(path1) + str(os.sep), u'')] = os.path.getsize(path1)
 
     path2_files = dict((f, int(s)) for f, s in torrent['Filelist'].items())
 
