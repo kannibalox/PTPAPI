@@ -27,6 +27,7 @@ class Torrent(object):
                 'Seeders',
                 'Snatched',
                 'ReleaseName',
+                'ReleaseGroup',
                 'GoldenPopcorn',
                 'Checked',
                 'RemasterTitle',
