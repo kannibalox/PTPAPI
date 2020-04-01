@@ -46,15 +46,15 @@ def match_by_torrent(torrent, filepath):
     logger = logging.getLogger(__name__)
     logger.info(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent['ReleaseName']))
 
-    path1 = os.path.abspath(filepath)
+    path1 = os.path.abspath(filepath) #.decode('utf-8')
     path1_files = {}
     if os.path.isdir(path1):
-        for root, _, filenames in os.walk(path1.encode('utf-8'), followlinks=True):
+        for root, _, filenames in os.walk(path1, followlinks=True):
             for filename in filenames:
-                realpath = os.path.join(root.decode('utf8'), filename.decode('utf8')).replace(os.path.dirname(path1) + str(os.sep), '')
+                realpath = os.path.join(root, filename).replace(os.path.dirname(path1) + os.sep, '')
                 path1_files[realpath] = os.path.getsize(os.path.join(root, filename))
     elif os.path.isfile(path1):
-        path1_files[path1.replace(os.path.dirname(path1) + str(os.sep), u'')] = os.path.getsize(path1)
+        path1_files[os.path.basename(path1)] = os.path.getsize(path1)
 
     path2_files = dict((f, int(s)) for f, s in torrent['Filelist'].items())
 
