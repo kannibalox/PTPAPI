@@ -13,7 +13,7 @@ setup(
         "six"
     ],
     extras_require={
-        'reseed': ['guessit>=2']
+        'reseed': ['guessit>=3', 'humanize']
     },
     packages=find_packages('src'),
     package_dir={'':'src'},
