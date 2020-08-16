@@ -84,7 +84,7 @@ def human_to_bytes(s):
         s = s[1:]
     num = float(num)
     letter = s.strip()
-    for name, sset in SYMBOLS.items():
+    for _, sset in SYMBOLS.items():
         if letter in sset:
             break
     else:

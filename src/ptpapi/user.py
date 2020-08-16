@@ -2,12 +2,10 @@
 import re
 
 from bs4 import BeautifulSoup as bs4 # pylint: disable=import-error
-from six.moves import configparser, html_parser
 
-from .util import snarf_cover_view_data, human_to_bytes
+from .util import snarf_cover_view_data
 from .session import session
 from .movie import Movie
-from .torrent import Torrent
 
 class User(object):
     """A primitive class to represent a user"""
