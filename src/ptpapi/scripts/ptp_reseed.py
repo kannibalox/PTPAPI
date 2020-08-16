@@ -46,6 +46,9 @@ def match_by_torrent(torrent, filepath):
     logger = logging.getLogger(__name__)
     logger.info(u"Attempting to match against torrent {0} ({1})".format(torrent.ID, torrent['ReleaseName']))
 
+    if type(filepath) == bytes:
+        filepath = filepath.decode('utf-8')
+    assert type(filepath) == str
     path1 = os.path.abspath(filepath) #.decode('utf-8')
     path1_files = {}
     if os.path.isdir(path1):
@@ -245,7 +248,7 @@ def define_parser():
     """Define the arguments for the CLI"""
     parser = argparse.ArgumentParser(description='Attempt to find and reseed torrents on PTP')
     parser.add_argument('-u', '--url', help='Permalink to the torrent page')
-    parser.add_argument('files', help='Paths to files/directories to reseed (or leave blank to read stdin)', nargs='*')
+    parser.add_argument('files', help='Paths to files/directories to reseed (or leave blank to read stdin)', nargs='*', type=str)
     parser.add_argument('-n', '--dry-run', help="Don't actually create any files or load torrents", action="store_true")
     parser.add_argument('-a', '--action', help="Method to use when creating files", choices=['hard', 'soft'],
                         default=ptpapi.config.config.get('Reseed', 'action'))
