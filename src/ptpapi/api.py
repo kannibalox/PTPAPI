@@ -2,11 +2,12 @@
 """The entrypoint module for access the API"""
 import re
 import os
+import sys
 import pickle
 import logging
 
 from bs4 import BeautifulSoup as bs4
-from six.moves import configparser, html_parser
+from six.moves import html_parser
 import requests
 
 import ptpapi
@@ -42,11 +43,12 @@ class API(object):
             and config.has_option("PTP", "passkey")
         ):
             logger.warn(
-                "Using your password/passkey to access the site is deprecated, see README.md for instructions on using the new ApiUser/ApiKey."
+                "Using your password/passkey to access the site is deprecated, " +
+                "see README.md for instructions on using the new ApiUser/ApiKey."
             )
         else:
             logger.critical("No credentials found! Exiting...")
-            sys.exit(78)  # EX_CONFIG
+            sys.exit(78)
 
         req = None
         if config.has_option("PTP", "ApiUser"):
