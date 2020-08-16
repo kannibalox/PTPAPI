@@ -225,12 +225,12 @@ def do_search_fields(api, args):
             or e['name'].startswith('tags_type') or e['name'].startswith('country_type')
             or e['name'] == 'action'):
             continue
-        str = e['name']
+        name = e['name']
         if 'placeholder' in e.attrs.keys():
-            str += ' - ' + e['placeholder']
+            name += ' - ' + e['placeholder']
         if 'title' in e.attrs.keys():
-            str += ' - ' + e['title']
-        print(str)
+            name += ' - ' + e['title']
+        print(name)
 
 def do_userstats(api, args):
     if args.user_id:
