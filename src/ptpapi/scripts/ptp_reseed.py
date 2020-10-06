@@ -263,7 +263,7 @@ def load_torrent(proxy, ID, path):
                 thash, proxy.d.name(thash)
             )
         )
-        return
+        return False
     except (xmlrpc_client.Fault, xmlrpc.HashNotFound):
         pass
     proxy.load.raw("", xmlrpc_client.Binary(torrent_data))
@@ -279,6 +279,7 @@ def load_torrent(proxy, ID, path):
     proxy.d.custom.set(thash, "tm_completed", str(int(time())))
     proxy.d.directory.set(thash, path)
     proxy.d.check_hash(thash)
+    return True
 
 
 def find_existing_torrents(proxy):
