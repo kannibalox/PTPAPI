@@ -514,8 +514,9 @@ def main(cli_args):
         "Total session tokens consumed: %s", ptpapi.session.session.consumed_tokens
     )
     logger.debug("Exiting...")
-    sys.exit(exit_code)
+    return exit_code
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    exit_code = main(sys.argv[1:])
+    sys.exit(exit_code)
