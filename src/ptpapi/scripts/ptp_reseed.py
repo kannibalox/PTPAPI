@@ -371,10 +371,10 @@ def define_parser():
     return parser
 
 
-def main():
+def main(cli_args):
     """The entrypoint"""
     parser = define_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(cli_args)
     logger = logging.getLogger("ptp-reseed")
 
     logging.basicConfig(level=args.loglevel)
@@ -517,4 +517,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
