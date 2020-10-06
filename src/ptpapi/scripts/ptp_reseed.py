@@ -372,7 +372,7 @@ def define_parser():
     return parser
 
 
-def main(cli_args):
+def process(cli_args):
     """The entrypoint"""
     parser = define_parser()
     args = parser.parse_args(cli_args)
@@ -517,6 +517,10 @@ def main(cli_args):
     return exit_code
 
 
-if __name__ == "__main__":
-    exit_code = main(sys.argv[1:])
+def main():
+    exit_code = process(sys.argv[1:])
     sys.exit(exit_code)
+
+
+if __name__ == "__main__":
+    main()
