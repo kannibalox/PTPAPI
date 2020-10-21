@@ -380,8 +380,6 @@ def process(cli_args):
 
     logging.basicConfig(level=args.loglevel)
 
-    # Load pyroscope
-    load_config.ConfigLoader().load()
     proxy = config.engine.open()
 
     # Futile attempt to impose our loglevel upon pyroscope
@@ -518,6 +516,8 @@ def process(cli_args):
 
 
 def main():
+    # Load pyroscope
+    load_config.ConfigLoader().load()
     exit_code = process(sys.argv[1:])
     sys.exit(exit_code)
 
