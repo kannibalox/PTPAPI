@@ -91,7 +91,7 @@ The full list of possible values for picking encodes is:
 * `576p` or `720p` or `1080p`
 * `XviD` or `x264`
 * `HD` or `SD`
-* `Remux`
+* `remux` or `not-remux`
 * `seeded` - the number of seeds is greater than 0 (deprecated, use `seeders>0`)
 * `not-trumpable` - ignore any trumpable torrents
 * `unseen` - ignores all torrents if you've marked the movie as seen or rated it

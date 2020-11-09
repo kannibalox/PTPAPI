@@ -174,6 +174,7 @@ class Movie(object):
                 '1080p': (lambda t, _: t['Resolution'] == '1080p'),
                 'HD': (lambda t, _: t['Quality'] == 'High Definition'),
                 'SD': (lambda t, _: t['Quality'] == 'Standard Definition'),
+                'not-remux': (lambda t, _: 'remux' not in t['RemasterTitle'].lower()),
                 'remux': (lambda t, _: 'remux' in t['RemasterTitle'].lower()),
                 'x264': (lambda t, _: t['Codec'] == 'x264'),
                 'xvid': (lambda t, _: t['Codec'] == 'XviD'),
@@ -183,7 +184,7 @@ class Movie(object):
                 'unsnatched': (lambda t, m: not m['Snatched'])
             }
             for (name, func) in simple_filter_dict.items():
-                if name.lower() in profile:
+                if name.lower() in profile.split(' '):
                     matches = [t for t in matches if func(t, self)]
                     LOGGER.debug("%i matches after filtering by parameter '%s'", len(matches), name)
             # lambdas that take a torrent, a function for comparison, and a value-as-a-string
