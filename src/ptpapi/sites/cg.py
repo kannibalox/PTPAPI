@@ -46,7 +46,7 @@ class CGAPI(BaseSiteAPI):
 
 
     def getTorrentListInfo(self, soup):
-        if not soup.find('table', class_='torrenttable'):
+        if not soup.find('table', class_='torrenttable') or not soup.find('table', class_='torrenttable').find('tbody'):
             return []
         rows = soup.find('table', class_='torrenttable').find('tbody').find_all('tr')
         retArray = []
