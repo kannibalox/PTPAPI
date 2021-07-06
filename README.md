@@ -47,7 +47,17 @@ An alias for `ptp-search -d`
 
 #### `ptp search`
 
-This subcommand lets you search the site for movies. It can take movie and permalinks, as well as search by arbitrary parameters, and the `-d` flag allows for downloading matching torrents. For instance, `ptp search year=1980-2000 taglist=sci.fi` or `ptp search "Star Wars"`. It can also accept URLs for torrents and collages, e.g. `ptp search "https://passthepopcorn.me/torrents.php?id=68148"` or `ptp search "https://passthepopcorn.me/collages.php?id=2438"`, and regular search URLs, e.g. `ptp search "https://passthepopcorn.me/torrents.php?action=advanced&year=1980-2000&taglist=action"`.
+This subcommand lets you search the site for movies. It can take movie and permalinks, as well as search by arbitrary parameters, and the `-d` flag allows for downloading matching torrents. For instance: 
+- `ptp search year=1980-2000 taglist=sci.fi`
+- `ptp search "Star Wars"`.
+
+It can also accept URLs for torrents and collages:
+- `ptp search "https://passthepopcorn.me/torrents.php?id=68148"`
+- `ptp search "https://passthepopcorn.me/collages.php?id=2438"`
+
+and regular search URLs:
+- `ptp search "https://passthepopcorn.me/torrents.php?action=advanced&year=1980-2000&taglist=action"`.
+
 As a general rule of thumb anything supported by the advanced site search will work with `ptp search`, e.g. searching `https://passthepopcorn.me/torrents.php?action=advanced&taglist=comedy&format=x264&media=Blu-ray&resolution=1080p&scene=1` is the same as `ptp search taglist=comedy format=x264 media=Blu-ray resolution=1080p scene=1`.
 
 To work with multiple pages of results, use the `--pages <num>` flag.
