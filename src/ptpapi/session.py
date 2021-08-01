@@ -8,6 +8,7 @@ from .config import config
 
 LOGGER = logging.getLogger(__name__)
 
+
 class TokenSession(requests.Session):
     """Allows rate-limiting requests to the site"""
 
@@ -63,11 +64,8 @@ LOGGER.debug("Initializing token session")
 session = TokenSession(3, 0.5)
 if config.get("Main", "retry").lower() == "true":
     LOGGER.debug("Setting up automatic retry")
-    retry_config = Retry(10,
-        connect = 4,
-        status = 4,
-        backoff_factor = 0.5,
-        status_forcelist = [502]
+    retry_config = Retry(
+        10, connect=4, status=4, backoff_factor=0.5, status_forcelist=[502]
     )
     session.mount("https://", requests.adapters.HTTPAdapter(max_retries=retry_config))
 session.headers.update({"User-Agent": "Wget/1.13.4"})
