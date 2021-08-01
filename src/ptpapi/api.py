@@ -20,7 +20,7 @@ from ptpapi.movie import Movie
 LOGGER = logging.getLogger(__name__)
 
 
-def login(**kwargs):
+def login(kwargs):
     """Simple helper function"""
     return API(**kwargs)
 
@@ -28,7 +28,9 @@ def login(**kwargs):
 class API(object):
     """Used for instantiating an object that can access the API"""
 
-    def __init__(self, username=None, password=None, passkey=None):
+    def __init__(
+        self, username=None, password=None, passkey=None, api_user=None, api_key=None
+    ):
         self.current_user_id = None
         j = None
         self.cookies_file = os.path.expanduser(config.get("Main", "cookiesFile"))
@@ -43,19 +45,27 @@ class API(object):
             and config.has_option("PTP", "passkey")
         ):
             logger.warn(
-                "Using your password/passkey to access the site is deprecated, " +
-                "see README.md for instructions on using the new ApiUser/ApiKey."
+                "Using your password/passkey to access the site is deprecated, "
+                + "see README.md for instructions on using the new ApiUser/ApiKey."
             )
         else:
             logger.critical("No credentials found! Exiting...")
             sys.exit(78)
 
         req = None
-        if config.has_option("PTP", "ApiUser"):
+
+        if config.has_option("PTP", "ApiUser") and api_user is None and api_key is None:
             session.headers.update(
                 {
                     "ApiUser": config.get("PTP", "ApiUser"),
                     "ApiKey": config.get("PTP", "ApiKey"),
+                }
+            )
+        elif api_user is not None and api_key is not None:
+            session.headers.update(
+                {
+                    "ApiUser": api_user,
+                    "ApiKey": api_key,
                 }
             )
         elif os.path.isfile(self.cookies_file):

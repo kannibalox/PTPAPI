@@ -5,6 +5,7 @@ from ptpapi.torrent import Torrent
 from ptpapi.movie import Movie
 from ptpapi.user import User
 
-def login(username=None, password=None, passkey=None):
+
+def login(**kwargs):
     """A helper function to make it easy to log in"""
-    return API(username, password, passkey)
+    return API(**kwargs)
