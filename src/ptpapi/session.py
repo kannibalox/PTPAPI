@@ -39,7 +39,6 @@ class TokenSession(requests.Session):
             LOGGER.debug("Waiting for token bucket to refill...")
             sleep(1)
         req = requests.Session.request(self, *args, **kwargs)
-        req.raise_for_status()
         return req
 
     def get_tokens(self):

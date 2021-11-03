@@ -7,9 +7,9 @@ import argparse
 import logging
 from time import sleep, time
 
-from pyrobase import bencode
-from pyrocore import config
-from pyrocore.util import load_config, metafile, xmlrpc
+import bencode
+from pyrosimple import config
+from pyrosimple.util import load_config, metafile, xmlrpc
 from six.moves import xmlrpc_client
 from six.moves.urllib.parse import parse_qs, urlparse
 

@@ -4,7 +4,7 @@ import logging
 
 import humanize
 from bs4 import BeautifulSoup
-from pyrobase import bencode
+import bencode
 
 from ptpapi.config import config
 from ptpapi.session import TokenSession
