@@ -64,7 +64,7 @@ class User(object):
 
         :rtype: A dictionary of stat names and their values, both in string format.
         """
-        soup = bs4(session.base_get("user.php", params={"id": self.ID}).text, "lxml")
+        soup = bs4(session.base_get("user.php", params={"id": self.ID}).text, "html.parser")
         stats = {}
         for li in soup.find("span", text="Stats").parent.parent.find_all("li"):
             stat, value = self.__parse_stat(li.text)

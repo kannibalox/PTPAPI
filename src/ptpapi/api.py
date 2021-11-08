@@ -226,7 +226,7 @@ class API(object):
             torrent = m["GroupingQualities"][0]["Torrents"][0]
             torrent["Link"] = (
                 config.get("Main", "baseURL")
-                + bs4(torrent["Title"], "lxml").find("a")["href"]
+                + bs4(torrent["Title"], "html.parser").find("a")["href"]
             )
             torrents.append(torrent)
         return torrents

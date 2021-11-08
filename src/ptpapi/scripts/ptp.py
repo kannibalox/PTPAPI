@@ -236,9 +236,9 @@ def do_fields(api, args):
 def do_search_fields(api, args):
     soup = bs4(
         ptpapi.session.session.base_get(
-            "torrents.php", params={"action": "advanced"}
+            "torrents.php", params={"action": "advanced", "json": "0"}
         ).content,
-        "lxml",
+        "html.parser",
     )
     for e in soup.find(id="filter_torrents_form")("input"):
         if (

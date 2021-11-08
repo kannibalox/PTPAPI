@@ -91,7 +91,7 @@ class CGAPI(BaseSiteAPI):
 
     def __httpRequest(self, url, data=None):
         html = self.__request(self.baseURL + url, data)
-        soup = BeautifulSoup(html, "html5lib")
+        soup = BeautifulSoup(html, "html.parser")
         return soup
 
     def __request(self, url, data=None):
