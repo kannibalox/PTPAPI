@@ -249,8 +249,12 @@ def create_matched_files(match, directory=None, action="hard", dry_run=False):
     return match
 
 
-def load_torrent(proxy, ID, path):
+def load_torrent(ID, path):
     """Send a torrent to rtorrent and kick off the hash recheck"""
+    proxy = config.engine.open()
+    if proxy is None:
+        load_config.ConfigLoader().load()
+        proxy = config.engine.open()
     logger = logging.getLogger(__name__)
     torrent = ptpapi.Torrent(ID=ID)
     torrent_data = torrent.download()
@@ -366,11 +370,6 @@ def define_parser():
         type=int,
         default=5,
     )
-    parser.add_argument(
-        "--compare-paths",
-        help="Check rtorrent for path matches before checking the site (experimental)",
-        action="store_true",
-    )
     return parser
 
 
@@ -381,8 +380,6 @@ def process(cli_args):
     logger = logging.getLogger("ptp-reseed")
 
     logging.basicConfig(level=args.loglevel)
-
-    proxy = config.engine.open()
 
     # Futile attempt to impose our loglevel upon pyroscope
     logging.basicConfig(level=args.loglevel)
@@ -400,11 +397,7 @@ def process(cli_args):
     else:
         filelist = args.files
 
-    if args.compare_paths:
-        logger.debug("Loading existing torrents for pre-matching")
-        loaded_paths = find_existing_torrents(proxy)
-    else:
-        loaded_paths = []
+    loaded_paths = []
 
     for filename in filelist:
         match = Match(None)
@@ -487,7 +480,7 @@ def process(cli_args):
             would_load.append(filename)
             logger.debug("Dry-run: Stopping before actual load")
             continue
-        if load_torrent(proxy, match.ID, match.path):
+        if load_torrent(match.ID, match.path):
             loaded.append(filename)
         else:
             already_loaded.append(filename)
@@ -519,7 +512,6 @@ def process(cli_args):
 
 def main():
     # Load pyroscope
-    load_config.ConfigLoader().load()
     exit_code = process(sys.argv[1:])
     sys.exit(exit_code)
 
