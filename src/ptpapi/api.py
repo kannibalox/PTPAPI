@@ -7,7 +7,7 @@ import pickle
 import logging
 
 from bs4 import BeautifulSoup as bs4
-from six.moves import html_parser
+import html
 import requests
 
 import ptpapi
@@ -159,7 +159,7 @@ class API(object):
                 movie["Directors"] = []
             if "ImdbId" not in movie:
                 movie["ImdbId"] = "0"
-            movie["Title"] = html_parser.HTMLParser().unescape(movie["Title"])
+            movie["Title"] = html.unescape(movie["Title"])
             ret_array.append(ptpapi.Movie(data=movie))
         return ret_array
 
