@@ -13,7 +13,8 @@ setup(
         "six"
     ],
     extras_require={
-        'reseed': ['guessit>=3', 'humanize']
+        'reseed': ['guessit>=3', 'humanize'],
+        'rtorrent': ['pyrosimple @ git+https://github.com/kannibalox/pyrosimple.git@main']
     },
     packages=find_packages('src'),
     package_dir={'':'src'},
