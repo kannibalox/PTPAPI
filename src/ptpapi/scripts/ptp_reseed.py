@@ -243,6 +243,8 @@ def create_matched_files(match, directory=None, action="hard", dry_run=False):
                 os.symlink(origin_file, file_to_create)
             elif action == "hard":
                 os.link(origin_file, file_to_create)
+            elif action == "skip":
+                continue
     match.path = directory
     return match
 
@@ -321,7 +323,7 @@ def define_parser():
         "-a",
         "--action",
         help="Method to use when creating files",
-        choices=["hard", "soft"],
+        choices=["hard", "soft", "skip"],
         default=ptpapi.config.config.get("Reseed", "action"),
     )
     parser.add_argument(
