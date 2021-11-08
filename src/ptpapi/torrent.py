@@ -3,8 +3,8 @@ import re
 import os
 import logging
 
-from bs4 import BeautifulSoup as bs4  # pylint: disable=import-error
-from six.moves.urllib.parse import parse_qs, urlparse
+from bs4 import BeautifulSoup as bs4
+from urllib.parse import parse_qs, urlparse
 
 import ptpapi
 from .config import config

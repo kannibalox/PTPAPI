@@ -10,14 +10,14 @@ setup(
         "requests",
         "beautifulsoup4",
         "tempita",
-        "six"
     ],
     extras_require={
         'reseed': ['guessit>=3', 'humanize'],
-        'rtorrent': ['pyrosimple @ git+https://github.com/kannibalox/pyrosimple.git@main']
+        'rtorrent':
+        ['pyrosimple @ git+https://github.com/kannibalox/pyrosimple.git@main']
     },
     packages=find_packages('src'),
-    package_dir={'':'src'},
+    package_dir={'': 'src'},
     license='MIT',
     entry_points={
         'console_scripts': [
@@ -25,5 +25,4 @@ setup(
             'ptp-reseed=ptpapi.scripts.ptp_reseed:main',
             'ptp-reseed-machine=ptpapi.scripts.ptp_reseed_machine:main',
         ],
-    }
-)
+    })

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import logging
 import argparse
-from six.moves.urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs
 
 import ptpapi
 from ptpapi.sites import CGAPI

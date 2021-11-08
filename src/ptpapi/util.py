@@ -1,8 +1,9 @@
 import re
 import json
+import html
 
 from bs4 import BeautifulSoup as bs4
-from six.moves import html_parser
+
 
 
 def raise_for_cloudflare(text):
@@ -110,7 +111,7 @@ def snarf_cover_view_data(text, key=br"coverViewJsonData\[\s*\d+\s*\]"):
     for json_data in re.finditer(key + br"\s*=\s*({.*});", text):
         data.extend(json.loads(json_data.group(1).decode())["Movies"])
         for movie in data:
-            movie["Title"] = html_parser.HTMLParser().unescape(movie["Title"])
+            movie["Title"] = html.unescape(movie["Title"])
             movie["Torrents"] = []
             for group in movie["GroupingQualities"]:
                 for torrent in group["Torrents"]:

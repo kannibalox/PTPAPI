@@ -6,7 +6,7 @@ from time import sleep
 import argparse
 import tempita
 from bs4 import BeautifulSoup as bs4
-from six.moves.urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse
 
 import ptpapi
 

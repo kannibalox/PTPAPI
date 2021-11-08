@@ -10,8 +10,8 @@ from time import sleep, time
 import bencode
 from pyrosimple import config
 from pyrosimple.util import load_config, metafile, xmlrpc
-from six.moves import xmlrpc_client
-from six.moves.urllib.parse import parse_qs, urlparse
+from xmlrpc import client as xmlrpc_client
+from urllib.parse import parse_qs, urlparse
 
 import ptpapi
 

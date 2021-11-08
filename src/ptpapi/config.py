@@ -3,8 +3,8 @@
 import os
 import os.path
 
-from six.moves import configparser
-from six import StringIO
+import configparser
+from io import StringIO
 
 conf_file = os.path.expanduser(os.path.join("~", ".ptpapi.conf"))
 
