@@ -477,7 +477,7 @@ def process(cli_args):
             )
         )
         if args.dry_run:
-            would_load.append(filename)
+            would_load.append(f"https://passthepopcorn.me/torrents.php?torrentid={match.ID} -> {filename}")
             logger.debug("Dry-run: Stopping before actual load")
             continue
         if load_torrent(match.ID, match.path):
@@ -486,14 +486,18 @@ def process(cli_args):
             already_loaded.append(filename)
 
     if args.summary:
-        print("==> Loaded:")
-        print("\n".join(loaded))
-        print("==> Would have loaded:")
-        print("\n".join(would_load))
-        print("==> Already loaded:")
-        print("\n".join(already_loaded))
-        print("==> Not found:")
-        print("\n".join(not_found))
+        if loaded:
+            print("==> Loaded:")
+            print("\n".join(loaded))
+        if would_load:
+            print("==> Would have loaded:")
+            print("\n".join(would_load))
+        if already_loaded:
+            print("==> Already loaded:")
+            print("\n".join(already_loaded))
+        if not_found:
+            print("==> Not found:")
+            print("\n".join(not_found))
 
     exit_code = 0
     if len(not_found) == 1:
