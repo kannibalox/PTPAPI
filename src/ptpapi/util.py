@@ -5,7 +5,6 @@ import html
 from bs4 import BeautifulSoup as bs4
 
 
-
 def raise_for_cloudflare(text):
     """Raises an exception if a CloudFlare error page is detected
 

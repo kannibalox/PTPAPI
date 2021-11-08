@@ -46,7 +46,7 @@ def match_by_torrent(torrent, filepath):
     """Attempt matching against a torrent ID"""
     logger = logging.getLogger(__name__)
     logger.info(
-        u"Attempting to match against torrent {0} ({1})".format(
+        "Attempting to match against torrent {0} ({1})".format(
             torrent.ID, torrent["ReleaseName"]
         )
     )
@@ -131,12 +131,12 @@ def match_by_torrent(torrent, filepath):
     for filename1, size1 in list(path1_files.items()):
         for filename2, size2 in list(path2_files.items()):
             logger.debug(
-                u"Comparing size of {0} ({1}) to size of {2} ({3})".format(
+                "Comparing size of {0} ({1}) to size of {2} ({3})".format(
                     filename1, size1, filename2, size2
                 )
             )
             if size1 == size2:
-                logger.debug(u"Matched {0} to {1}".format(filename1, filename2))
+                logger.debug("Matched {0} to {1}".format(filename1, filename2))
                 matched_files[filename1] = filename2
                 del path1_files[filename1]
                 del path2_files[filename2]
@@ -157,7 +157,7 @@ def match_by_movie(movie, filepath):
     """Tries to match a torrent against a single movie"""
     logger = logging.getLogger(__name__)
     logger.info(
-        u"Attempting to match against movie {0} ({1})".format(movie.ID, movie["Title"])
+        "Attempting to match against movie {0} ({1})".format(movie.ID, movie["Title"])
     )
 
     movie.load_html_data()
@@ -221,7 +221,7 @@ def create_matched_files(match, directory=None, action="hard", dry_run=False):
         file_to_create = os.path.join(directory, matched_file)
         path_to_create = os.path.dirname(file_to_create)
         try:
-            logger.debug(u"Creating directory '{0}'".format(path_to_create))
+            logger.debug("Creating directory '{0}'".format(path_to_create))
             if not dry_run:
                 os.makedirs(path_to_create)
         except OSError as exc:
@@ -230,11 +230,11 @@ def create_matched_files(match, directory=None, action="hard", dry_run=False):
                 raise
         if os.path.lexists(file_to_create):
             logger.debug(
-                u"File '{0}' already exists, skipping creation".format(file_to_create)
+                "File '{0}' already exists, skipping creation".format(file_to_create)
             )
             continue
         logger.info(
-            u"Creating file '{0}' from '{1}' via action '{2}'".format(
+            "Creating file '{0}' from '{1}' via action '{2}'".format(
                 file_to_create, origin_file, action
             )
         )
@@ -262,10 +262,10 @@ def load_torrent(ID, path):
     thash = metafile.info_hash(data)
     try:
         logger.debug(
-            u"Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True))
+            "Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True))
         )
         logger.error(
-            u"Hash {0} already exists in rtorrent as {1}, cannot load.".format(
+            "Hash {0} already exists in rtorrent as {1}, cannot load.".format(
                 thash, proxy.d.name(thash)
             )
         )
@@ -281,7 +281,7 @@ def load_torrent(ID, path):
             break
         except (xmlrpc_client.Fault, xmlrpc.HashNotFound):
             pass
-    logger.info(u"Torrent loaded at {0}".format(path))
+    logger.info("Torrent loaded at {0}".format(path))
     proxy.d.custom.set(thash, "tm_completed", str(int(time())))
     proxy.d.directory.set(thash, path)
     proxy.d.check_hash(thash)
@@ -403,10 +403,10 @@ def process(cli_args):
         match = Match(None)
         filename = filename.strip("\n")
 
-        logger.info(u'Starting reseed attempt on file "{0}"'.format(filename))
+        logger.info('Starting reseed attempt on file "{0}"'.format(filename))
 
         if not os.path.exists(filename):
-            logger.error(u"File/directory {0} does not exist".format(filename))
+            logger.error("File/directory {0} does not exist".format(filename))
             continue
 
         if args.url:
@@ -425,13 +425,13 @@ def process(cli_args):
                     if match_type == "filename":
                         if os.path.abspath(filename) in loaded_paths:
                             logger.info(
-                                u"Path {0} already in rtorrent, skipping".format(
+                                "Path {0} already in rtorrent, skipping".format(
                                     os.path.abspath(filename)
                                 )
                             )
                         else:
                             logger.debug(
-                                u"Path {0} not in rtorrent".format(
+                                "Path {0} not in rtorrent".format(
                                     os.path.abspath(filename)
                                 )
                             )
@@ -440,23 +440,21 @@ def process(cli_args):
                         match = match_by_guessed_name(ptp, filename, args.limit)
                     else:
                         logger.error(
-                            u"Match type {0} not recognized for {1}, skipping".format(
+                            "Match type {0} not recognized for {1}, skipping".format(
                                 match_type, filename
                             )
                         )
                     if match:
                         break
                 except Exception:
-                    print(
-                        u"Error while attempting to match file '{0}'".format(filename)
-                    )
+                    print("Error while attempting to match file '{0}'".format(filename))
                     raise
 
         # Make sure we have the minimum information required
         if not match:
             not_found.append(filename)
             logger.error(
-                u"Could not find an associated torrent for '{0}', cannot reseed".format(
+                "Could not find an associated torrent for '{0}', cannot reseed".format(
                     filename
                 )
             )
@@ -472,12 +470,14 @@ def process(cli_args):
             match, directory=create_in, action=args.action, dry_run=args.dry_run
         )
         logger.info(
-            u"Found match, now loading torrent {0} to path {1}".format(
+            "Found match, now loading torrent {0} to path {1}".format(
                 match.ID, match.path
             )
         )
         if args.dry_run:
-            would_load.append(f"https://passthepopcorn.me/torrents.php?torrentid={match.ID} -> {filename}")
+            would_load.append(
+                f"https://passthepopcorn.me/torrents.php?torrentid={match.ID} -> {filename}"
+            )
             logger.debug("Dry-run: Stopping before actual load")
             continue
         if load_torrent(match.ID, match.path):
