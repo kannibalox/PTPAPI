@@ -88,7 +88,7 @@ See `ptp-reseed -h` and `ptpapi.conf.example` for more information and configura
 
 #### guessit
 
-By default the script looks for exact matches against file names and sizes. If you'd like the name matching to be less strict, you can install the guessit library (`pip install guessit`), and if the filename search fails, the script will attempt to parse the movie name out of the file with guessit.
+By default the script looks for exact matches against file names and sizes. If you'd like the name matching to be less strict, you can install the guessit library (`pip install 'guessit>=3'`), and if the filename search fails, the script will attempt to parse the movie name out of the file with guessit.
 
 ## Concepts
 

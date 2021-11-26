@@ -10,11 +10,12 @@ setup(
         "requests",
         "beautifulsoup4",
         "tempita",
+        "guessit>=3",
+        'pyrosimple @ git+https://github.com/kannibalox/pyrosimple.git@main',
+        'bencode.py>=4',
     ],
     extras_require={
-        'reseed': ['guessit>=3', 'humanize'],
-        'rtorrent':
-        ['pyrosimple @ git+https://github.com/kannibalox/pyrosimple.git@main']
+        'reseed-extras': ['guessit>=3', 'humanize']
     },
     packages=find_packages('src'),
     package_dir={'': 'src'},
