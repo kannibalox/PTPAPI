@@ -1,11 +1,14 @@
 #!/usr/bin/env python
+import re
+import os
 import logging
 import argparse
+
+import requests
 from urllib.parse import urlparse, parse_qs
 
 import ptpapi
-from ptpapi.sites import CGAPI
-from ptpapi.sites import KGAPI
+from ptpapi.config import config
 
 
 class DownloadFoundException(Exception):
@@ -64,11 +67,6 @@ def main():
 
     logger.info("Logging into PTP")
     ptp = ptpapi.login()
-    logger.info("Logging into CG")
-    cg = CGAPI()
-    logger.info("Logging into KG")
-    kg = KGAPI()
-    sites = [cg, kg]
 
     if args.id:
         movies = args.id
@@ -93,41 +91,62 @@ def main():
             except KeyError:
                 logger.warn("ImdbId not found from '{0}', skipping".format(i))
                 continue
-            find_match(
-                ptp_movie,
-                sites,
-                min_seeds=args.min_ptp_seeds,
-                remote_seeds=args.required_remote_seeds,
-            )
-
-
-def find_match(ptp_movie, sites, min_seeds=0, remote_seeds=0):
-    logger = logging.getLogger(__name__)
-    for site in sites:
-        for torrent in site.find_ptp_movie(ptp_movie):
-            for ptp_torrent in ptp_movie["Torrents"]:
-                logger.debug(
-                    u"Comparing humanized size {0} to {1} and seeds {2} <= {3} and {4} >= {5}".format(
-                        site.bytes_to_site_size(ptp_torrent["Size"]),
-                        torrent["BinaryHumanSize"],
-                        ptp_torrent["Seeders"],
-                        min_seeds,
-                        torrent["Seeders"],
-                        remote_seeds,
-                    )
+            if ptp_movie["ImdbId"]:
+                find_match(
+                    ptp_movie,
+                    [],
+                    max_ptp_seeds=args.min_ptp_seeds,
+                    remote_seeds=args.required_remote_seeds,
                 )
-                if (
-                    site.bytes_to_site_size(ptp_torrent["Size"])
-                    == torrent["BinaryHumanSize"]
-                    and int(torrent["Seeders"]) >= remote_seeds
-                    and int(ptp_torrent["Seeders"]) <= min_seeds
-                ):
 
-                    logger.info(
-                        u"Downloading torrent {0} from {1}".format(torrent["ID"], site)
+
+def find_match(ptp_movie, sites, max_ptp_seeds=0, remote_seeds=0):
+    logger = logging.getLogger(__name__)
+    print("tt" + ptp_movie["ImdbId"])
+    resp = requests.get(
+        config.get("Prowlarr", "url") + "api/v1/search",
+        params={
+            "query": "tt" + ptp_movie["ImdbId"],
+            "indexerIds": "-2",
+            "categories": "2000",
+        },
+        headers={"X-Api-Key": config.get("Prowlarr", "api_key")},
+    ).json()
+    percent_diff = 1
+
+    # print(resp)
+    for result in resp:
+        if result["indexer"] == "PassThePopcorn" and result["seeders"] == 0:
+            logger.debug("Working {}".format(result["title"]))
+            for other_result in resp:
+                size_diff = abs(((other_result["size"] / result["size"]) - 1) * 100)
+                if (
+                    other_result["indexer"] != "PassThePopcorn"
+                    and other_result["seeders"] > 0
+                    and size_diff > 0
+                    and size_diff < percent_diff
+                ):
+                    print(
+                        "match: other {} ptp {} == {}% size diff".format(
+                            other_result["size"], result["size"], size_diff
+                        )
                     )
-                    site.download_to_file(torrent["ID"])
-                    break
+                    r = requests.get(other_result["downloadUrl"])
+                    r.raise_for_status()
+                    name = (
+                        re.search(r'filename="(.*)"', r.headers["Content-Disposition"])
+                        .group(1)
+                        .replace("/", "_")
+                    )
+                    dest = os.path.join(config.get("Main", "downloadDirectory"), name)
+                    with open(dest, "wb") as fh:
+                        fh.write(r.content)
+                elif other_result["indexer"] != "PassThePopcorn":
+                    logger.debug(
+                        "{}: {} seeders, {} size diff".format(
+                            other_result["indexer"], other_result["seeders"], size_diff
+                        )
+                    )
 
 
 if __name__ == "__main__":

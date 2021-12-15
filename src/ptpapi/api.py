@@ -214,6 +214,7 @@ class API(object):
         data["categories"] = [
             o.get_text() for o in soup.find(id="categories").find_all("option")
         ]
+        data["AntiCsrfToken"] = soup.find("body")["data-anticsrftoken"]
         return data
 
     def need_for_seed(self, filters={}):
