@@ -195,7 +195,15 @@ def do_raw(_, args):
     for url_str in args.url:
         url = urlparse(url_str)
         data = ptpapi.session.session.base_get("?".join([url.path, url.query])).content
-        with open(os.path.basename(url.path), "w") as fileh:
+        if "output" in args:
+            if args.output == "-":
+                print(data.decode(), end="")
+                return
+            else:
+                file_out = args.output
+        else:
+            file_out = os.path.basename(url.path)
+        with open(file_out, "w") as fileh:
             fileh.write(data.decode())
 
 
@@ -434,6 +442,11 @@ def main():
     raw_parser = subparsers.add_parser("raw", help="Fetch the raw HTML of pages")
     add_verbosity_args(raw_parser)
     raw_parser.add_argument("url", help="A list of urls to download", nargs="+")
+    raw_parser.add_argument(
+        "-o",
+        "--output",
+        help="Set output file (or - for stdout)",
+    )
     raw_parser.set_defaults(func=do_raw)
 
     userstats_parser = subparsers.add_parser(
