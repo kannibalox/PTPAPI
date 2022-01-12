@@ -115,6 +115,8 @@ def snarf_cover_view_data(text, key=br"coverViewJsonData\[\s*\d+\s*\]"):
             for group in movie["GroupingQualities"]:
                 for torrent in group["Torrents"]:
                     soup = bs4(torrent["Title"], "html.parser")
+                    if len(soup.a.text.split("/")) < 4:
+                        continue
                     (
                         torrent["Codec"],
                         torrent["Container"],
@@ -124,6 +126,8 @@ def snarf_cover_view_data(text, key=br"coverViewJsonData\[\s*\d+\s*\]"):
                     torrent["GoldenPopcorn"] = (
                         soup.contents[0].string.strip(" ") == u"\u10047"
                     )  # 10047 = Unicode GP symbol pylint: disable=line-too-long
+                    if "title" not in soup.a:
+                        continue
                     torrent["ReleaseName"] = soup.a["title"].split("\n")[-1]
                     match = re.search(
                         r"torrents.php\?id=(\d+)&torrentid=(\d+)", soup.a["href"]
