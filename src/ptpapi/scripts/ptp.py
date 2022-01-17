@@ -195,7 +195,7 @@ def do_raw(_, args):
     for url_str in args.url:
         url = urlparse(url_str)
         data = ptpapi.session.session.base_get("?".join([url.path, url.query])).content
-        if "output" in args:
+        if args.output:
             if args.output == "-":
                 print(data.decode(), end="")
                 return
