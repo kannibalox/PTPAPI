@@ -124,9 +124,9 @@ class API(object):
     def logout(self):
         """Forces a logout. In ApiUser mode, essentially a waste of two request tokens."""
         req = session.base_get("index.php")
-        self.auth_key = re.search(r"auth=([0-9a-f]{32})", req.text).group(1)
+        auth_key = re.search(r"auth=([0-9a-f]{32})", req.text).group(1)
         os.remove(self.cookies_file)
-        return session.base_get("logout.php", params={"auth": self.auth_key})
+        return session.base_get("logout.php", params={"auth": auth_key})
 
     def __save_cookie(self):
         """Save requests' cookies to a file"""
@@ -148,7 +148,7 @@ class API(object):
             self.current_user_id = re.search(r"user.php\?id=(\d+)", req.text).group(1)
         return CurrentUser(self.current_user_id)
 
-    def search(self, filters):
+    def search(self, filters, add_coverview_data=False):
         """Perform a movie search"""
         if "name" in filters:
             filters["searchstr"] = filters["name"]
@@ -163,9 +163,29 @@ class API(object):
             ret_array.append(ptpapi.Movie(data=movie))
         return ret_array
 
+    # There's probably a better place to put this, but it's not really useful inside the Movie class
+    search_coverview_fields = [
+        'RtRating',
+        'RtUrl',
+        'UserRating',
+        'TotalSeeders',
+        'TotalSnatched',
+        'TotalLeechers',
+    ]
+    def search_coverview(self, filters):
+        filters["json"] = 0
+        ret_array = []
+        if "name" in filters:
+            filters["searchstr"] = filters["name"]
+        for movie in ptpapi.util.snarf_cover_view_data(session.base_get("torrents.php", params=filters).content, key=b'PageData'):
+            if 'UserRating' not in movie:
+                movie['UserRating'] = None
+            ret_array.append(ptpapi.Movie(data=movie))
+        return ret_array
+
     def search_single(self, filters):
         """If you know ahead of time that a filter will redirect to a single movie,
-        you can use this method to avoid an exception until that behaivor is
+        you can use this method to avoid an exception until that behavior is
         fixed upstream."""
         if "name" in filters:
             filters["searchstr"] = filters["name"]

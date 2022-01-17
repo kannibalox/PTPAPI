@@ -107,7 +107,7 @@ def snarf_cover_view_data(text, key=br"coverViewJsonData\[\s*\d+\s*\]"):
     :param text: a raw html string
     :rtype: a dictionary of movie data"""
     data = []
-    for json_data in re.finditer(key + br"\s*=\s*({.*});", text):
+    for json_data in re.finditer(key + br"\s*=\s*({.*});", text, flags=re.DOTALL):
         data.extend(json.loads(json_data.group(1).decode())["Movies"])
         for movie in data:
             movie["Title"] = html.unescape(movie["Title"])

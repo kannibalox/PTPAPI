@@ -30,7 +30,7 @@ class Movie(object):
                 "Directors",
                 "PtpRating",
                 "PtpVoteCount",
-                "PtpYourRating",
+                "UserRating",
                 "Seen",
                 "Snatched",
             ],
@@ -63,6 +63,10 @@ class Movie(object):
     def items(self):
         """Passthru function for underlying dict"""
         return self.data.items()
+
+    def update(self, obj):
+        for k, v in obj.items():
+            self.data[k] = v
 
     def __setitem__(self, key, value):
         self.data[key] = value
@@ -125,13 +129,13 @@ class Movie(object):
         )
         your_rating = rating.find(id="ptp_your_rating").text
         if "?" in your_rating:
-            self.data["PtpYourRating"] = None
+            self.data["UserRating"] = None
             self.data["Seen"] = False
         elif re.sub("\D", "", your_rating) == "":
-            self.data["PtpYourRating"] = None
+            self.data["UserRating"] = None
             self.data["Seen"] = True
         else:
-            self.data["PtpYourRating"] = re.sub("\D", "", your_rating)
+            self.data["UserRating"] = re.sub(r"\D", "", your_rating)
             self.data["Seen"] = True
         # Have we snatched this
         self.data["Snatched"] = False

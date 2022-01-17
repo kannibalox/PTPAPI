@@ -145,6 +145,13 @@ def search_page(api, args, target, movies, torrents, terms):
         logger.debug('Attempting to search target "%s" with terms %s', target, terms)
         if target == "torrents":
             movies = api.search(terms)
+            # Check to see if we should scrape the cover view data to save calls
+            wanted_fields = set([l[2].split('|')[0] for l in movie_template._parsed if l[0] == 'expr'])
+            if len(wanted_fields & set(api.search_coverview_fields)):
+                for movie in api.search_coverview(terms):
+                    for ret_movie in movies:
+                        if movie['GroupId'] == ret_movie['GroupId']:
+                            ret_movie.update(movie)
         elif target == "bookmarks":
             movies = api.current_user().bookmarks(search_terms=terms)
         elif target == "collage":
@@ -233,12 +240,12 @@ def do_fields(api, args):
     m = ptpapi.Movie(ID=1)
     for values in m.key_finder.values():
         for val in values:
-            print("- {0}".format(val))
+            print(f"- {val}")
     print("Torrent:")
     t = ptpapi.Torrent(ID=1)
     for values in t.key_finder.values():
         for val in values:
-            print("- {0}".format(val))
+            print(f"- {val}")
 
 
 def do_search_fields(api, args):
@@ -341,7 +348,7 @@ def main():
     search_parent.add_argument(
         "search_terms",
         help="""A list of terms in [field]=[text] format.
-                               If the '=' is omitted, the field is assumed to be 'name'.""",
+        If the '=' is omitted, the field is assumed to be 'name'.""",
         nargs="+",
         metavar="term",
     )
