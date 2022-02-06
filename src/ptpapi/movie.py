@@ -153,11 +153,17 @@ class Movie(object):
                 r"\/(.*)\/", filediv.find("thead").find_all("div")[1].get_text()
             ).group(1)
             for elem in filediv.find("tbody").find_all("tr"):
-                bytesize = (
-                    elem("td")[1]("span")[0]["title"]
-                    .replace(",", "")
-                    .replace(" bytes", "")
-                )
+                try:
+                    bytesize = (
+                        elem("td")[1]("span")[0]["title"]
+                        .replace(",", "")
+                        .replace(" bytes", "")
+                    )
+                except IndexError as ex:
+                    LOGGER.error(
+                        f"Could not parse site for filesize, possibly check for bad filenames: https://passthepopcorn.me/torrents.php?torrentid={tor.ID}"
+                    )
+                    raise ex
                 filepath = os.path.join(basepath, elem("td")[0].string)
                 tor.data["Filelist"][filepath] = bytesize
             # Check if trumpable
