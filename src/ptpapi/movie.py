@@ -163,7 +163,7 @@ class Movie(object):
                     LOGGER.error(
                         f"Could not parse site for filesize, possibly check for bad filenames: https://passthepopcorn.me/torrents.php?torrentid={tor.ID}"
                     )
-                    raise ex
+                    continue
                 filepath = os.path.join(basepath, elem("td")[0].string)
                 tor.data["Filelist"][filepath] = bytesize
             # Check if trumpable
