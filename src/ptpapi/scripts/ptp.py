@@ -340,6 +340,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Extensible command line utility for PTP"
     )
+    parser.set_defaults(func=None)
     add_verbosity_args(parser)
     subparsers = parser.add_subparsers()
 
@@ -496,6 +497,9 @@ def main():
 
     api = ptpapi.login()
 
+    if args.func is None:
+        parser.print_help()
+        return
     args.func(api, args)
     logger.debug(
         "Total session tokens consumed: %s", ptpapi.session.session.consumed_tokens
