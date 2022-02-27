@@ -6,3 +6,4 @@ cookies.txt
 _build
 *.egg-info/
 *.egg
+dist/
