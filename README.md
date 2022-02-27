@@ -4,14 +4,14 @@ A small API for a mildly popular movie site. The goal was to be able to collect 
 
 ## Dependencies
 
-* Python 3.6+
+* Python 3.7+
 * pip
 
 ## Installation
 
 Use of a [virtualenv](https://virtualenv.readthedocs.org/en/latest/userguide.html#usage) is highly recommended.
 
-`pip install -U https://github.com/kannibalox/PTPAPI/archive/master.zip`
+`pip install ptpapi`
 
 ## Configuration
 
