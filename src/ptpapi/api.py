@@ -1,21 +1,24 @@
 #!/bin/env python
 """The entrypoint module for access the API"""
-import re
-import os
-import sys
-import pickle
-import logging
-
-from bs4 import BeautifulSoup as bs4
 import html
+import logging
+import os
+import pickle
+import re
+import sys
+
 import requests
 
+from bs4 import BeautifulSoup as bs4
+
 import ptpapi
+
 from ptpapi.config import config
-from ptpapi.session import session
-from ptpapi.user import CurrentUser
 from ptpapi.error import PTPAPIException
 from ptpapi.movie import Movie
+from ptpapi.session import session
+from ptpapi.user import CurrentUser
+
 
 LOGGER = logging.getLogger(__name__)
 

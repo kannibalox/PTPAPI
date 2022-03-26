@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 """Reseed a torrent from PTP, given a path"""
-import sys
-import os
-import os.path
 import argparse
 import logging
+import os
+import os.path
+import sys
+
 from time import sleep, time
+from urllib.parse import parse_qs, urlparse
+from xmlrpc import client as xmlrpc_client
 
 import bencode
+
 from pyrosimple import config
 from pyrosimple.util import load_config, metafile, xmlrpc
-from xmlrpc import client as xmlrpc_client
-from urllib.parse import parse_qs, urlparse
 
 import ptpapi
 

@@ -1,10 +1,13 @@
 import logging
-from time import time, sleep
-from urllib3.util.retry import Retry
+
+from time import sleep, time
 
 import requests
 
+from urllib3.util.retry import Retry
+
 from .config import config
+
 
 LOGGER = logging.getLogger(__name__)
 

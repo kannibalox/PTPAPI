@@ -1,12 +1,14 @@
 #!/usr/bin/env python
+import argparse
 import logging
 import os.path
-from time import sleep
 
-import argparse
-import tempita
-from bs4 import BeautifulSoup as bs4
+from time import sleep
 from urllib.parse import parse_qs, urlparse
+
+import tempita
+
+from bs4 import BeautifulSoup as bs4
 
 import ptpapi
 

@@ -1,16 +1,18 @@
 """Represents a movie"""
-import re
 import logging
-import os.path
 import operator
+import os.path
+import re
+
 from datetime import datetime
 
 from bs4 import BeautifulSoup as bs4  # pylint: disable=import-error
 
+from .error import PTPAPIException
 from .session import session
 from .torrent import Torrent
-from .error import PTPAPIException
 from .util import human_to_bytes
+
 
 LOGGER = logging.getLogger(__name__)
 

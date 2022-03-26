@@ -2,6 +2,7 @@ import os
 import re
 
 import humanize
+
 from bs4 import BeautifulSoup
 
 from ptpapi.config import config

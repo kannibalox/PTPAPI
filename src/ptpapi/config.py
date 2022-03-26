@@ -1,10 +1,11 @@
 # pylint: disable=invalid-name
 """Hold config values"""
+import configparser
 import os
 import os.path
 
-import configparser
 from io import StringIO
+
 
 conf_file = os.path.expanduser(os.path.join("~", ".ptpapi.conf"))
 

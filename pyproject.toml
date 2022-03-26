@@ -39,3 +39,21 @@ ptp = "ptpapi.scripts.ptp:main"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pylint]
+[tool.pylint.'MESSAGES CONTROL']
+disable="locally-disabled, bad-continuation, superfluous-parens, no-else-return, too-many-arguments,logging-not-lazy, logging-format-interpolation, too-few-public-methods, protected-access, duplicate-code, consider-using-f-string, fixme, invalid-name, line-too-long, design"
+
+[tool.isort]
+profile = "black"
+force_single_line = false
+atomic = true
+include_trailing_comma = true
+lines_after_imports = 2
+lines_between_types = 1
+use_parentheses = true
+
+[tool.mypy]
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

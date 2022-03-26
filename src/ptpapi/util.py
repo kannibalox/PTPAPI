@@ -1,6 +1,6 @@
-import re
-import json
 import html
+import json
+import re
 
 from bs4 import BeautifulSoup as bs4
 

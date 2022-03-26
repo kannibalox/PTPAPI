@@ -3,9 +3,9 @@ import re
 
 from bs4 import BeautifulSoup as bs4  # pylint: disable=import-error
 
-from .util import snarf_cover_view_data
-from .session import session
 from .movie import Movie
+from .session import session
+from .util import snarf_cover_view_data
 
 
 class User(object):

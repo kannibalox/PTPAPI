@@ -1,13 +1,15 @@
 #!/usr/bin/env python
-import re
-import os
-import logging
 import argparse
+import logging
+import os
+import re
+
+from urllib.parse import parse_qs, urlparse
 
 import requests
-from urllib.parse import urlparse, parse_qs
 
 import ptpapi
+
 from ptpapi.config import config
 
 

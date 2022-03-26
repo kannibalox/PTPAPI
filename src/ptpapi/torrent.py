@@ -1,15 +1,18 @@
 """Represent a single torrent object"""
-import re
-import os
 import logging
+import os
+import re
 
-from bs4 import BeautifulSoup as bs4
 from urllib.parse import parse_qs, urlparse
 
+from bs4 import BeautifulSoup as bs4
+
 import ptpapi
+
 from .config import config
-from .session import session
 from .error import PTPAPIException
+from .session import session
+
 
 LOGGER = logging.getLogger(__name__)
 

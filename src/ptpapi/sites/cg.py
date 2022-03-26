@@ -1,10 +1,11 @@
+import logging
 import os
 import re
-import logging
 
-import humanize
-from bs4 import BeautifulSoup
 import bencode
+import humanize
+
+from bs4 import BeautifulSoup
 
 from ptpapi.config import config
 from ptpapi.session import TokenSession
