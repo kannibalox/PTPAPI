@@ -18,7 +18,7 @@ from pyrosimple.util import load_config, metafile, xmlrpc
 import ptpapi
 
 
-class Match(object):
+class Match():
     """A tiny class to make matching easier
 
     Could be expanded to introduce a confidence indicator
@@ -26,10 +26,12 @@ class Match(object):
     ID is an integer-as-a-string, and path is filepath"""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, ID=None, path=None, matched_files={}):
+    def __init__(self, ID=None, path=None, matched_files=None):
         """A defined match"""
         self.ID = ID
         self.path = path
+        if matched_files is None:
+            matched_files = {}
         self.matched_files = matched_files
 
     def __nonzero__(self):
@@ -53,10 +55,9 @@ def match_by_torrent(torrent, filepath):
         )
     )
 
-    if type(filepath) == bytes:
+    if isinstance(filepath, bytes):
         filepath = filepath.decode("utf-8")
-    assert type(filepath) == str
-    path1 = os.path.abspath(filepath)  # .decode('utf-8')
+    path1 = os.path.abspath(filepath)
     path1_files = {}
     if os.path.isdir(path1):
         for root, _, filenames in os.walk(path1, followlinks=True):
@@ -177,7 +178,7 @@ def match_by_guessed_name(ptp, filepath, limit, name=None):
     try:
         import guessit  # pylint: disable=import-error
     except ImportError:
-        logger.warn("Error importing 'guessit' module, skipping name guess")
+        logger.warning("Error importing 'guessit' module, skipping name guess")
         return Match(None)
     logger.info("Guessing name from filepath with guessit")
     if not name:
@@ -394,7 +395,7 @@ def process(cli_args):
     already_loaded = []
     not_found = []
 
-    if args.files == ["-"] or args.files == []:
+    if args.files in (["-"], []):
         filelist = sys.stdin
     else:
         filelist = args.files
