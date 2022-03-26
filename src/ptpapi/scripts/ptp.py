@@ -13,7 +13,7 @@ import ptpapi
 
 def ellipsize(string, length):
     if len(string) > length:
-        return string[: length - 3] + u"..."
+        return string[: length - 3] + "..."
     return string
 
 
@@ -48,7 +48,7 @@ def do_inbox(api, args):
             if args.user is not None and msg["Sender"] != args.user:
                 continue
             print(
-                u"{0: <10}{1: <32}{2: <15}".format(
+                "{0: <10}{1: <32}{2: <15}".format(
                     msg["ID"],
                     ellipsize(msg["Subject"].decode("utf-8"), 31),
                     ellipsize(msg["Sender"], 15),
@@ -136,7 +136,7 @@ def search_page(api, args, target, movies, torrents, terms):
         torrent_template = tempita.Template(args.torrent_format)
     else:
         torrent_template = tempita.Template(
-            u"{{if GoldenPopcorn}}\u2606{{else}}-{{endif}} {{Codec}}/{{Container}}/{{Source}}/{{Resolution}}"
+            "{{if GoldenPopcorn}}\u2606{{else}}-{{endif}} {{Codec}}/{{Container}}/{{Source}}/{{Resolution}}"
             " - {{ReleaseName}} - {{Snatched}}/{{Seeders}}/{{Leechers}}"
         )
 
@@ -146,11 +146,13 @@ def search_page(api, args, target, movies, torrents, terms):
         if target == "torrents":
             movies = api.search(terms)
             # Check to see if we should scrape the cover view data to save calls
-            wanted_fields = set([l[2].split('|')[0] for l in movie_template._parsed if l[0] == 'expr'])
+            wanted_fields = set(
+                [l[2].split("|")[0] for l in movie_template._parsed if l[0] == "expr"]
+            )
             if len(wanted_fields & set(api.search_coverview_fields)):
                 for movie in api.search_coverview(terms):
                     for ret_movie in movies:
-                        if movie['GroupId'] == ret_movie['GroupId']:
+                        if movie["GroupId"] == ret_movie["GroupId"]:
                             ret_movie.update(movie)
         elif target == "bookmarks":
             movies = api.current_user().bookmarks(search_terms=terms)
@@ -288,7 +290,7 @@ def do_userstats(api, args):
         )
     else:
         for stat, value in user.stats().items():
-            print(stat + u": " + value)
+            print(stat + ": " + value)
 
 
 def do_archive(api, args):
@@ -296,15 +298,17 @@ def do_archive(api, args):
         "archive.php",
         params={
             "action": "fetch",
-            "MaxStalled": "0",
-            "ContainerName": "TheOxtainer",
-            "ContainerSize": "30T",
+            "MaxStalled": 0,
+            "ContainerName": ptpapi.config.config.get("PTP", "archiveContainerName"),
+            "ContainerSize": ptpapi.config.config.get("PTP", "archiveContainerSize"),
         },
     )
     r.raise_for_status()
     data = r.json()
-    print(r.content.decode())
-    # ptpapi.Torrent(ID=data['TorrentID']).download(params={'ArchiveID': data['ArchiveID']})
+    # print(r.content.decode())
+    ptpapi.Torrent(ID=data["TorrentID"]).download_to_dir(
+        params={"ArchiveID": data["ArchiveID"]}
+    )
 
 
 def add_verbosity_args(parser):
