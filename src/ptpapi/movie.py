@@ -105,7 +105,7 @@ class Movie(object):
         self.data["Cover"] = soup.find("img", class_="sidebar-cover-image")["src"]
         # Title and Year
         match = re.match(
-            br"(.*)(:? \[(\d{4})\])?",
+            rb"(.*)(:? \[(\d{4})\])?",
             soup.find("h2", class_="page__title").encode_contents(),
         )
         self.data["Title"] = match.group(1)

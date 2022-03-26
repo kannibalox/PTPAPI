@@ -165,21 +165,24 @@ class API(object):
 
     # There's probably a better place to put this, but it's not really useful inside the Movie class
     search_coverview_fields = [
-        'RtRating',
-        'RtUrl',
-        'UserRating',
-        'TotalSeeders',
-        'TotalSnatched',
-        'TotalLeechers',
+        "RtRating",
+        "RtUrl",
+        "UserRating",
+        "TotalSeeders",
+        "TotalSnatched",
+        "TotalLeechers",
     ]
+
     def search_coverview(self, filters):
         filters["json"] = 0
         ret_array = []
         if "name" in filters:
             filters["searchstr"] = filters["name"]
-        for movie in ptpapi.util.snarf_cover_view_data(session.base_get("torrents.php", params=filters).content, key=b'PageData'):
-            if 'UserRating' not in movie:
-                movie['UserRating'] = None
+        for movie in ptpapi.util.snarf_cover_view_data(
+            session.base_get("torrents.php", params=filters).content, key=b"PageData"
+        ):
+            if "UserRating" not in movie:
+                movie["UserRating"] = None
             ret_array.append(ptpapi.Movie(data=movie))
         return ret_array
 

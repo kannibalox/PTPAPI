@@ -100,14 +100,14 @@ def human_to_bytes(s):
     return int(num * prefix[letter])
 
 
-def snarf_cover_view_data(text, key=br"coverViewJsonData\[\s*\d+\s*\]"):
+def snarf_cover_view_data(text, key=rb"coverViewJsonData\[\s*\d+\s*\]"):
     """Grab cover view data directly from an html source
     and parse out any relevant infomation we can
 
     :param text: a raw html string
     :rtype: a dictionary of movie data"""
     data = []
-    for json_data in re.finditer(key + br"\s*=\s*({.*});", text, flags=re.DOTALL):
+    for json_data in re.finditer(key + rb"\s*=\s*({.*});", text, flags=re.DOTALL):
         data.extend(json.loads(json_data.group(1).decode())["Movies"])
         for movie in data:
             movie["Title"] = html.unescape(movie["Title"])
@@ -124,7 +124,7 @@ def snarf_cover_view_data(text, key=br"coverViewJsonData\[\s*\d+\s*\]"):
                         torrent["Resolution"],
                     ) = [item.strip() for item in soup.a.text.split("/")[0:4]]
                     torrent["GoldenPopcorn"] = (
-                        soup.contents[0].string.strip(" ") == u"\u10047"
+                        soup.contents[0].string.strip(" ") == "\u10047"
                     )  # 10047 = Unicode GP symbol pylint: disable=line-too-long
                     if "title" not in soup.a:
                         continue
