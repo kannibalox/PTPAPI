@@ -10,8 +10,11 @@ from time import sleep, time
 from urllib.parse import parse_qs, urlparse
 from xmlrpc import client as xmlrpc_client
 from typing import List
+from pathlib import Path
 
+import libtc
 import bencode
+import bencodepy
 
 from pyrosimple import config
 from pyrosimple.util import load_config, metafile, xmlrpc
@@ -19,7 +22,7 @@ from pyrosimple.util import load_config, metafile, xmlrpc
 import ptpapi
 
 
-class Match():
+class Match:
     """A tiny class to make matching easier
 
     Could be expanded to introduce a confidence indicator
@@ -253,7 +256,7 @@ def create_matched_files(match, directory=None, action="hard", dry_run=False):
     return match
 
 
-def load_torrent(ID, path):
+def load_torrent(ID, path, client=None):
     """Send a torrent to rtorrent and kick off the hash recheck"""
     proxy = config.engine.open()
     if proxy is None:
@@ -264,49 +267,36 @@ def load_torrent(ID, path):
     torrent_data = torrent.download()
     data = bencode.bdecode(torrent_data)
     thash = metafile.info_hash(data)
-    try:
-        logger.debug(
-            "Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True))
-        )
-        logger.error(
-            "Hash {0} already exists in rtorrent as {1}, cannot load.".format(
-                thash, proxy.d.name(thash)
-            )
-        )
-        return False
-    except (xmlrpc_client.Fault, xmlrpc.HashNotFound):
-        pass
-    proxy.load.raw("", xmlrpc_client.Binary(torrent_data))
-    # Wait until the torrent is loaded and available
-    while True:
-        sleep(1)
+    if client is None:
         try:
-            proxy.d.hash(thash, fail_silently=True)
-            break
+            logger.debug(
+                "Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True))
+            )
+            logger.error(
+                "Hash {0} already exists in rtorrent as {1}, cannot load.".format(
+                    thash, proxy.d.name(thash)
+                )
+            )
+            return False
         except (xmlrpc_client.Fault, xmlrpc.HashNotFound):
             pass
-    logger.info("Torrent loaded at {0}".format(path))
-    proxy.d.custom.set(thash, "tm_completed", str(int(time())))
-    proxy.d.directory.set(thash, path)
-    proxy.d.check_hash(thash)
-    return True
-
-
-def find_existing_torrents(proxy) -> List[str]:
-    """Filter out a list of path for all PTP torrents"""
-    paths = []
-    for torrent in proxy.d.multicall(
-        "main", "d.directory=", "d.is_multi_file=", "d.name=", "t.multicall='',t.url="
-    ):
-        basedir, is_multi, name, trackers = torrent
-        for tracker in trackers:
-            if "passthepopcorn" in tracker[0]:
-                # http://rtorrent-docs.readthedocs.io/en/latest/cmd-ref.html#term-d-directory-set
-                if is_multi == 1:
-                    paths.append(basedir)
-                else:
-                    paths.append(os.path.join(basedir, name))
-    return paths
+        proxy.load.raw("", xmlrpc_client.Binary(torrent_data))
+        # Wait until the torrent is loaded and available
+        while True:
+            sleep(1)
+            try:
+                proxy.d.hash(thash, fail_silently=True)
+                break
+            except (xmlrpc_client.Fault, xmlrpc.HashNotFound):
+                pass
+        logger.info("Torrent loaded at {0}".format(path))
+        proxy.d.custom.set(thash, "tm_completed", str(int(time())))
+        proxy.d.directory.set(thash, path)
+        proxy.d.check_hash(thash)
+        return True
+    else:
+        bd = bencodepy.BencodeDecoder()
+        client.add(bd.decode(torrent_data), path)
 
 
 def define_parser():
@@ -347,6 +337,11 @@ def define_parser():
         dest="loglevel",
         const=logging.DEBUG,
         default=logging.WARNING,
+    )
+    parser.add_argument(
+        "--client",
+        help="Use a custom libtc torrent",
+        nargs=1,
     )
     parser.add_argument(
         "-v",
@@ -402,6 +397,11 @@ def process(cli_args):
         filelist = args.files
 
     loaded_paths = []
+
+    if args.client:
+        client = libtc.parse_libtc_url(args.client[0])
+    else:
+        client = None
 
     for filename in filelist:
         match = Match(None)
@@ -484,7 +484,7 @@ def process(cli_args):
             )
             logger.debug("Dry-run: Stopping before actual load")
             continue
-        if load_torrent(match.ID, match.path):
+        if load_torrent(match.ID, Path(match.path), client):
             loaded.append(filename)
         else:
             already_loaded.append(filename)
