@@ -127,13 +127,13 @@ class Movie(object):
         rating = soup.find(id="ptp_rating_td")
         self.data["PtpRating"] = rating.find(id="user_rating").text.strip("%")
         self.data["PtpRatingCount"] = re.sub(
-            "\D", "", rating.find(id="user_total").text
+            r"\D", "", rating.find(id="user_total").text
         )
         your_rating = rating.find(id="ptp_your_rating").text
         if "?" in your_rating:
             self.data["UserRating"] = None
             self.data["Seen"] = False
-        elif re.sub("\D", "", your_rating) == "":
+        elif re.sub(r"\D", "", your_rating) == "":
             self.data["UserRating"] = None
             self.data["Seen"] = True
         else:
