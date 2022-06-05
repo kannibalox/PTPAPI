@@ -340,7 +340,7 @@ def define_parser():
     )
     parser.add_argument(
         "--client",
-        help="Use a custom libtc torrent",
+        help="Experimental: use a custom libtc URL. See https://github.com/JohnDoee/libtc#url-syntax for examples",
         nargs=1,
     )
     parser.add_argument(
