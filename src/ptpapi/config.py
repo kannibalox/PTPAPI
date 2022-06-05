@@ -23,5 +23,5 @@ findBy=filename,title
 """
 
 config = configparser.ConfigParser()
-config.readfp(StringIO(default))
+config.read_file(StringIO(default))
 config.read(conf_file)

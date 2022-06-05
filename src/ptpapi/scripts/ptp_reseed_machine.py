@@ -91,7 +91,7 @@ def main():
             try:
                 ptp_movie["ImdbId"]
             except KeyError:
-                logger.warn("ImdbId not found from '{0}', skipping".format(i))
+                logger.warning("ImdbId not found from '{0}', skipping".format(i))
                 continue
             if ptp_movie["ImdbId"]:
                 find_match(
@@ -125,8 +125,7 @@ def find_match(ptp_movie, sites, max_ptp_seeds=0, remote_seeds=0):
                 if (
                     other_result["indexer"] != "PassThePopcorn"
                     and other_result["seeders"] > 0
-                    and size_diff > 0
-                    and size_diff < percent_diff
+                    and 0 < size_diff < percent_diff
                 ):
                     print(
                         "match: other {} ptp {} == {}% size diff".format(

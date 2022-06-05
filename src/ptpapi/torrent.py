@@ -5,6 +5,7 @@ import re
 
 from urllib.parse import parse_qs, urlparse
 
+import humanize
 from bs4 import BeautifulSoup as bs4
 
 import ptpapi
@@ -17,7 +18,7 @@ from .session import session
 LOGGER = logging.getLogger(__name__)
 
 
-class Torrent(object):
+class Torrent:
     """Represent a single torrent"""
 
     def __init__(self, ID=None, data=None):
@@ -145,7 +146,7 @@ class Torrent(object):
         self.data["Link"] = "https://passthepopcorn.me/torrents.php?torrentid=" + str(
             self.ID
         )
-        self.data["HumanSize"] = util.bytes_to_human(int(self.data["Size"]))
+        self.data["HumanSize"] = humanize.naturalsize(int(self.data["Size"]), binary=True)
 
     def load_parent_data(self):
         self.data["Movie"] = ptpapi.Movie(ID=self["GroupId"])
@@ -171,14 +172,16 @@ class Torrent(object):
 
     def download(self, params={}):
         """Download the torrent contents"""
-        params.update({"action": "download", "id": self.ID})
-        req = session.base_get("torrents.php", params=params)
+        req_params = params.copy()
+        req_params.update({"action": "download", "id": self.ID})
+        req = session.base_get("torrents.php", params=req_params)
         return req.content
 
     def download_to_dir(self, dest=None, params={}):
         """Convenience method to download directly to a directory"""
-        params.update({"action": "download", "id": self.ID})
-        req = session.base_get("torrents.php", params=params)
+        req_params = params.copy()
+        req_params.update({"action": "download", "id": self.ID})
+        req = session.base_get("torrents.php", params=req_params)
         if not dest:
             dest = config.get("Main", "downloadDirectory")
         name = re.search(r'filename="(.*)"', req.headers["Content-Disposition"]).group(

@@ -120,9 +120,9 @@ class API(object):
             ptpapi.util.raise_for_cloudflare(req.text)
         LOGGER.info("Login successful.")
 
-    def is_api():
+    def is_api(self):
         """Helper function to check for the use of ApiUser"""
-        return config.has_option("PTP", "ApiUser")
+        return config.has_option("PTP", "ApiKey")
 
     def logout(self):
         """Forces a logout. In ApiUser mode, essentially a waste of two request tokens."""

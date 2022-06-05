@@ -9,6 +9,7 @@ import sys
 from time import sleep, time
 from urllib.parse import parse_qs, urlparse
 from xmlrpc import client as xmlrpc_client
+from typing import List
 
 import bencode
 
@@ -46,7 +47,7 @@ class Match():
         return "<Match {0}:{1}>".format(self.ID, self.path)
 
 
-def match_by_torrent(torrent, filepath):
+def match_by_torrent(torrent, filepath: str) -> Match:
     """Attempt matching against a torrent ID"""
     logger = logging.getLogger(__name__)
     logger.info(
@@ -156,7 +157,7 @@ def match_by_torrent(torrent, filepath):
     return Match(torrent.ID, os.path.dirname(path1), matched_files)
 
 
-def match_by_movie(movie, filepath):
+def match_by_movie(movie, filepath) -> Match:
     """Tries to match a torrent against a single movie"""
     logger = logging.getLogger(__name__)
     logger.info(
@@ -171,7 +172,7 @@ def match_by_movie(movie, filepath):
     return Match(None)
 
 
-def match_by_guessed_name(ptp, filepath, limit, name=None):
+def match_by_guessed_name(ptp, filepath, limit, name=None) -> Match:
     """Use guessit to find the movie by metadata scraped from the filename"""
     logger = logging.getLogger(__name__)
     filepath = os.path.abspath(filepath)
@@ -200,7 +201,7 @@ def match_by_guessed_name(ptp, filepath, limit, name=None):
     return Match(None)
 
 
-def match_against_file(ptp, filepath, movie_limit):
+def match_against_file(ptp, filepath, movie_limit) -> Match:
     """Use's PTP's file search feature to match a filename to a movie"""
     logger = logging.getLogger(__name__)
     filepath = os.path.abspath(filepath)
@@ -291,7 +292,7 @@ def load_torrent(ID, path):
     return True
 
 
-def find_existing_torrents(proxy):
+def find_existing_torrents(proxy) -> List[str]:
     """Filter out a list of path for all PTP torrents"""
     paths = []
     for torrent in proxy.d.multicall(
