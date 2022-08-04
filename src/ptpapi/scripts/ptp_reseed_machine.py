@@ -108,9 +108,10 @@ def find_match(ptp_movie, sites, max_ptp_seeds=0, remote_seeds=0):
     resp = requests.get(
         config.get("Prowlarr", "url") + "api/v1/search",
         params={
-            "query": "tt" + ptp_movie["ImdbId"],
+            "query": "{ImdbId:" + ptp_movie["ImdbId"] + "}",
             "indexerIds": "-2",
             "categories": "2000",
+            "type": "movie",
         },
         headers={"X-Api-Key": config.get("Prowlarr", "api_key")},
     ).json()
