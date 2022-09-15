@@ -6,6 +6,7 @@ import re
 from urllib.parse import parse_qs, urlparse
 
 import humanize
+
 from bs4 import BeautifulSoup as bs4
 
 import ptpapi
@@ -146,7 +147,9 @@ class Torrent:
         self.data["Link"] = "https://passthepopcorn.me/torrents.php?torrentid=" + str(
             self.ID
         )
-        self.data["HumanSize"] = humanize.naturalsize(int(self.data["Size"]), binary=True)
+        self.data["HumanSize"] = humanize.naturalsize(
+            int(self.data["Size"]), binary=True
+        )
 
     def load_parent_data(self):
         self.data["Movie"] = ptpapi.Movie(ID=self["GroupId"])

@@ -1,13 +1,14 @@
 #!/bin/env python
-import re
-import os.path
+import argparse
 import logging
-from urlparse import urlparse, parse_qs
+import os.path
+import re
 
 from bs4 import BeautifulSoup as bs4
-import argparse
+from urlparse import parse_qs, urlparse
 
 import ptpapi
+
 
 def main():
     parser = argparse.ArgumentParser(description='Automatically download trumped torrents')

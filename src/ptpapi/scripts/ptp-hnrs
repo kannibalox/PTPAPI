@@ -1,12 +1,13 @@
 #!/bin/env python
 # Download hnr files to specified directory
-import os
-import os.path
 import argparse
 import logging
+import os
+import os.path
 import subprocess
 
 import ptpapi
+
 
 logger = logging.getLogger(__name__)
 
