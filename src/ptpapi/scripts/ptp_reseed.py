@@ -6,20 +6,20 @@ import os
 import os.path
 import sys
 
+from pathlib import Path
 from time import sleep, time
+from typing import List
 from urllib.parse import parse_qs, urlparse
 from xmlrpc import client as xmlrpc_client
-from typing import List
-from pathlib import Path
 
-import libtc
 import bencode
 import bencodepy
+import libtc
 
-from pyrosimple import config
-from pyrosimple.util import load_config, metafile, xmlrpc
+from pyrosimple.util import metafile, rpc
 
 import ptpapi
+import pyrosimple
 
 
 class Match:
@@ -258,15 +258,13 @@ def create_matched_files(match, directory=None, action="hard", dry_run=False):
 
 def load_torrent(ID, path, client=None):
     """Send a torrent to rtorrent and kick off the hash recheck"""
-    proxy = config.engine.open()
     if proxy is None:
-        load_config.ConfigLoader().load()
-        proxy = config.engine.open()
+        proxy = pyrosimple.connect().open()
     logger = logging.getLogger(__name__)
     torrent = ptpapi.Torrent(ID=ID)
     torrent_data = torrent.download()
-    data = bencode.bdecode(torrent_data)
-    thash = metafile.info_hash(data)
+    data = metafile.Metafile(bencode.bdecode(torrent_data))
+    thash = data.info_hash()
     if client is None:
         try:
             logger.debug(
@@ -278,7 +276,7 @@ def load_torrent(ID, path, client=None):
                 )
             )
             return False
-        except (xmlrpc_client.Fault, xmlrpc.HashNotFound):
+        except (xmlrpc_client.Fault, rpc.HashNotFound):
             pass
         proxy.load.raw("", xmlrpc_client.Binary(torrent_data))
         # Wait until the torrent is loaded and available
@@ -287,7 +285,7 @@ def load_torrent(ID, path, client=None):
             try:
                 proxy.d.hash(thash, fail_silently=True)
                 break
-            except (xmlrpc_client.Fault, xmlrpc.HashNotFound):
+            except (xmlrpc_client.Fault, rpc.HashNotFound):
                 pass
         logger.info("Torrent loaded at {0}".format(path))
         proxy.d.custom.set(thash, "tm_completed", str(int(time())))
