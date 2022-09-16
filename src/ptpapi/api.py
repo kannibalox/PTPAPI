@@ -5,7 +5,6 @@ import logging
 import os
 import pickle
 import re
-import sys
 
 import requests
 
@@ -52,8 +51,7 @@ class API(object):
                 + "see README.md for instructions on using the new ApiUser/ApiKey."
             )
         else:
-            logger.critical("No credentials found! Exiting...")
-            sys.exit(78)
+            raise PTPAPIException("No credentials found!")
 
         req = None
 
