@@ -120,6 +120,7 @@ def do_search(api, args):
     (target, movies, torrents, terms) = parse_terms(args.search_terms)
     if args.all:
         args.pages = get_pages(target, terms)
+        logger = logging.getLogger(__name__)
         logger.debug("Auto-detected maximum page as %s")
     if "page" not in terms:
         terms["page"] = "1"
