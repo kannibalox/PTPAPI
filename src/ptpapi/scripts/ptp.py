@@ -109,8 +109,18 @@ def parse_terms(termlist):
     return (target, movies, torrents, terms)
 
 
+def get_pages(target, terms):
+    if target == "torrents":
+        return ptpapi.util.find_page_range(
+            ptpapi.session.session.base_get("torrents.php", params=terms).content
+        )
+
+
 def do_search(api, args):
     (target, movies, torrents, terms) = parse_terms(args.search_terms)
+    if args.all:
+        args.pages = get_pages(target, terms)
+        logger.debug("Auto-detected maximum page as %s")
     if "page" not in terms:
         terms["page"] = "1"
     else:
@@ -350,6 +360,7 @@ def main():
     add_verbosity_args(parser)
     subparsers = parser.add_subparsers()
 
+    # Search & download
     search_parent = argparse.ArgumentParser()
     add_verbosity_args(search_parent)
     search_parent.add_argument(
@@ -393,6 +404,7 @@ def main():
         "-a", "--all", help="Return all search results", action="store_true"
     )
 
+    # Search
     search_parser = subparsers.add_parser(
         "search",
         help="Search for or download movies",
@@ -404,6 +416,7 @@ def main():
     )
     search_parser.set_defaults(func=do_search)
 
+    # Download
     download_parser = subparsers.add_parser(
         "download",
         help="An alias for `search -d`",
@@ -419,11 +432,13 @@ def main():
     )
     download_parser.set_defaults(func=do_search)
 
+    # Archive
     archive_parser = subparsers.add_parser(
         "archive", help="Commands related to the archive project."
     )
     archive_parser.set_defaults(func=do_archive)
 
+    # Inbox
     inbox_parser = subparsers.add_parser("inbox", help="Reads messages in your inbox")
     add_verbosity_args(inbox_parser)
     inbox_parser.add_argument(
@@ -463,6 +478,7 @@ def main():
     )
     raw_parser.set_defaults(func=do_raw)
 
+    # User stats
     userstats_parser = subparsers.add_parser(
         "userstats", help="Gather users' stats from profile pages"
     )
@@ -475,6 +491,7 @@ def main():
     )
     userstats_parser.set_defaults(func=do_userstats)
 
+    # Fields
     field_parser = subparsers.add_parser(
         "fields", help="List the fields available for each PTPAPI resource"
     )

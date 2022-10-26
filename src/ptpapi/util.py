@@ -1,6 +1,10 @@
 import html
 import json
+import math
 import re
+import urllib
+
+from typing import Tuple
 
 from bs4 import BeautifulSoup as bs4
 
@@ -135,6 +139,22 @@ def snarf_cover_view_data(text, key=rb"coverViewJsonData\[\s*\d+\s*\]"):
                     torrent["Id"] = match.group(2)
                     movie["Torrents"].append(torrent)
     return data
+
+
+def find_page_range(text) -> int:
+    """From a full HTML page, try to find the number of available
+    pages."""
+    # Try loading as a big JSON
+    try:
+        data = json.loads(text)
+        return math.ceil(int(data["TotalResults"]) / len(data["Movies"]))
+    except json.decoder.JSONDecodeError:
+        pass
+    # Try parsing pagination infromation from HTML
+    soup = bs4(text, "html.parser")
+    url = soup.select("a.pagination__link--last")[0]["href"]
+    qs = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
+    return int(qs["page"][0])
 
 
 def creds_from_conf(filename):

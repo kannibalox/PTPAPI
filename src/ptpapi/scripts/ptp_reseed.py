@@ -15,11 +15,11 @@ from xmlrpc import client as xmlrpc_client
 import bencode
 import bencodepy
 import libtc
+import pyrosimple
 
 from pyrosimple.util import metafile, rpc
 
 import ptpapi
-import pyrosimple
 
 
 class Match:
