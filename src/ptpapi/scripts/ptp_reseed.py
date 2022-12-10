@@ -258,8 +258,7 @@ def create_matched_files(match, directory=None, action="hard", dry_run=False):
 
 def load_torrent(ID, path, client=None):
     """Send a torrent to rtorrent and kick off the hash recheck"""
-    if proxy is None:
-        proxy = pyrosimple.connect().open()
+    proxy = pyrosimple.connect().open()
     logger = logging.getLogger(__name__)
     torrent = ptpapi.Torrent(ID=ID)
     torrent_data = torrent.download()
@@ -268,7 +267,7 @@ def load_torrent(ID, path, client=None):
     if client is None:
         try:
             logger.debug(
-                "Testing for hash {0}".format(proxy.d.hash(thash, fail_silently=True))
+                "Testing for hash {0}".format(proxy.d.hash(thash))
             )
             logger.error(
                 "Hash {0} already exists in rtorrent as {1}, cannot load.".format(
@@ -283,13 +282,13 @@ def load_torrent(ID, path, client=None):
         while True:
             sleep(1)
             try:
-                proxy.d.hash(thash, fail_silently=True)
+                proxy.d.hash(thash)
                 break
             except (xmlrpc_client.Fault, rpc.HashNotFound):
                 pass
         logger.info("Torrent loaded at {0}".format(path))
         proxy.d.custom.set(thash, "tm_completed", str(int(time())))
-        proxy.d.directory.set(thash, path)
+        proxy.d.directory.set(thash, str(path))
         proxy.d.check_hash(thash)
         return True
     else:
