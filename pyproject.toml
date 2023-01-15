@@ -43,7 +43,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pylint]
 [tool.pylint.'MESSAGES CONTROL']
-disable="locally-disabled, bad-continuation, superfluous-parens, no-else-return, too-many-arguments,logging-not-lazy, logging-format-interpolation, too-few-public-methods, protected-access, duplicate-code, consider-using-f-string, fixme, invalid-name, line-too-long, design"
+disable="locally-disabled, bad-continuation, superfluous-parens, no-else-return, too-many-arguments,logging-not-lazy, logging-format-interpolation, too-few-public-methods, protected-access, duplicate-code, consider-using-f-string, fixme, invalid-name, line-too-long, design, missing-function-docstring"
 
 [tool.isort]
 profile = "black"

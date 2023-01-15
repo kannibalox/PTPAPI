@@ -8,7 +8,7 @@ from .session import session
 from .util import snarf_cover_view_data
 
 
-class User(object):
+class User:
     """A primitive class to represent a user"""
 
     def __init__(self, ID):
@@ -175,7 +175,7 @@ class CurrentUser(User):
                 "Sender": row.find_all("td")[2].text,
                 "Date": row.find_all("td")[3].span["title"],
                 "ID": re.search(r"id=(\d+)", row.find_all("td")[1].a["href"]).group(1),
-                "Unread": True if "inbox-message--unread" in row["class"] else False,
+                "Unread": bool("inbox-message--unread" in row["class"]),
             }
 
     def inbox_conv(self, conv_id):

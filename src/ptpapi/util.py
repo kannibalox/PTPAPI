@@ -8,6 +8,8 @@ from typing import Tuple
 
 from bs4 import BeautifulSoup as bs4
 
+from ptpapi.error import PTPAPIException
+
 
 def raise_for_cloudflare(text):
     """Raises an exception if a CloudFlare error page is detected

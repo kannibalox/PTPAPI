@@ -17,7 +17,7 @@ from .util import human_to_bytes
 LOGGER = logging.getLogger(__name__)
 
 
-class Movie(object):
+class Movie:
     """A class representing a movie"""
 
     def __init__(self, ID=None, data=None):
@@ -161,9 +161,10 @@ class Movie(object):
                         .replace(",", "")
                         .replace(" bytes", "")
                     )
-                except IndexError as ex:
+                except IndexError:
                     LOGGER.error(
-                        f"Could not parse site for filesize, possibly check for bad filenames: https://passthepopcorn.me/torrents.php?torrentid={tor.ID}"
+                        "Could not parse site for filesize, possibly check for bad filenames: https://passthepopcorn.me/torrents.php?torrentid=%s",
+                        tor.ID,
                     )
                     continue
                 filepath = os.path.join(basepath, elem("td")[0].string)
@@ -187,8 +188,8 @@ class Movie(object):
         current_sort = None
         if "Torrents" not in self.data:
             self.load_json_data()
-        for profile in profiles:
-            LOGGER.debug("Attempting to match movie to profile '%s'", profile)
+        for subprofile in profiles:
+            LOGGER.debug("Attempting to match movie to profile '%s'", subprofile)
             matches = self.data["Torrents"]
             simple_filter_dict = {
                 "gp": (lambda t, _: t["GoldenPopcorn"]),
@@ -209,7 +210,7 @@ class Movie(object):
                 "unsnatched": (lambda t, m: not m["Snatched"]),
             }
             for (name, func) in simple_filter_dict.items():
-                if name.lower() in profile.split(" "):
+                if name.lower() in subprofile.split(" "):
                     matches = [t for t in matches if func(t, self)]
                     LOGGER.debug(
                         "%i matches after filtering by parameter '%s'",
@@ -232,7 +233,7 @@ class Movie(object):
                 "<=": operator.le,
             }
             for (name, func) in comparative_filter_dict.items():
-                match = re.search(r"\b%s([<>=!]+)(.+?)\b" % name, profile)
+                match = re.search(r"\b%s([<>=!]+)(.+?)\b" % name, subprofile)
                 if match is not None:
                     comp_func = comparisons[match.group(1)]
                     value = match.group(2)
@@ -255,7 +256,7 @@ class Movie(object):
                 return matches[0]
             elif len(matches) > 1:
                 for name, (rev, sort) in sort_dict.items():
-                    if name in profile:
+                    if name in subprofile:
                         current_sort = name
                 if current_sort is None:
                     current_sort = "most recent"

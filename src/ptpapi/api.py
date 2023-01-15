@@ -27,7 +27,7 @@ def login(kwargs):
     return API(**kwargs)
 
 
-class API(object):
+class API:
     """Used for instantiating an object that can access the API"""
 
     def __init__(
@@ -241,8 +241,10 @@ class API(object):
         data["AntiCsrfToken"] = soup.find("body")["data-anticsrftoken"]
         return data
 
-    def need_for_seed(self, filters={}):
+    def need_for_seed(self, filters=None):
         """List torrents that need seeding"""
+        if filters is None:
+            fitlers = {}
         data = ptpapi.util.snarf_cover_view_data(
             session.base_get("needforseed.php", params=filters).content
         )
@@ -269,8 +271,10 @@ class API(object):
             )
         return ret_array
 
-    def collage(self, coll_id, search_terms={}):
+    def collage(self, coll_id, search_terms=None):
         """Simplistic representation of a collage, might be split out later"""
+        if search_terms is None:
+            search_terms = {}
         search_terms["id"] = coll_id
         req = session.base_get("collages.php", params=search_terms)
         movies = []
@@ -281,8 +285,10 @@ class API(object):
             movies.append(ptpapi.Movie(data=movie))
         return movies
 
-    def artist(self, art_id, search_terms={}):
+    def artist(self, art_id, search_terms=None):
         """Simplistic representation of an artist page, might be split out later"""
+        if search_terms is None:
+            search_terms = {}
         search_terms["id"] = art_id
         req = session.base_get("artist.php", params=search_terms)
         movies = []
