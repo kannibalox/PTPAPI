@@ -318,10 +318,15 @@ def do_archive(api, args):
     )
     r.raise_for_status()
     data = r.json()
-    # print(r.content.decode())
     ptpapi.Torrent(ID=data["TorrentID"]).download_to_dir(
         params={"ArchiveID": data["ArchiveID"]}
     )
+    if args.download_incomplete:
+        for _id, i_data in data["IncompleteTransactions"].items():
+            if i_data["InfoHash"] is not None:
+                ptpapi.Torrent(ID=i_data["TorrentID"]).download_to_dir(
+                    params={"ArchiveID": data["ArchiveID"]}
+                )
 
 
 def add_verbosity_args(parser):
@@ -436,6 +441,11 @@ def main():
     # Archive
     archive_parser = subparsers.add_parser(
         "archive", help="Commands related to the archive project."
+    )
+    archive_parser.add_argument(
+        "--download-incomplete",
+        help="Also download any incomplete transactions",
+        action="store_true",
     )
     archive_parser.set_defaults(func=do_archive)
 

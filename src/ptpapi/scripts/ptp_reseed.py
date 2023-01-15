@@ -266,9 +266,7 @@ def load_torrent(ID, path, client=None):
     thash = data.info_hash()
     if client is None:
         try:
-            logger.debug(
-                "Testing for hash {0}".format(proxy.d.hash(thash))
-            )
+            logger.debug("Testing for hash {0}".format(proxy.d.hash(thash)))
             logger.error(
                 "Hash {0} already exists in rtorrent as {1}, cannot load.".format(
                     thash, proxy.d.name(thash)
