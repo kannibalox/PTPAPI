@@ -4,8 +4,6 @@ import math
 import re
 import urllib
 
-from typing import Tuple
-
 from bs4 import BeautifulSoup as bs4
 
 from ptpapi.error import PTPAPIException

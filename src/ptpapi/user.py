@@ -98,8 +98,8 @@ class CurrentUser(User):
     """Defines some additional methods that only apply to the logged in user."""
 
     def __init__(self, ID):
-        self.ID = ID
         self.new_messages = 0
+        super().__init__(ID)
 
     def archive_container(self, ID):
         """Fetch info about a containers from the archive project

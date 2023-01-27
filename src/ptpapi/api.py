@@ -101,11 +101,12 @@ class API:
                 j = req.json()
             except ValueError:
                 if req.status_code == 200:
-                    raise PTPAPIException("Could not parse returned json data.")
-                else:
-                    if req.status_code == 429:
-                        LOGGER.critical(req.text.strip())
-                    req.raise_for_status()
+                    raise PTPAPIException(
+                        "Could not parse returned json data."
+                    ) from ValueError
+                if req.status_code == 429:
+                    LOGGER.critical(req.text.strip())
+                req.raise_for_status()
             if j["Result"] == "TfaRequired":
                 req = session.base_post(
                     "ajax.php?action=login",
@@ -255,7 +256,7 @@ class API:
     def need_for_seed(self, filters=None):
         """List torrents that need seeding"""
         if filters is None:
-            fitlers = {}
+            filters = {}
         data = util.snarf_cover_view_data(
             session.base_get("needforseed.php", params=filters).content
         )

@@ -226,8 +226,8 @@ def do_raw(_, args):
                 file_out = args.output
         else:
             file_out = os.path.basename(url.path)
-        with open(file_out, "w") as fileh:
-            fileh.write(data.decode())
+        with open(file_out, "wb") as fileh:
+            fileh.write(data)
 
 
 def do_log(api, args):

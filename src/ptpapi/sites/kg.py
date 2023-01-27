@@ -15,7 +15,7 @@ class KGAPI(BaseSiteAPI):
         self.baseURL = "https://karagarga.in"
         self.session = TokenSession(3, 0.5)
         self.session.headers.update({"User-Agent": "Wget/1.13.4"})
-        super(KGAPI, self).__init__()
+        super().__init__()
 
     def login(self, username=None, password=None, passkey=None):
         password = password or config.get("KG", "password")

@@ -172,15 +172,19 @@ class Torrent:
             ).json()
         )
 
-    def download(self, params={}):
+    def download(self, params=None):
         """Download the torrent contents"""
+        if params is None:
+            params = {}
         req_params = params.copy()
         req_params.update({"action": "download", "id": self.ID})
         req = session.base_get("torrents.php", params=req_params)
         return req.content
 
-    def download_to_dir(self, dest=None, params={}):
+    def download_to_dir(self, dest=None, params=None):
         """Convenience method to download directly to a directory"""
+        if params is None:
+            params = {}
         req_params = params.copy()
         req_params.update({"action": "download", "id": self.ID})
         req = session.base_get("torrents.php", params=req_params)
