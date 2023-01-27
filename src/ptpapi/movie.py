@@ -8,10 +8,10 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup as bs4  # pylint: disable=import-error
 
-from .error import PTPAPIException
-from .session import session
-from .torrent import Torrent
-from .util import human_to_bytes
+from ptpapi import torrent
+from ptpapi.error import PTPAPIException
+from ptpapi.session import session
+from ptpapi.util import human_to_bytes
 
 
 LOGGER = logging.getLogger(__name__)
@@ -96,7 +96,7 @@ class Movie:
             for t in torrents:
                 if "RemasterTitle" not in t:
                     t["RemasterTitle"] = ""
-            self.data["Torrents"] = [Torrent(data=t) for t in torrents]
+            self.data["Torrents"] = [torrent.Torrent(data=t) for t in torrents]
 
     def load_html_data(self):
         """Scrape all data from a movie's HTML page"""

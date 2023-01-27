@@ -9,11 +9,10 @@ import humanize
 
 from bs4 import BeautifulSoup as bs4
 
-import ptpapi
-
-from .config import config
-from .error import PTPAPIException
-from .session import session
+from ptpapi import movie
+from ptpapi.config import config
+from ptpapi.error import PTPAPIException
+from ptpapi.session import session
 
 
 LOGGER = logging.getLogger(__name__)
@@ -152,7 +151,7 @@ class Torrent:
         )
 
     def load_parent_data(self):
-        self.data["Movie"] = ptpapi.Movie(ID=self["GroupId"])
+        self.data["Movie"] = movie.Movie(ID=self["GroupId"])
 
     def load_torrent_json_data(self):
         """Load torrent data from a JSON call"""

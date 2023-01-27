@@ -10,8 +10,7 @@ import requests
 
 from bs4 import BeautifulSoup as bs4
 
-import ptpapi
-
+from ptpapi import util
 from ptpapi.config import config
 from ptpapi.error import PTPAPIException
 from ptpapi.movie import Movie
@@ -75,7 +74,7 @@ class API:
             session.max_redirects = 1
             try:
                 req = session.base_get("torrents.php")
-                ptpapi.util.raise_for_cloudflare(req.text)
+                util.raise_for_cloudflare(req.text)
             except requests.exceptions.TooManyRedirects:
                 if os.path.isfile(self.cookies_file):
                     os.remove(self.cookies_file)
@@ -127,7 +126,7 @@ class API:
             self.__save_cookie()
             # Get some information that will be useful for later
             req = session.base_get("index.php")
-            ptpapi.util.raise_for_cloudflare(req.text)
+            util.raise_for_cloudflare(req.text)
         LOGGER.info("Login successful.")
 
     def is_api(self):
@@ -173,7 +172,7 @@ class API:
             if "ImdbId" not in movie:
                 movie["ImdbId"] = "0"
             movie["Title"] = html.unescape(movie["Title"])
-            ret_array.append(ptpapi.Movie(data=movie))
+            ret_array.append(Movie(data=movie))
         return ret_array
 
     # There's probably a better place to put this, but it's not really useful inside the Movie class
@@ -191,7 +190,7 @@ class API:
         ret_array = []
         if "name" in filters:
             filters["searchstr"] = filters["name"]
-        for movie in ptpapi.util.snarf_cover_view_data(
+        for movie in util.snarf_cover_view_data(
             session.base_get("torrents.php", params=filters).content, key=b"PageData"
         ):
             if "UserRating" not in movie:
@@ -257,7 +256,7 @@ class API:
         """List torrents that need seeding"""
         if filters is None:
             fitlers = {}
-        data = ptpapi.util.snarf_cover_view_data(
+        data = util.snarf_cover_view_data(
             session.base_get("needforseed.php", params=filters).content
         )
         torrents = []
@@ -290,7 +289,7 @@ class API:
         search_terms["id"] = coll_id
         req = session.base_get("collages.php", params=search_terms)
         movies = []
-        for movie in ptpapi.util.snarf_cover_view_data(req.content):
+        for movie in util.snarf_cover_view_data(req.content):
             movie["Torrents"] = []
             for group in movie["GroupingQualities"]:
                 movie["Torrents"].extend(group["Torrents"])
@@ -310,7 +309,7 @@ class API:
             movie["Torrents"] = []
             for group in movie["GroupingQualities"]:
                 movie["Torrents"].extend(group["Torrents"])
-            movies.append(ptpapi.Movie(data=movie))
+            movies.append(Movie(data=movie))
         return movies
 
     def log(self):
