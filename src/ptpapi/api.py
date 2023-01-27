@@ -107,6 +107,18 @@ class API:
                     if req.status_code == 429:
                         LOGGER.critical(req.text.strip())
                     req.raise_for_status()
+            if j["Result"] == "TfaRequired":
+                req = session.base_post(
+                    "ajax.php?action=login",
+                    data={
+                        "username": username,
+                        "password": password,
+                        "passkey": passkey,
+                        "TfaType": "normal",
+                        "TfaCode": input("Enter 2FA auth code:"),
+                    },
+                )
+                j = req.json()
             if j["Result"] != "Ok":
                 raise PTPAPIException(
                     "Failed to log in. Please check the username, password and passkey. Response: %s"
