@@ -13,7 +13,6 @@ from ptpapi.sites.base import BaseSiteAPI
 
 
 class CGAPI(BaseSiteAPI):
-    HttpHeader = {"User-Agent": "Wget/1.13.4"}
     Name = "CG"
 
     def __init__(self):
@@ -37,7 +36,7 @@ class CGAPI(BaseSiteAPI):
         search_string = "&".join(
             ["%s=%s" % (key, value) for (key, value) in search_args.items()]
         )
-        soup = self.__httpRequest("/browse.php?%s" % search_string)
+        soup = self._httpRequest("/browse.php?%s" % search_string)
         return self.getTorrentListInfo(soup)
 
     def find_ptp_movie(self, movie):
@@ -89,17 +88,6 @@ class CGAPI(BaseSiteAPI):
         logger.debug("Downloading ID {} to {}".format(ID, dest.encode("utf-8")))
         with open(dest, "wb") as fh:
             fh.write(r.content)
-
-    def __httpRequest(self, url, data=None):
-        html = self.__request(self.baseURL + url, data)
-        soup = BeautifulSoup(html, "html.parser")
-        return soup
-
-    def __request(self, url, data=None):
-        return self.session.get(url, data=data).text
-
-    def __jsonRequest(self, url, data=None):
-        return self.session.get(url, data=data).json()
 
 
 class CGAPIException(Exception):

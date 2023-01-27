@@ -11,7 +11,6 @@ from ptpapi.sites.base import BaseSiteAPI
 
 
 class KGAPI(BaseSiteAPI):
-    HttpHeader = {"User-Agent": "Wget/1.13.4"}
     Name = "KG"
 
     def __init__(self):
@@ -34,7 +33,7 @@ class KGAPI(BaseSiteAPI):
         search_string = "&".join(
             ["%s=%s" % (key, value) for (key, value) in search_args.items()]
         )
-        soup = self.__httpRequest("/browse.php?%s" % search_string)
+        soup = self._httpRequest("/browse.php?%s" % search_string)
         return self.getTorrentListInfo(soup)
 
     def getTorrentListInfo(self, soup):
@@ -87,17 +86,6 @@ class KGAPI(BaseSiteAPI):
         if "MiB" in humanized or "KiB" in humanized:
             humanized = humanize.naturalsize(byte_num, format="%d", binary=True)
         return humanized
-
-    def __httpRequest(self, url, data=None):
-        html = self.__request(self.baseURL + url, data)
-        soup = BeautifulSoup(html, "html.parser")
-        return soup
-
-    def __request(self, url, data=None):
-        return self.session.get(url, data=data).text
-
-    def __jsonRequest(self, url, data=None):
-        return self.session.get(url, data=data).json()
 
 
 class KGAPIException(Exception):
