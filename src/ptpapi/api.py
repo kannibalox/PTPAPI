@@ -45,7 +45,7 @@ class API:
             and config.has_option("PTP", "username")
             and config.has_option("PTP", "passkey")
         ):
-            logger.warn(
+            logger.warning(
                 "Using your password/passkey to access the site is deprecated, "
                 + "see README.md for instructions on using the new ApiUser/ApiKey."
             )
@@ -195,7 +195,7 @@ class API:
         ):
             if "UserRating" not in movie:
                 movie["UserRating"] = None
-            ret_array.append(ptpapi.Movie(data=movie))
+            ret_array.append(Movie(data=movie))
         return ret_array
 
     def search_single(self, filters):
@@ -293,7 +293,7 @@ class API:
             movie["Torrents"] = []
             for group in movie["GroupingQualities"]:
                 movie["Torrents"].extend(group["Torrents"])
-            movies.append(ptpapi.Movie(data=movie))
+            movies.append(Movie(data=movie))
         return movies
 
     def artist(self, art_id, search_terms=None):
@@ -303,7 +303,7 @@ class API:
         search_terms["id"] = art_id
         req = session.base_get("artist.php", params=search_terms)
         movies = []
-        for movie in ptpapi.util.snarf_cover_view_data(
+        for movie in util.snarf_cover_view_data(
             req.content, key=b"ungroupedCoverViewJsonData"
         ):
             movie["Torrents"] = []

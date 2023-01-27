@@ -101,8 +101,8 @@ def human_to_bytes(s):
         else:
             raise ValueError("can't interpret %r" % init)
     prefix = {sset[0]: 1}
-    for i, s in enumerate(sset[1:]):
-        prefix[s] = 1 << (i + 1) * 10
+    for i, sval in enumerate(sset[1:]):
+        prefix[sval] = 1 << (i + 1) * 10
     return int(num * prefix[letter])
 
 
@@ -157,17 +157,3 @@ def find_page_range(text) -> int:
     url = soup.select("a.pagination__link--last")[0]["href"]
     qs = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
     return int(qs["page"][0])
-
-
-def creds_from_conf(filename):
-    """Pull user, password, and passkey information from a file
-
-    :param filename: an absolute filename
-    :rtype: a diction of the username, password and passkey"""
-    config_file = configparser.ConfigParser()
-    config_file.read(filename)
-    return {
-        "username": config_file.get("PTP", "username"),
-        "password": config_file.get("PTP", "password"),
-        "passkey": config_file.get("PTP", "passkey"),
-    }

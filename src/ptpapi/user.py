@@ -141,7 +141,7 @@ class CurrentUser(User):
                 if field.find("label"):
                     l = field.find("label")
                     cont[l["title"].lower()] = int(l.text.replace(",", ""))
-            containers.appent(cont)
+            containers.append(cont)
         return containers
 
     def __parse_new_messages(self, soup):

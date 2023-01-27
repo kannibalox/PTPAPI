@@ -114,6 +114,7 @@ def get_pages(target, terms):
         return ptpapi.util.find_page_range(
             ptpapi.session.session.base_get("torrents.php", params=terms).content
         )
+    return None
 
 
 def do_search(api, args):

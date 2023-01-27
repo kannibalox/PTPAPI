@@ -291,7 +291,7 @@ def load_torrent(ID, path, client=None):
         return True
     else:
         bd = bencodepy.BencodeDecoder()
-        client.add(bd.decode(torrent_data), path)
+        return bool(client.add(bd.decode(torrent_data), path))
 
 
 def define_parser():

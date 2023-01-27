@@ -3,8 +3,6 @@ import re
 
 import humanize
 
-from bs4 import BeautifulSoup
-
 from ptpapi.config import config
 from ptpapi.session import TokenSession
 from ptpapi.sites.base import BaseSiteAPI

@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 
 
-class BaseSiteAPI(object):
+class BaseSiteAPI:
     Name = "BS"
 
     def __init__(self):
