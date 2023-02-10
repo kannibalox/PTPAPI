@@ -85,8 +85,6 @@ class Movie:
         )
         if "ImdbId" not in self.data:
             self.data["ImdbId"] = ""
-        if "Directors" not in self.data:
-            self.data["Directors"] = []
         self.conv_json_torrents()
 
     def conv_json_torrents(self):
