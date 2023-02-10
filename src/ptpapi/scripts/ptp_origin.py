@@ -49,7 +49,6 @@ def main():
             "Title": movie["Name"],
             "Year": int(movie["Year"]),
             "Directors": movie["Directors"],
-            "Tags": movie["Tags"],
             "ReleaseName": torrent["ReleaseName"],
             "RemasterTitle": torrent["RemasterTitle"],
             "IMDb": f'https://imdb.com/title/tt{movie["ImdbId"]}',
@@ -66,6 +65,7 @@ def main():
             "Resolution": torrent["Resolution"],
             "Size": int(torrent["Size"]),
             "Source": torrent["Source"],
+            "Tags": movie["Tags"],
         }
         max_key_len = max(len(k) for k in data)
         yaml.dump(data, stream)
