@@ -23,7 +23,7 @@ class Movie:
     def __init__(self, ID=None, data=None):
         self.torrents = []
         self.key_finder = {
-            "json": ["ImdbId", "ImdbRating", "ImdbVoteCount", "Torrents", "CoverImage"],
+            "json": ["ImdbId", "ImdbRating", "ImdbVoteCount", "Torrents", "CoverImage", "Name"],
             "html": [
                 "Title",
                 "Year",
