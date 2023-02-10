@@ -116,7 +116,7 @@ class Movie:
         self.data["Tags"] = []
         for tagbox in soup.find_all("div", class_="box_tags"):
             for tag in tagbox.find_all("li"):
-                self.data["Tags"].append(tag.find("a").string)
+                self.data["Tags"].append(str(tag.find("a").string))
         # Directors
         self.data["Directors"] = []
         for director in soup.find("h2", class_="page__title").find_all(
