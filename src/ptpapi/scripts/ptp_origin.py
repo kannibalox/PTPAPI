@@ -27,9 +27,35 @@ def main():
     parser = argparse.ArgumentParser(
         usage="Download metadata from PTP for archival purposes"
     )
-    parser.add_argument("torrent", nargs="+")
+    parser.add_argument("torrent", nargs="+", help="Torrent file to use for scraping information")
+    parser.add_argument(
+        "--debug",
+        help="Print lots of debugging statements",
+        action="store_const",
+        dest="loglevel",
+        const=logging.DEBUG,
+        default=logging.WARNING,
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        help="Be verbose",
+        action="store_const",
+        dest="loglevel",
+        const=logging.INFO,
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        help="Hide most messages",
+        action="store_const",
+        dest="loglevel",
+        const=logging.CRITICAL,
+    )
+    parser.add_argument('-d', '--output-directory', help="Directory to write files to (default: origin)", default='origin', metavar='DIR')
+    parser.add_argument('--no-images', help="Skip downloading images", action='store_true')
     args = parser.parse_args()
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=args.loglevel)
     ptpapi.login()
     stream = sys.stdout
     yaml = ruamel.yaml.YAML()
@@ -100,16 +126,17 @@ def main():
             if message != row.find_all("span")[1].text:
                 log_data.append({"Time": time, "Message": message.strip()})
         yaml.dump({"Log": log_data}, stream)
-        # Download any URL that looks like a URL
-        for m in re.finditer(RE_URL, desc):
-            url_parts = urlparse(m.group(0))
-            path = Path(Path(url_parts.path).name)
-            if "imdb.com/title/" not in m.group(0) and not path.exists():
-                resp = requests.get(m.group(0))
-                if resp.headers["Content-Type"].startswith("image"):
-                    with path.open("wb") as fh:
-                        fh.write(resp.content)
-        continue
+        # Download anything that looks like a URL
+        if not args.no_images:
+            for m in re.finditer(RE_URL, desc):
+                url_parts = urlparse(m.group(0))
+                path = Path(Path(url_parts.path).name)
+                # Skip IMDb title URLS
+                if "imdb.com/title/" not in m.group(0) and not path.exists():
+                    resp = requests.get(m.group(0))
+                    if resp.headers["Content-Type"].startswith("image"):
+                        with path.open("wb") as fh:
+                            fh.write(resp.content)
 
 
 if __name__ == "__main__":
