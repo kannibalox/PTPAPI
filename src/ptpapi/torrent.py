@@ -178,6 +178,8 @@ class Torrent:
                 },
             ).json()
         )
+        if "Nfo" in self.data and self.data["Nfo"]:
+            self.data["Nfo"] = html.unescape(self.data["Nfo"])
 
     def download(self, params=None):
         """Download the torrent contents"""
