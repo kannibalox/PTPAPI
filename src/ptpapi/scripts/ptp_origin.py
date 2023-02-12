@@ -39,9 +39,13 @@ def write_origin(t, args):
     match = RE_COMMENT.match(mfile["comment"])
     movie = ptpapi.Movie(match.group(1))
     torrent = ptpapi.Torrent(data={"Id": match.group(2), "GroupId": match.group(1)})
-    Path(args.output_directory).mkdir(parents=True, exist_ok=True)
-    yaml_path = Path(args.output_directory, mfile_path.with_suffix(".yaml").name)
-    nfo_path = Path(args.output_directory, mfile_path.with_suffix(".nfo").name)
+    if args.output_directory is not None:
+        output_dir = args.output_directory
+    else:
+        output_dir = Path(mfile_path.stem)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    yaml_path = Path(output_dir, mfile_path.with_suffix(".yaml").name)
+    nfo_path = Path(output_dir, mfile_path.with_suffix(".nfo").name)
     logger.info("Writing origin YAML file %s", yaml_path)
     stream = yaml_path.open("w")
     stream.write("---")
@@ -110,7 +114,7 @@ def write_origin(t, args):
     if not args.no_images:
         for m in re.finditer(RE_URL, desc):
             url_parts = urlparse(m.group(0))
-            path = Path(args.output_directory, Path(url_parts.path).name)
+            path = Path(output_dir, Path(url_parts.path).name)
             # Skip IMDb title URLS
             if "imdb.com/title/" not in m.group(0) and not path.exists():
                 logger.info("Downloading description image %s to %s", m.group(0), path)
@@ -120,7 +124,7 @@ def write_origin(t, args):
                         fh.write(resp.content)
         # Cover
         url_parts = urlparse(movie["Cover"])
-        path = Path(args.output_directory, Path(url_parts.path).name)
+        path = Path(output_dir, Path(url_parts.path).name)
         if not path.exists():
             logger.info("Downloading cover %s to %s", movie["Cover"], path)
             resp = requests.get(m.group(0))
@@ -166,8 +170,7 @@ def main():
     parser.add_argument(
         "-d",
         "--output-directory",
-        help="Directory to write files to (default: origin)",
-        default="origin",
+        help="Directory to write files to (defaults to torrent name without extension)",
         metavar="DIR",
     )
     parser.add_argument(
