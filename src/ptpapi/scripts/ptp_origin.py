@@ -49,7 +49,7 @@ def write_origin(t, args):
     nfo_path = Path(output_dir, mfile_path.with_suffix(".nfo").name)
     logger.info("Writing origin YAML file %s", yaml_path)
     stream = yaml_path.open("w")
-    stream.write("---")
+    stream.write("---\n")
     # Basic data
     data = {
         "Title": movie["Name"],
