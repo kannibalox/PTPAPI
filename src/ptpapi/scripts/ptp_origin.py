@@ -188,14 +188,22 @@ def main():
         if p_path.is_dir():
             if args.recursive:
                 for t in p_path.rglob("*.torrent"):
-                    write_origin(t, args)
+                    try:
+                        write_origin(t, args)
+                    except Exception:
+                        logger.error("Error handling file %", t)
+                        raise
             else:
                 logger.warning(
                     "Skipping directory %s, use --recursive to descend into directories",
                     p,
                 )
         if p_path.is_file():
-            write_origin(p, args)
+            try:
+                write_origin(p, args)
+            except Exception:
+                logger.error("Error handling file %", t)
+                raise
 
 
 if __name__ == "__main__":
