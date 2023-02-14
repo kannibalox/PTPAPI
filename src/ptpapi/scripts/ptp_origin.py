@@ -18,6 +18,7 @@ YAML = ruamel.yaml.YAML()
 YAML.top_level_colon_align = True
 YAML.width = float("inf")
 YAML.allow_unicode = True
+YAML.encoding = 'utf-8'
 
 RE_COMMENT = re.compile(
     r"https://passthepopcorn.me/torrents.php\?id=(\d+)&torrentid=(\d+)"
