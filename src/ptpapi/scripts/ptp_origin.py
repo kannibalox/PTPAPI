@@ -105,7 +105,11 @@ def write_origin(t, args):
         time = row.find_all("span")[0]["title"]
         message = RE_DELETED_BY.sub("was deleted for", row.find_all("span")[1].text)
         if message != row.find_all("span")[1].text:
-            log_data.append({"Time": time, "Message": unicodedata.normalize('NFC', message.strip())})
+            try:
+                message.encode()
+            except UnicodeEncodeError:
+                message = unicodedata.normalize('NFC', message)
+            log_data.append({"Time": time, "Message": message.strip()})
     YAML.dump({"Log": log_data}, stream)
     stream.close()
     # NFO
