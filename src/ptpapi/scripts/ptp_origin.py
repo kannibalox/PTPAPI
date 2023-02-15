@@ -4,6 +4,7 @@ import logging
 import argparse
 import re
 import sys
+import unicodedata
 import textwrap
 from urllib.parse import urlparse
 from pathlib import Path
@@ -104,7 +105,7 @@ def write_origin(t, args):
         time = row.find_all("span")[0]["title"]
         message = RE_DELETED_BY.sub("was deleted for", row.find_all("span")[1].text)
         if message != row.find_all("span")[1].text:
-            log_data.append({"Time": time, "Message": message.strip()})
+            log_data.append({"Time": time, "Message": unicodedata.normalize('NFC', message.strip())})
     YAML.dump({"Log": log_data}, stream)
     stream.close()
     # NFO
