@@ -191,7 +191,7 @@ def main():
                     try:
                         write_origin(t, args)
                     except Exception:
-                        logger.error("Error handling file %", t)
+                        logger.error("Error handling file %s", t)
                         raise
             else:
                 logger.warning(
@@ -202,7 +202,7 @@ def main():
             try:
                 write_origin(p, args)
             except Exception:
-                logger.error("Error handling file %", t)
+                logger.error("Error handling file %s", p)
                 raise
 
 
