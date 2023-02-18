@@ -1,19 +1,23 @@
 #!/usr/bin/env python
-import logging
-import io
 import argparse
+import io
+import logging
 import re
 import sys
-import unicodedata
 import textwrap
-from urllib.parse import urlparse
+import unicodedata
+
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 import ruamel.yaml
-import ptpapi
-from pyrosimple.util import metafile
+
 from bs4 import BeautifulSoup as bs4
+from pyrosimple.util import metafile
+
+import ptpapi
+
 
 YAML = ruamel.yaml.YAML()
 YAML.top_level_colon_align = True
