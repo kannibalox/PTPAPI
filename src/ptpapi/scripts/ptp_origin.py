@@ -10,6 +10,7 @@ import unicodedata
 from pathlib import Path
 from urllib.parse import urlparse
 
+import urllib3
 import requests
 import ruamel.yaml
 
@@ -131,7 +132,10 @@ def write_origin(t, args):
                     )
                     try:
                         resp = requests.get(m.group(0))
-                    except requests.exceptions.RequestException as exc:
+                    except (
+                        requests.exceptions.RequestException,
+                        urllib3.exceptions.HTTPError,
+                    ) as exc:
                         logger.error("Could not fetch URL %s: %s", m.group(0), exc)
                     else:
                         if resp.headers["Content-Type"].startswith("image"):
@@ -142,7 +146,7 @@ def write_origin(t, args):
         path = Path(output_dir, Path(url_parts.path).name)
         if not path.exists():
             logger.info("Downloading cover %s to %s", movie["Cover"], path)
-            resp = requests.get(m.group(0))
+            resp = requests.get(movie["Cover"])
             if resp.headers["Content-Type"].startswith("image"):
                 with path.open("wb") as fh:
                     fh.write(resp.content)
