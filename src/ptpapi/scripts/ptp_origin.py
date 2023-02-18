@@ -49,69 +49,64 @@ def write_origin(t, args):
     yaml_path = Path(output_dir, mfile_path.with_suffix(".yaml").name)
     nfo_path = Path(output_dir, mfile_path.with_suffix(".nfo").name)
     logger.info("Writing origin YAML file %s", yaml_path)
-    stream = yaml_path.open("w")
-    stream.write("---\n")
-    # Basic data
-    data = {
-        "Title": movie["Name"],
-        "Year": int(movie["Year"]),
-        "Directors": movie["Directors"],
-        "ReleaseName": torrent["ReleaseName"],
-        "RemasterTitle": torrent["RemasterTitle"],
-        "IMDb": f'https://imdb.com/title/tt{movie["ImdbId"]}',
-        "Cover": movie["Cover"],
-        "Permalink": mfile["comment"],
-        "InfoHash": torrent["InfoHash"],
-        "Codec": torrent["Codec"],
-        "Container": torrent["Container"],
-        "UploadTime": torrent["UploadTime"],
-        "Checked": torrent["Checked"],
-        "GoldenPopcorn": torrent["GoldenPopcorn"],
-        "Scene": torrent["Scene"],
-        "ReleaseGroup": torrent["ReleaseGroup"],
-        "Resolution": torrent["Resolution"],
-        "Size": int(torrent["Size"]),
-        "Source": torrent["Source"],
-        "Tags": movie["Tags"],
-    }
-    max_key_len = max(len(k) for k in data)
-    YAML.dump(data, stream)
-    # Nicely format multi-line descriptions
-    desc = torrent["BBCodeDescription"]
-    stream.write("Description: |\n")
-    stream.write(
-        textwrap.indent(
-            desc,
-            "  ",
+    with yaml_path.open("w", encoding='utf-8') as stream:
+        stream.write("---\n")
+        # Basic data
+        data = {
+            "Title": movie["Name"],
+            "Year": int(movie["Year"]),
+            "Directors": movie["Directors"],
+            "ReleaseName": torrent["ReleaseName"],
+            "RemasterTitle": torrent["RemasterTitle"],
+            "IMDb": f'https://imdb.com/title/tt{movie["ImdbId"]}',
+            "Cover": movie["Cover"],
+            "Permalink": mfile["comment"],
+            "InfoHash": torrent["InfoHash"],
+            "Codec": torrent["Codec"],
+            "Container": torrent["Container"],
+            "UploadTime": torrent["UploadTime"],
+            "Checked": torrent["Checked"],
+            "GoldenPopcorn": torrent["GoldenPopcorn"],
+            "Scene": torrent["Scene"],
+            "ReleaseGroup": torrent["ReleaseGroup"],
+            "Resolution": torrent["Resolution"],
+            "Size": int(torrent["Size"]),
+            "Source": torrent["Source"],
+            "Tags": movie["Tags"],
+        }
+        max_key_len = max(len(k) for k in data)
+        YAML.dump(data, stream)
+        # Nicely format multi-line descriptions
+        desc = torrent["BBCodeDescription"]
+        stream.write("Description: |\n")
+        stream.write(
+            textwrap.indent(
+                desc,
+                "  ",
+            )
         )
-    )
-    stream.write("\n")
-    # Scrubbed deletion log
-    soup = bs4(
-        ptpapi.session.session.base_get(
-            "torrents.php",
-            params={
-                "action": "history_log",
-                "groupid": movie.ID,
-                "search": "",
-                "only_deletions": 1,
-            },
-        ).content,
-        features="html.parser",
-    )
-    log_body = soup.find("tbody")
-    log_data = []
-    for row in log_body.find_all("tr"):
-        time = row.find_all("span")[0]["title"]
-        message = RE_DELETED_BY.sub("was deleted for", row.find_all("span")[1].text)
-        if message != row.find_all("span")[1].text:
-            try:
-                message.encode()
-            except UnicodeEncodeError:
-                message = unicodedata.normalize('NFC', message)
-            log_data.append({"Time": time, "Message": message.strip()})
-    YAML.dump({"Log": log_data}, stream)
-    stream.close()
+        stream.write("\n")
+        # Scrubbed deletion log
+        soup = bs4(
+            ptpapi.session.session.base_get(
+                "torrents.php",
+                params={
+                    "action": "history_log",
+                    "groupid": movie.ID,
+                    "search": "",
+                    "only_deletions": 1,
+                },
+            ).content,
+            features="html.parser",
+        )
+        log_body = soup.find("tbody")
+        log_data = []
+        for row in log_body.find_all("tr"):
+            time = row.find_all("span")[0]["title"]
+            message = RE_DELETED_BY.sub("was deleted for", row.find_all("span")[1].text)
+            if message != row.find_all("span")[1].text:
+                log_data.append({"Time": time, "Message": message.strip()})
+        YAML.dump({"Log": log_data}, stream)
     # NFO
     if "Nfo" in torrent.data and torrent["Nfo"]:
         logger.info("Writing NFO file %s", nfo_path)
