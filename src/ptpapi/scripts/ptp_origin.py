@@ -129,10 +129,14 @@ def write_origin(t, args):
                     logger.info(
                         "Downloading description image %s to %s", m.group(0), path
                     )
-                    resp = requests.get(m.group(0))
-                    if resp.headers["Content-Type"].startswith("image"):
-                        with path.open("wb") as fh:
-                            fh.write(resp.content)
+                    try:
+                        resp = requests.get(m.group(0))
+                    except requests.exceptions.RequestException as exc:
+                        logger.error("Could not fetch URL %s: %s", m.group(0), exc)
+                    else:
+                        if resp.headers["Content-Type"].startswith("image"):
+                            with path.open("wb") as fh:
+                                fh.write(resp.content)
         # Cover
         url_parts = urlparse(movie["Cover"])
         path = Path(output_dir, Path(url_parts.path).name)
