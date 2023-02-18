@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import logging
-
+import io
 import argparse
 import re
 import sys
@@ -19,7 +19,7 @@ YAML = ruamel.yaml.YAML()
 YAML.top_level_colon_align = True
 YAML.width = float("inf")
 YAML.allow_unicode = True
-YAML.encoding = 'utf-8'
+YAML.encoding = "utf-8"
 
 RE_COMMENT = re.compile(
     r"https://passthepopcorn.me/torrents.php\?id=(\d+)&torrentid=(\d+)"
@@ -52,64 +52,64 @@ def write_origin(t, args):
         return
     nfo_path = Path(output_dir, mfile_path.with_suffix(".nfo").name)
     logger.info("Writing origin YAML file %s", yaml_path)
-    with yaml_path.open("w", encoding='utf-8') as stream:
-        stream.write("---\n")
-        # Basic data
-        data = {
-            "Title": movie["Name"],
-            "Year": int(movie["Year"]),
-            "Directors": movie["Directors"],
-            "ReleaseName": torrent["ReleaseName"],
-            "RemasterTitle": torrent["RemasterTitle"],
-            "IMDb": f'https://imdb.com/title/tt{movie["ImdbId"]}',
-            "Cover": movie["Cover"],
-            "Permalink": mfile["comment"],
-            "InfoHash": torrent["InfoHash"],
-            "Codec": torrent["Codec"],
-            "Container": torrent["Container"],
-            "UploadTime": torrent["UploadTime"],
-            "Checked": torrent["Checked"],
-            "GoldenPopcorn": torrent["GoldenPopcorn"],
-            "Scene": torrent["Scene"],
-            "ReleaseGroup": torrent["ReleaseGroup"],
-            "Resolution": torrent["Resolution"],
-            "Size": int(torrent["Size"]),
-            "Source": torrent["Source"],
-            "Tags": movie["Tags"],
-        }
-        max_key_len = max(len(k) for k in data)
-        YAML.dump(data, stream)
-        # Nicely format multi-line descriptions
-        desc = torrent["BBCodeDescription"]
-        stream.write("Description: |\n")
-        stream.write(
-            textwrap.indent(
-                desc,
-                "  ",
-            )
-        )
-        stream.write("\n")
-        # Scrubbed deletion log
-        soup = bs4(
-            ptpapi.session.session.base_get(
-                "torrents.php",
-                params={
-                    "action": "history_log",
-                    "groupid": movie.ID,
-                    "search": "",
-                    "only_deletions": 1,
-                },
-            ).content,
-            features="html.parser",
-        )
-        log_body = soup.find("tbody")
-        log_data = []
-        for row in log_body.find_all("tr"):
-            time = row.find_all("span")[0]["title"]
-            message = RE_DELETED_BY.sub("was deleted for", row.find_all("span")[1].text)
-            if message != row.find_all("span")[1].text:
-                log_data.append({"Time": time, "Message": message.strip()})
-        YAML.dump({"Log": log_data}, stream)
+    output = "---\n"
+    # Basic data
+    data = {
+        "Title": movie["Name"],
+        "Year": int(movie["Year"]),
+        "Directors": movie["Directors"],
+        "ReleaseName": torrent["ReleaseName"],
+        "RemasterTitle": torrent["RemasterTitle"],
+        "IMDb": f'https://imdb.com/title/tt{movie["ImdbId"]}',
+        "Cover": movie["Cover"],
+        "Permalink": mfile["comment"],
+        "InfoHash": torrent["InfoHash"],
+        "Codec": torrent["Codec"],
+        "Container": torrent["Container"],
+        "UploadTime": torrent["UploadTime"],
+        "Checked": torrent["Checked"],
+        "GoldenPopcorn": torrent["GoldenPopcorn"],
+        "Scene": torrent["Scene"],
+        "ReleaseGroup": torrent["ReleaseGroup"],
+        "Resolution": torrent["Resolution"],
+        "Size": int(torrent["Size"]),
+        "Source": torrent["Source"],
+        "Tags": movie["Tags"],
+    }
+    max_key_len = max(len(k) for k in data)
+    buf = io.StringIO()
+    YAML.dump(data, buf)
+    output += buf.read()
+    # Nicely format multi-line descriptions
+    desc = torrent["BBCodeDescription"]
+    output += "Description: |\n"
+    output += textwrap.indent(desc, "")
+    output += "\n"
+    # Scrubbed deletion log
+    soup = bs4(
+        ptpapi.session.session.base_get(
+            "torrents.php",
+            params={
+                "action": "history_log",
+                "groupid": movie.ID,
+                "search": "",
+                "only_deletions": 1,
+            },
+        ).content,
+        features="html.parser",
+    )
+    log_body = soup.find("tbody")
+    log_data = []
+    for row in log_body.find_all("tr"):
+        time = row.find_all("span")[0]["title"]
+        message = RE_DELETED_BY.sub("was deleted for", row.find_all("span")[1].text)
+        if message != row.find_all("span")[1].text:
+            log_data.append({"Time": time, "Message": message.strip()})
+    buf = io.StringIO()
+    YAML.dump({"Log": log_data}, buf)
+    output += buf.read()
+    with yaml_path.open("w", encoding="utf-8") as stream:
+        stream.write(output)
     # NFO
     if "Nfo" in torrent.data and torrent["Nfo"]:
         logger.info("Writing NFO file %s", nfo_path)
@@ -122,7 +122,9 @@ def write_origin(t, args):
             # Skip IMDb title URLS
             if "imdb.com/title/" not in m.group(0):
                 if not path.exists() or args.overwrite:
-                    logger.info("Downloading description image %s to %s", m.group(0), path)
+                    logger.info(
+                        "Downloading description image %s to %s", m.group(0), path
+                    )
                     resp = requests.get(m.group(0))
                     if resp.headers["Content-Type"].startswith("image"):
                         with path.open("wb") as fh:
@@ -136,6 +138,11 @@ def write_origin(t, args):
             if resp.headers["Content-Type"].startswith("image"):
                 with path.open("wb") as fh:
                     fh.write(resp.content)
+            else:
+                logger.warning(
+                    "Cover did not appear to be an image (content-type %s), not saving",
+                    resp.headers["Content-Type"],
+                )
 
 
 def main():
@@ -173,7 +180,9 @@ def main():
         "-r", "--recursive", help="Recursively walk directory", action="store_true"
     )
     parser.add_argument(
-        "--overwrite", help="Re-download files even if they already exist", action="store_true"
+        "--overwrite",
+        help="Re-download files even if they already exist",
+        action="store_true",
     )
     parser.add_argument(
         "-d",
