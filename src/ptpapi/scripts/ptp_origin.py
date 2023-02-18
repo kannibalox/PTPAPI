@@ -47,6 +47,9 @@ def write_origin(t, args):
         output_dir = Path(mfile_path.stem)
     output_dir.mkdir(parents=True, exist_ok=True)
     yaml_path = Path(output_dir, mfile_path.with_suffix(".yaml").name)
+    if yaml_path.exists() and not args.overwrite:
+        logger.info("Skipping file %s, origin file '%s' exists", t, yaml_path)
+        return
     nfo_path = Path(output_dir, mfile_path.with_suffix(".nfo").name)
     logger.info("Writing origin YAML file %s", yaml_path)
     with yaml_path.open("w", encoding='utf-8') as stream:
@@ -117,12 +120,13 @@ def write_origin(t, args):
             url_parts = urlparse(m.group(0))
             path = Path(output_dir, Path(url_parts.path).name)
             # Skip IMDb title URLS
-            if "imdb.com/title/" not in m.group(0) and not path.exists():
-                logger.info("Downloading description image %s to %s", m.group(0), path)
-                resp = requests.get(m.group(0))
-                if resp.headers["Content-Type"].startswith("image"):
-                    with path.open("wb") as fh:
-                        fh.write(resp.content)
+            if "imdb.com/title/" not in m.group(0):
+                if not path.exists() or args.overwrite:
+                    logger.info("Downloading description image %s to %s", m.group(0), path)
+                    resp = requests.get(m.group(0))
+                    if resp.headers["Content-Type"].startswith("image"):
+                        with path.open("wb") as fh:
+                            fh.write(resp.content)
         # Cover
         url_parts = urlparse(movie["Cover"])
         path = Path(output_dir, Path(url_parts.path).name)
@@ -167,6 +171,9 @@ def main():
     )
     parser.add_argument(
         "-r", "--recursive", help="Recursively walk directory", action="store_true"
+    )
+    parser.add_argument(
+        "--overwrite", help="Re-download files even if they already exist", action="store_true"
     )
     parser.add_argument(
         "-d",
