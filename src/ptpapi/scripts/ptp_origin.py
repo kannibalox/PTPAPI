@@ -146,7 +146,13 @@ def write_origin(t, args):
         path = Path(output_dir, Path(url_parts.path).name)
         if not path.exists():
             logger.info("Downloading cover %s to %s", movie["Cover"], path)
-            resp = requests.get(movie["Cover"])
+            try:
+                resp = requests.get(movie["Cover"])
+            except (
+                requests.exceptions.RequestException,
+                urllib3.exceptions.HTTPError,
+            ) as exc:
+                logger.error("Could not fetch cover URL %s: %s", m.group(0), exc)
             if resp.headers["Content-Type"].startswith("image"):
                 with path.open("wb") as fh:
                     fh.write(resp.content)
