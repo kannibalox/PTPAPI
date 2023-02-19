@@ -125,18 +125,17 @@ def write_origin(t, args):
             url_parts = urlparse(m.group(0))
             path = Path(output_dir, Path(url_parts.path).name)
             # Skip IMDb title URLS
-            if "imdb.com/title/" not in m.group(0) and "passthepopcorn.me" not in m.group(0):
+            url = m.group(0)
+            if "imdb.com/title/" not in url and "passthepopcorn.me" not in url:
                 if not path.exists() or args.overwrite:
-                    logger.info(
-                        "Downloading description image %s to %s", m.group(0), path
-                    )
+                    logger.info("Downloading description image %s to %s", url, path)
                     try:
-                        resp = requests.get(m.group(0))
+                        resp = requests.get(url)
                     except (
                         requests.exceptions.RequestException,
                         urllib3.exceptions.HTTPError,
                     ) as exc:
-                        logger.error("Could not fetch URL %s: %s", m.group(0), exc)
+                        logger.error("Could not fetch URL %s: %s", url, exc)
                     else:
                         if resp.headers["Content-Type"].startswith("image"):
                             with path.open("wb") as fh:
