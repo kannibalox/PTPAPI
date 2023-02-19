@@ -137,7 +137,9 @@ def write_origin(t, args):
                     ) as exc:
                         logger.error("Could not fetch URL %s: %s", url, exc)
                     else:
-                        if resp.headers["Content-Type"].startswith("image"):
+                        if "Content-Type" in resp.headers and resp.headers[
+                            "Content-Type"
+                        ].startswith("image"):
                             with path.open("wb") as fh:
                                 fh.write(resp.content)
         # Cover
@@ -152,7 +154,9 @@ def write_origin(t, args):
                 urllib3.exceptions.HTTPError,
             ) as exc:
                 logger.error("Could not fetch cover URL %s: %s", m.group(0), exc)
-            if resp.headers["Content-Type"].startswith("image"):
+            if "Content-Type" in resp.headers and resp.headers[
+                "Content-Type"
+            ].startswith("image"):
                 with path.open("wb") as fh:
                     fh.write(resp.content)
             else:
