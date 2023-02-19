@@ -282,30 +282,40 @@ class API:
                 (cell.find_all("td")[1].get_text(), cell.find_all("td")[2].get_text())
             )
         return ret_array
-    
+
     def collage_all(self, coll_id, search_terms={}):
         """Gets all the movies in a collage in one request, only fills torrentid"""
         search_terms["id"] = coll_id
         req = session.base_get("collages.php", params=search_terms)
-        soup=bs4(req.content, 'html.parser')
+        soup = bs4(req.content, "html.parser")
+
         def not_missing_li(tag):
-            return tag.has_attr('name') and (tag.name=="li")
-        movielist=soup.find(id="collection_movielist").find_all(not_missing_li)
-        movies=[]
+            return tag.has_attr("name") and (tag.name == "li")
+
+        movielist = soup.find(id="collection_movielist").find_all(not_missing_li)
+        movies = []
         for page_movie in movielist:
-            movieid=page_movie.a['href'].split("id=")[1]
+            movieid = page_movie.a["href"].split("id=")[1]
             movies.append(ptpapi.Movie(ID=movieid))
         return movies
 
     def collage_add(self, coll_id, movieobj):
         """Adds a given movie to a collage, requires password login."""
-        search_terms=dict(id = coll_id)
+        search_terms = dict(id=coll_id)
         req = session.base_get("collages.php", params=search_terms)
-        soup=bs4(req.content, 'html.parser')
-        csrf_token=soup.find(id="add_film").find('input')['value']
+        soup = bs4(req.content, "html.parser")
+        csrf_token = soup.find(id="add_film").find("input")["value"]
         movieobj.load_inferred_data()
-        resp=session.base_post("collages.php",params=dict(action="add_torrent"), 
-                data=dict(AntiCsrfToken=csrf_token,action="add_torrent",collageid=coll_id,url=movieobj.data["Link"]))
+        resp = session.base_post(
+            "collages.php",
+            params=dict(action="add_torrent"),
+            data=dict(
+                AntiCsrfToken=csrf_token,
+                action="add_torrent",
+                collageid=coll_id,
+                url=movieobj.data["Link"],
+            ),
+        )
         return resp
 
     def collage(self, coll_id, search_terms=None):
