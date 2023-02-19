@@ -125,7 +125,7 @@ def write_origin(t, args):
             url_parts = urlparse(m.group(0))
             path = Path(output_dir, Path(url_parts.path).name)
             # Skip IMDb title URLS
-            if "imdb.com/title/" not in m.group(0):
+            if "imdb.com/title/" not in m.group(0) and "passthepopcorn.me" not in m.group(0):
                 if not path.exists() or args.overwrite:
                     logger.info(
                         "Downloading description image %s to %s", m.group(0), path
