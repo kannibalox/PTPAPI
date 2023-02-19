@@ -136,12 +136,12 @@ def write_origin(t, args):
                         urllib3.exceptions.HTTPError,
                     ) as exc:
                         logger.error("Could not fetch URL %s: %s", url, exc)
-                    else:
-                        if "Content-Type" in resp.headers and resp.headers[
-                            "Content-Type"
-                        ].startswith("image"):
-                            with path.open("wb") as fh:
-                                fh.write(resp.content)
+                        continue
+                    if "Content-Type" in resp.headers and resp.headers[
+                        "Content-Type"
+                    ].startswith("image"):
+                        with path.open("wb") as fh:
+                            fh.write(resp.content)
         # Cover
         url_parts = urlparse(movie["Cover"])
         path = Path(output_dir, Path(url_parts.path).name)
@@ -154,6 +154,7 @@ def write_origin(t, args):
                 urllib3.exceptions.HTTPError,
             ) as exc:
                 logger.error("Could not fetch cover URL %s: %s", m.group(0), exc)
+                return
             if "Content-Type" in resp.headers and resp.headers[
                 "Content-Type"
             ].startswith("image"):
