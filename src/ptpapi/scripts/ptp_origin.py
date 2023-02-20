@@ -130,7 +130,7 @@ def write_origin(t, args):
                 if not path.exists() or args.overwrite:
                     logger.info("Downloading description image %s to %s", url, path)
                     try:
-                        resp = requests.get(url)
+                        resp = requests.get(url, timeout=10)
                     except (
                         requests.exceptions.RequestException,
                         urllib3.exceptions.HTTPError,
@@ -148,7 +148,7 @@ def write_origin(t, args):
         if not path.exists():
             logger.info("Downloading cover %s to %s", movie["Cover"], path)
             try:
-                resp = requests.get(movie["Cover"])
+                resp = requests.get(movie["Cover"], timeout=10)
             except (
                 requests.exceptions.RequestException,
                 urllib3.exceptions.HTTPError,
