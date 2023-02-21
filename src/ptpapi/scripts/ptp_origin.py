@@ -155,7 +155,9 @@ def write_origin(t, args):
             ) as exc:
                 logger.error("Could not fetch cover URL %s: %s", m.group(0), exc)
                 return
-            if "Content-Type" in resp.headers and resp.headers[
+            if "Content-Type" not in resp.headers:
+                logger.warning("Cover did not return an content-type, cannot save")
+a            if resp.headers[
                 "Content-Type"
             ].startswith("image"):
                 with path.open("wb") as fh:
