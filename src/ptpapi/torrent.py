@@ -95,9 +95,11 @@ class Torrent:
         return self.data.keys()
 
     def load_torrent_description_data(self):
-        self.data["BBCodeDescription"] = html.unescape(session.base_get(
-            "torrents.php", params={"id": self.ID, "action": "get_description"}
-        ).text)
+        self.data["BBCodeDescription"] = html.unescape(
+            session.base_get(
+                "torrents.php", params={"id": self.ID, "action": "get_description"}
+            ).text
+        )
 
     def load_movie_html_data(self):
         """Get data from the parent movie's JSON data"""
