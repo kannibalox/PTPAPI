@@ -153,7 +153,7 @@ def write_origin(t, args):
                 requests.exceptions.RequestException,
                 urllib3.exceptions.HTTPError,
             ) as exc:
-                logger.error("Could not fetch cover URL %s: %s", m.group(0), exc)
+                logger.error("Could not fetch cover URL %s: %s", movie["Cover"], exc)
                 return
             if "Content-Type" not in resp.headers:
                 logger.warning("Cover did not return an content-type, cannot save")
