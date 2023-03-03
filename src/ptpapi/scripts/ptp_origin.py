@@ -157,7 +157,7 @@ def write_origin(t, args):
                 return
             if "Content-Type" not in resp.headers:
                 logger.warning("Cover did not return an content-type, cannot save")
-a            if resp.headers[
+            if resp.headers[
                 "Content-Type"
             ].startswith("image"):
                 with path.open("wb") as fh:
