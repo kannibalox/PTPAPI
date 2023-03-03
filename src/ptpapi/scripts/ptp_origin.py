@@ -81,7 +81,6 @@ def write_origin(t, args):
         "Source": torrent["Source"],
         "Tags": movie["Tags"],
     }
-    max_key_len = max(len(k) for k in data)
     buf = io.StringIO()
     YAML.dump(data, buf)
     output += buf.read()
@@ -221,8 +220,6 @@ def main():
     logging.basicConfig(level=args.loglevel)
     logger = logging.getLogger(__name__)
     ptpapi.login()
-    stream = sys.stdout
-    file_iter = args.torrent
     for p in args.torrent:
         p_path = Path(p)
         if p_path.is_dir():
