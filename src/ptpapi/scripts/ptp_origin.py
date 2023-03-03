@@ -5,14 +5,13 @@ import logging
 import re
 import sys
 import textwrap
-import unicodedata
 
 from pathlib import Path
 from urllib.parse import urlparse
 
-import urllib3
 import requests
 import ruamel.yaml
+import urllib3
 
 from bs4 import BeautifulSoup as bs4
 from pyrosimple.util import metafile
@@ -117,7 +116,7 @@ def write_origin(t, args):
     # NFO
     if "Nfo" in torrent.data and torrent["Nfo"]:
         logger.info("Writing NFO file %s", nfo_path)
-        nfo_path.write_text(torrent["Nfo"])
+        nfo_path.write_text(torrent["Nfo"], encoding="utf-8")
     # Download anything that looks like a URL
     if not args.no_images:
         for m in re.finditer(RE_URL, desc):
@@ -156,9 +155,7 @@ def write_origin(t, args):
                 return
             if "Content-Type" not in resp.headers:
                 logger.warning("Cover did not return an content-type, cannot save")
-            if resp.headers[
-                "Content-Type"
-            ].startswith("image"):
+            if resp.headers["Content-Type"].startswith("image"):
                 with path.open("wb") as fh:
                     fh.write(resp.content)
             else:

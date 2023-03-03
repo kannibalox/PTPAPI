@@ -296,7 +296,7 @@ class API:
         movies = []
         for page_movie in movielist:
             movieid = page_movie.a["href"].split("id=")[1]
-            movies.append(ptpapi.Movie(ID=movieid))
+            movies.append(Movie(ID=movieid))
         return movies
 
     def collage_add(self, coll_id, movieobj):

@@ -1,8 +1,8 @@
 """Represent a single torrent object"""
+import html
 import logging
 import os
 import re
-import html
 
 from urllib.parse import parse_qs, urlparse
 

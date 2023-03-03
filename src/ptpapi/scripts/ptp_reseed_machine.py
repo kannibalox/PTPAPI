@@ -94,15 +94,10 @@ def main():
                 logger.warning("ImdbId not found from '{0}', skipping".format(i))
                 continue
             if ptp_movie["ImdbId"]:
-                find_match(
-                    ptp_movie,
-                    [],
-                    max_ptp_seeds=args.min_ptp_seeds,
-                    remote_seeds=args.required_remote_seeds,
-                )
+                find_match(ptp_movie)
 
 
-def find_match(ptp_movie, sites, max_ptp_seeds=0, remote_seeds=0):
+def find_match(ptp_movie):
     logger = logging.getLogger(__name__)
     print("tt" + ptp_movie["ImdbId"])
     resp = requests.get(
