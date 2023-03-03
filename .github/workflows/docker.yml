@@ -1,10 +1,7 @@
 name: Docker push
 on:
   push:
-    paths-ignore:
-      - 'docs/**'
-    branches:
-      - 'main'
+    branches: [main,wf-test]
 jobs:
   docker:
     runs-on: ubuntu-latest
