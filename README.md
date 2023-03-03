@@ -11,7 +11,7 @@ to collect as much information in as few network requests as possible.
 * Python 3.7+
 * pip
 
-## Installation
+# Installation
 
 Use of a
 [virtualenv](https://virtualenv.readthedocs.org/en/latest/userguide.html#usage)
