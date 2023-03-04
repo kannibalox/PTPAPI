@@ -97,14 +97,50 @@ def main():
                 find_match(ptp_movie)
 
 
+def match_results(ptp_result, other_result):
+    logger = logging.getLogger(__name__)
+    download = {}
+    percent_diff = 1
+    if other_result["protocol"] == "torrent":
+        size_diff = round(
+            abs(((other_result["size"] / ptp_result["size"]) - 1) * 100), 2
+        )
+        if (
+            other_result["indexer"] != "PassThePopcorn"
+            and other_result["seeders"] > 0
+            and 0 <= size_diff < percent_diff
+        ):
+            logger.info(
+                "match: %s (%s) and ptp (%s), with %d%% size diff",
+                other_result["indexer"],
+                other_result["size"],
+                ptp_result["size"],
+                size_diff,
+            )
+            download = {
+                "guid": other_result["guid"],
+                "indexerId": other_result["indexerId"],
+                "sortTitle": other_result["sortTitle"],
+            }
+    elif other_result["protocol"] == "usenet":
+        # Usenet sizes vary wildly based on PAR2 levels,
+        # etc, so size comparisons aren't as useful
+        size_diff = 0
+        if other_result["title"] == ptp_result["title"]:
+            download = {
+                "guid": other_result["guid"],
+                "indexerId": other_result["indexerId"],
+                "sortTitle": other_result["sortTitle"],
+            }
+    return download
+
+
 def find_match(ptp_movie):
     logger = logging.getLogger(__name__)
-    print("tt" + ptp_movie["ImdbId"])
     resp = requests.get(
         config.get("Prowlarr", "url") + "api/v1/search",
         params={
             "query": "{ImdbId:" + ptp_movie["ImdbId"] + "}",
-            "indexerIds": "-2",
             "categories": "2000",
             "type": "movie",
         },
@@ -116,34 +152,47 @@ def find_match(ptp_movie):
     for result in resp:
         if result["indexer"] == "PassThePopcorn" and result["seeders"] == 0:
             logger.debug("Working {}".format(result["title"]))
+            download = {}
             for other_result in resp:
-                size_diff = abs(((other_result["size"] / result["size"]) - 1) * 100)
-                if (
-                    other_result["indexer"] != "PassThePopcorn"
-                    and other_result["seeders"] > 0
-                    and 0 < size_diff < percent_diff
-                ):
-                    print(
-                        "match: other {} ptp {} == {}% size diff".format(
-                            other_result["size"], result["size"], size_diff
-                        )
+                download = match_results(result, other_result)
+                if download:
+                    break
+            # If no match found, search again by release title
+            if not download:
+                release_title_resp = requests.get(
+                    config.get("Prowlarr", "url") + "api/v1/search",
+                    params={
+                        "query": result["title"],
+                        "type": "search",
+                        "limit": 100,
+                    },
+                    headers={"X-Api-Key": config.get("Prowlarr", "api_key")},
+                ).json()
+                for release_result in release_title_resp:
+                    download = match_results(result, release_result)
+                    if download:
+                        break
+
+            if download:
+                r = requests.post(
+                    config.get("Prowlarr", "url") + "api/v1/search/bulk",
+                    json=[
+                        {
+                            "guid": other_result["guid"],
+                            "indexerId": other_result["indexerId"],
+                            "sortTitle": other_result["sortTitle"],
+                        }
+                    ],
+                    headers={"X-Api-Key": config.get("Prowlarr", "api_key")},
+                )
+                r.raise_for_status()
+            elif other_result["indexer"] != "PassThePopcorn":
+                logger.debug(
+                    "{}: {} seeders".format(
+                        other_result["indexer"],
+                        other_result["seeders"],
                     )
-                    r = requests.get(other_result["downloadUrl"])
-                    r.raise_for_status()
-                    name = (
-                        re.search(r'filename="(.*)"', r.headers["Content-Disposition"])
-                        .group(1)
-                        .replace("/", "_")
-                    )
-                    dest = os.path.join(config.get("Main", "downloadDirectory"), name)
-                    with open(dest, "wb") as fh:
-                        fh.write(r.content)
-                elif other_result["indexer"] != "PassThePopcorn":
-                    logger.debug(
-                        "{}: {} seeders, {} size diff".format(
-                            other_result["indexer"], other_result["seeders"], size_diff
-                        )
-                    )
+                )
 
 
 if __name__ == "__main__":
