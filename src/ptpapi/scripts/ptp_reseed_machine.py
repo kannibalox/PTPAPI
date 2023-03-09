@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import argparse
 import logging
-import os
-import re
 
 from urllib.parse import parse_qs, urlparse
 
@@ -11,10 +9,6 @@ import requests
 import ptpapi
 
 from ptpapi.config import config
-
-
-class DownloadFoundException(Exception):
-    pass
 
 
 def main():
