@@ -132,7 +132,7 @@ def match_results(ptp_result: dict, other_result: dict) -> dict:
         else:
             logger.debug(
                 "usetnet mismatch: %s vs %s (%s)",
-                other_result,
+                other_result["title"],
                 ptp_result["title"],
                 ptp_result["sortTitle"],
             )
