@@ -84,6 +84,7 @@ def main():
         if "://passthepopcorn.me" in i:
             parsed_url = parse_qs(urlparse(i).query)
             ptp_movie = ptpapi.Movie(ID=parsed_url["id"][0])
+            torrent_id = int(parsed_url.get("torrentid", ["0"])[0])
 
         if ptp_movie is None:
             logger.error("Could not figure out ID '{0}'".format(i))
@@ -94,12 +95,11 @@ def main():
                 logger.warning("ImdbId not found from '{0}', skipping".format(i))
                 continue
             if ptp_movie["ImdbId"]:
-                find_match(ptp_movie)
+                find_match(ptp_movie, torrent_id)
 
 
-def match_results(ptp_result, other_result):
+def match_results(ptp_result: dict, other_result: dict) -> dict:
     logger = logging.getLogger(__name__)
-    download = {}
     percent_diff = 1
     if other_result["protocol"] == "torrent":
         size_diff = round(
@@ -111,31 +111,41 @@ def match_results(ptp_result, other_result):
             and 0 <= size_diff < percent_diff
         ):
             logger.info(
-                "match: %s (%s) and ptp (%s), with %d%% size diff",
+                "match: %s (%s) and ptp (%s), with %.2f%% size diff",
                 other_result["indexer"],
                 other_result["size"],
                 ptp_result["size"],
                 size_diff,
             )
-            download = {
-                "guid": other_result["guid"],
-                "indexerId": other_result["indexerId"],
-                "sortTitle": other_result["sortTitle"],
-            }
+            return other_result
+        elif other_result["seeders"] > 0:
+            logger.debug(
+                "size mismatch: %s (%s) and ptp (%s), with %.2f%% > %d",
+                other_result["indexer"],
+                other_result["size"],
+                ptp_result["size"],
+                size_diff,
+                percent_diff,
+            )
     elif other_result["protocol"] == "usenet":
         # Usenet sizes vary wildly based on PAR2 levels,
         # etc, so size comparisons aren't as useful
         size_diff = 0
-        if other_result["title"] == ptp_result["title"]:
-            download = {
-                "guid": other_result["guid"],
-                "indexerId": other_result["indexerId"],
-                "sortTitle": other_result["sortTitle"],
-            }
-    return download
+        if other_result["sortTitle"] == ptp_result["sortTitle"] or other_result[
+            "sortTitle"
+        ] == ptp_result["sortTitle"].replace("blu ray", "bluray"):
+            return other_result
+        else:
+            logger.debug(
+                "usetnet mismatch: %s vs %s (%s)",
+                other_result,
+                ptp_result["title"],
+                ptp_result["sortTitle"],
+            )
+    return {}
 
 
-def find_match(ptp_movie):
+def find_match(ptp_movie, torrent_id=0):
     logger = logging.getLogger(__name__)
     resp = requests.get(
         config.get("Prowlarr", "url") + "api/v1/search",
@@ -146,11 +156,13 @@ def find_match(ptp_movie):
         },
         headers={"X-Api-Key": config.get("Prowlarr", "api_key")},
     ).json()
-    percent_diff = 1
 
-    # print(resp)
     for result in resp:
         if result["indexer"] == "PassThePopcorn" and result["seeders"] == 0:
+            if torrent_id and f"torrentid={torrent_id}" not in result.get(
+                "infoUrl", ""
+            ):
+                continue
             logger.debug("Working {}".format(result["title"]))
             download = {}
             for other_result in resp:
@@ -174,25 +186,21 @@ def find_match(ptp_movie):
                         break
 
             if download:
+                logger.info(
+                    "Downloading %s (%s) from %s",
+                    download["title"],
+                    download["guid"],
+                    download["indexer"],
+                )
                 r = requests.post(
-                    config.get("Prowlarr", "url") + "api/v1/search/bulk",
-                    json=[
-                        {
-                            "guid": other_result["guid"],
-                            "indexerId": other_result["indexerId"],
-                            "sortTitle": other_result["sortTitle"],
-                        }
-                    ],
+                    config.get("Prowlarr", "url") + "api/v1/search",
+                    json={
+                        "guid": download["guid"],
+                        "indexerId": download["indexerId"],
+                    },
                     headers={"X-Api-Key": config.get("Prowlarr", "api_key")},
                 )
                 r.raise_for_status()
-            elif other_result["indexer"] != "PassThePopcorn":
-                logger.debug(
-                    "{}: {} seeders".format(
-                        other_result["indexer"],
-                        other_result["seeders"],
-                    )
-                )
 
 
 if __name__ == "__main__":
