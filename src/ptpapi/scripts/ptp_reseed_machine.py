@@ -125,11 +125,11 @@ def match_results(ptp_result: dict, other_result: dict) -> dict:
         size_diff = 0
         # Check for a couple trivial changes
         # TODO: Replace with "edit distance > 1" check from difflib?
-        sortTitles = [
-            ptp_result["sortTitle"],
-            ptp_result["sortTitle"].replace("blu ray", "bluray"),
+        titles = [
+            ptp_result["title"],
+            ptp_result["title"].replace("blu ray", "bluray"),
         ]
-        if other_result["sortTitle"] in sortTitles:
+        if other_result["title"] in titles:
             logger.info(
                 "usenet match: %s (%s)", other_result["indexer"], other_result["title"]
             )
@@ -139,6 +139,26 @@ def match_results(ptp_result: dict, other_result: dict) -> dict:
                 "usenet title mismatch: %s",
                 other_result["title"],
             )
+        # Also check sortTitle if present
+        if "sortTitle" in ptp_result and "sortTitle" in other_result:
+            sortTitles = [
+                ptp_result["sortTitle"],
+                ptp_result["sortTitle"].replace("blu ray", "bluray"),
+            ]
+            if other_result["sortTitle"] in sortTitles:
+                logger.info(
+                    "usenet sort title match: %s (%s)", other_result["indexer"], other_result["title"]
+                )
+                return other_result
+            else:
+                logger.debug(
+                    "usenet sort title mismatch: %s (%s)",
+                    other_result["title"], other_result["sortTitle"]
+                )
+            sortTitles = [
+                ptp_result["sortTitle"],
+                ptp_result["sortTitle"].replace("blu ray", "bluray"),
+            ]
     return {}
 
 
