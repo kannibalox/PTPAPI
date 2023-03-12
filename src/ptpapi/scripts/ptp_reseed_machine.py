@@ -196,7 +196,7 @@ def find_match(ptp_movie, torrent_id=0):
                 logger.info(
                     "Downloading %s (%s) from %s",
                     download["title"],
-                    download["guid"],
+                    download["infoUrl"],
                     download["indexer"],
                 )
                 r = session.post(
