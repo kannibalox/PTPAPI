@@ -103,6 +103,7 @@ def match_results(ptp_result: dict, other_result: dict) -> dict:
             other_result["indexer"] != "PassThePopcorn"
             and other_result["seeders"] > 0
             and 0 <= size_diff < percent_diff
+            and ptp_result["imdbId"] == other_result["imdbId"]
         ):
             logger.info(
                 "torrent match: %s (%s), with %.2f%% size diff",
@@ -140,11 +141,13 @@ def match_results(ptp_result: dict, other_result: dict) -> dict:
             )
     return {}
 
+
 def bytes_to_human(b: int):
-    for count in ['B','KiB','MiB','GiB']:
+    for count in ["B", "KiB", "MiB", "GiB"]:
         if b < 1024.0:
-           return "%3.1f %s" % (b, count)
+            return "%3.1f %s" % (b, count)
         b /= 1024.0
+
 
 def find_match(ptp_movie, torrent_id=0):
     logger = logging.getLogger(__name__)
