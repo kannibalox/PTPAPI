@@ -127,9 +127,10 @@ def snarf_cover_view_data(text, key=rb"coverViewJsonData\[\s*\d+\s*\]"):
                         torrent["Source"],
                         torrent["Resolution"],
                     ) = [item.strip() for item in soup.a.text.split("/")[0:4]]
-                    torrent["GoldenPopcorn"] = (
-                        soup.contents[0].string.strip(" ") == "\u10047"
-                    )  # 10047 = Unicode GP symbol pylint: disable=line-too-long
+                    if soup.contents[0].string is not None:
+                        torrent["GoldenPopcorn"] = (
+                            soup.contents[0].string.strip(" ") == "\u10047"
+                        )  # 10047 = Unicode GP symbol pylint: disable=line-too-long
                     if "title" not in soup.a:
                         continue
                     torrent["ReleaseName"] = soup.a["title"].split("\n")[-1]

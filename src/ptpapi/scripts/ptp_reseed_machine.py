@@ -157,7 +157,7 @@ def find_match(ptp_movie, torrent_id=0):
                 "infoUrl", ""
             ):
                 continue
-            logger.debug("Working {}".format(result["title"]))
+            logger.debug("Working dead torrent {}".format(result["title"]))
             download = {}
             for other_result in resp:
                 download = match_results(result, other_result)
