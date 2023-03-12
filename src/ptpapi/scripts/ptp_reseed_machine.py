@@ -105,50 +105,58 @@ def match_results(ptp_result: dict, other_result: dict) -> dict:
             and 0 <= size_diff < percent_diff
         ):
             logger.info(
-                "match: %s (%s) and ptp (%s), with %.2f%% size diff",
+                "torrent match: %s (%s), with %.2f%% size diff",
                 other_result["indexer"],
                 other_result["size"],
-                ptp_result["size"],
                 size_diff,
             )
             return other_result
         elif other_result["seeders"] > 0:
             logger.debug(
-                "size mismatch: %s (%s) and ptp (%s), with %.2f%% > %d",
+                "torrent size mismatch: %s (%s), with %.2f%% size diff",
                 other_result["indexer"],
                 other_result["size"],
-                ptp_result["size"],
                 size_diff,
-                percent_diff,
             )
     elif other_result["protocol"] == "usenet":
         # Usenet sizes vary wildly based on PAR2 levels,
         # etc, so size comparisons aren't as useful
         size_diff = 0
-        if other_result["sortTitle"] == ptp_result["sortTitle"] or other_result[
-            "sortTitle"
-        ] == ptp_result["sortTitle"].replace("blu ray", "bluray"):
+        # Check for a couple trivial changes
+        # TODO: Replace with "edit distance > 1" check from difflib?
+        sortTitles = [
+            ptp_result["sortTitle"],
+            ptp_result["sortTitle"].replace("blu ray", "bluray"),
+        ]
+        if other_result["sortTitle"] in sortTitles:
+            logger.info(
+                "usenet match: %s (%s)", other_result["indexer"], other_result["title"]
+            )
             return other_result
         else:
             logger.debug(
-                "usetnet mismatch: %s vs %s (%s)",
+                "usenet title mismatch: %s",
                 other_result["title"],
-                ptp_result["title"],
-                ptp_result["sortTitle"],
             )
     return {}
 
+def bytes_to_human(b: int):
+    for count in ['B','KiB','MiB','GiB']:
+        if b < 1024.0:
+           return "%3.1f %s" % (b, count)
+        b /= 1024.0
 
 def find_match(ptp_movie, torrent_id=0):
     logger = logging.getLogger(__name__)
-    resp = requests.get(
+    session = requests.Session()
+    session.headers.update({"X-Api-Key": config.get("Prowlarr", "api_key")})
+    resp = session.get(
         config.get("Prowlarr", "url") + "api/v1/search",
         params={
             "query": "{ImdbId:" + ptp_movie["ImdbId"] + "}",
             "categories": "2000",
             "type": "movie",
         },
-        headers={"X-Api-Key": config.get("Prowlarr", "api_key")},
     ).json()
 
     for result in resp:
@@ -157,7 +165,13 @@ def find_match(ptp_movie, torrent_id=0):
                 "infoUrl", ""
             ):
                 continue
-            logger.debug("Working dead torrent {}".format(result["title"]))
+            logger.debug(
+                "Working dead torrent %s (size %s (%s), sortTitle '%s')",
+                result["title"],
+                result["size"],
+                bytes_to_human(int(result["size"])),
+                result["sortTitle"],
+            )
             download = {}
             for other_result in resp:
                 download = match_results(result, other_result)
@@ -165,14 +179,13 @@ def find_match(ptp_movie, torrent_id=0):
                     break
             # If no match found, search again by release title
             if not download:
-                release_title_resp = requests.get(
+                release_title_resp = session.get(
                     config.get("Prowlarr", "url") + "api/v1/search",
                     params={
                         "query": result["title"],
                         "type": "search",
                         "limit": 100,
                     },
-                    headers={"X-Api-Key": config.get("Prowlarr", "api_key")},
                 ).json()
                 for release_result in release_title_resp:
                     download = match_results(result, release_result)
@@ -186,13 +199,12 @@ def find_match(ptp_movie, torrent_id=0):
                     download["guid"],
                     download["indexer"],
                 )
-                r = requests.post(
+                r = session.post(
                     config.get("Prowlarr", "url") + "api/v1/search",
                     json={
                         "guid": download["guid"],
                         "indexerId": download["indexerId"],
                     },
-                    headers={"X-Api-Key": config.get("Prowlarr", "api_key")},
                 )
                 r.raise_for_status()
 
