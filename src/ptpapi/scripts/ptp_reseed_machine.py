@@ -47,14 +47,14 @@ def main():
     parser.add_argument(
         "-r",
         "--required-remote-seeds",
-        help="The number of seeds required on the remote site",
+        help="The number of seeds required on remote torrent",
         default=1,
         type=int,
     )
     parser.add_argument(
         "-m",
         "--min-ptp-seeds",
-        help="Set the minimum number of seeds before a reseed will happen",
+        help="Set the minimum number of PTP seeds before a reseed attempt will happen",
         default=0,
         type=int,
     )
@@ -93,46 +93,81 @@ def main():
                 find_match(ptp_movie, torrent_id)
 
 
-def match_results(ptp_result: dict, other_result: dict) -> dict:
+# Stolen from https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
+def levenshtein(s1: str, s2: str):
+    """Measure the edit distance between two strings"""
+    if len(s1) < len(s2):
+        return levenshtein(s2, s1)
+
+    if len(s2) == 0:
+        return len(s1)
+
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = (
+                previous_row[j + 1] + 1
+            )  # j+1 instead of j since previous_row and current_row are one character longer
+            deletions = current_row[j] + 1  # than s2
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+
+    return previous_row[-1]
+
+
+def match_results(ptp_result: dict, other_result: dict, title_distance=1) -> dict:
     logger = logging.getLogger(__name__)
     percent_diff = 1
+    if (
+        "imdbid" in other_result
+        and other_result["imdbid"]
+        and ptp_result["imdbId"] != other_result["imdbId"]
+    ):
+        logger.debug(
+            "%s IMDb ID mismatch: %s %s %s",
+            other_result["protocol"],
+            other_result["imdbId"],
+            other_result["indexer"],
+            other_result["title"],
+        )
     if other_result["protocol"] == "torrent":
         size_diff = round(
             abs(((other_result["size"] / ptp_result["size"]) - 1) * 100), 2
         )
-        if (
-            other_result["indexer"] != "PassThePopcorn"
-            and other_result["seeders"] > 0
-            and 0 <= size_diff < percent_diff
-            and ptp_result["imdbId"] == other_result["imdbId"]
-        ):
-            logger.info(
-                "torrent size match: %s (%s (%s)), with %.2f%% size diff",
+        if other_result["indexer"] == "PassThePopcorn":
+            return {}
+        if other_result["seeders"] == 0:
+            logger.debug(
+                "torrent has no seeders: %s %s",
                 other_result["indexer"],
+                other_result["title"],
+            )
+            return {}
+        if 0 <= size_diff < percent_diff:
+            logger.info(
+                "torrent size match: %s %s (%s (%s)), with %.2f%% size diff",
+                other_result["indexer"],
+                other_result["title"],
                 other_result["size"],
                 bytes_to_human(other_result["size"]),
                 size_diff,
             )
             return other_result
-        elif other_result["seeders"] > 0:
+        else:
             logger.debug(
-                "torrent size mismatch: %s (%s (%s)), with %.2f%% size diff",
+                "torrent size mismatch: %s %s (%s (%s)), with %.2f%% size diff",
                 other_result["indexer"],
+                other_result["title"],
                 other_result["size"],
                 bytes_to_human(other_result["size"]),
                 size_diff,
             )
     elif other_result["protocol"] == "usenet":
         # Usenet sizes vary wildly based on PAR2 levels,
-        # etc, so size comparisons aren't as useful
-        size_diff = 0
-        # Check for a couple trivial changes
-        # TODO: Replace with "edit distance > 1" check from difflib?
-        titles = [
-            ptp_result["title"],
-            ptp_result["title"].replace("blu ray", "bluray"),
-        ]
-        if other_result["title"] in titles:
+        # etc, so size comparisons aren't very useful
+        if levenshtein(other_result["title"], ptp_result["title"]) <= title_distance:
             logger.info(
                 "usenet title match: %s (%s)",
                 other_result["indexer"],
@@ -146,11 +181,10 @@ def match_results(ptp_result: dict, other_result: dict) -> dict:
             )
         # Also check sortTitle if present
         if "sortTitle" in ptp_result and "sortTitle" in other_result:
-            sortTitles = [
-                ptp_result["sortTitle"],
-                ptp_result["sortTitle"].replace("blu ray", "bluray"),
-            ]
-            if other_result["sortTitle"] in sortTitles:
+            if (
+                levenshtein(other_result["sortTitle"], ptp_result["sortTitle"])
+                <= title_distance
+            ):
                 logger.info(
                     "usenet sort title match: %s (%s)",
                     other_result["title"],
