@@ -118,7 +118,7 @@ def levenshtein(s1: str, s2: str):
 
 
 def match_results(ptp_result: dict, other_result: dict, title_distance=1) -> dict:
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger("reseed-machine.match")
     percent_diff = 1
     if (
         "imdbid" in other_result
@@ -213,7 +213,7 @@ def bytes_to_human(b: int):
 
 
 def find_match(ptp_movie, torrent_id=0):
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger("reseed-machine.find")
     session = requests.Session()
     session.headers.update({"X-Api-Key": config.get("Prowlarr", "api_key")})
     resp = session.get(
