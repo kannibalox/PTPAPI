@@ -1,8 +1,10 @@
 #!/usr/bin/env python
+"""The reseed machine runs a scan against prowlarr to find potential
+reseeds."""
 import argparse
 import logging
 
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse, urljoin
 
 import requests
 
@@ -22,15 +24,15 @@ def main():
         action="store_const",
         dest="loglevel",
         const=logging.DEBUG,
-        default=logging.WARNING,
+        default=logging.INFO,
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
-        help="Be verbose",
+        "-q",
+        "--quiet",
+        help="Only show error messages",
         action="store_const",
         dest="loglevel",
-        const=logging.INFO,
+        const=logging.ERROR,
     )
     parser.add_argument(
         "-l",
@@ -61,7 +63,6 @@ def main():
     logging.basicConfig(level=args.loglevel)
     logger = logging.getLogger("reseed-machine")
 
-    logger.info("Logging into PTP")
     ptp = ptpapi.login()
 
     if args.id:
@@ -106,17 +107,19 @@ def match_results(ptp_result: dict, other_result: dict) -> dict:
             and ptp_result["imdbId"] == other_result["imdbId"]
         ):
             logger.info(
-                "torrent match: %s (%s), with %.2f%% size diff",
+                "torrent size match: %s (%s (%s)), with %.2f%% size diff",
                 other_result["indexer"],
                 other_result["size"],
+                bytes_to_human(other_result["size"]),
                 size_diff,
             )
             return other_result
         elif other_result["seeders"] > 0:
             logger.debug(
-                "torrent size mismatch: %s (%s), with %.2f%% size diff",
+                "torrent size mismatch: %s (%s (%s)), with %.2f%% size diff",
                 other_result["indexer"],
                 other_result["size"],
+                bytes_to_human(other_result["size"]),
                 size_diff,
             )
     elif other_result["protocol"] == "usenet":
@@ -131,7 +134,9 @@ def match_results(ptp_result: dict, other_result: dict) -> dict:
         ]
         if other_result["title"] in titles:
             logger.info(
-                "usenet match: %s (%s)", other_result["indexer"], other_result["title"]
+                "usenet title match: %s (%s)",
+                other_result["indexer"],
+                other_result["title"],
             )
             return other_result
         else:
@@ -147,13 +152,16 @@ def match_results(ptp_result: dict, other_result: dict) -> dict:
             ]
             if other_result["sortTitle"] in sortTitles:
                 logger.info(
-                    "usenet sort title match: %s (%s)", other_result["indexer"], other_result["title"]
+                    "usenet sort title match: %s (%s)",
+                    other_result["title"],
+                    other_result["sortTitle"],
                 )
                 return other_result
             else:
                 logger.debug(
                     "usenet sort title mismatch: %s (%s)",
-                    other_result["title"], other_result["sortTitle"]
+                    other_result["title"],
+                    other_result["sortTitle"],
                 )
             sortTitles = [
                 ptp_result["sortTitle"],
@@ -167,6 +175,7 @@ def bytes_to_human(b: int):
         if b < 1024.0:
             return "%3.1f %s" % (b, count)
         b /= 1024.0
+    return "%3.1f TiB" % b
 
 
 def find_match(ptp_movie, torrent_id=0):
@@ -174,7 +183,7 @@ def find_match(ptp_movie, torrent_id=0):
     session = requests.Session()
     session.headers.update({"X-Api-Key": config.get("Prowlarr", "api_key")})
     resp = session.get(
-        config.get("Prowlarr", "url") + "api/v1/search",
+        urljoin(config.get("Prowlarr", "url"), "api/v1/search"),
         params={
             "query": "{ImdbId:" + ptp_movie["ImdbId"] + "}",
             "categories": "2000",
@@ -188,8 +197,8 @@ def find_match(ptp_movie, torrent_id=0):
                 "infoUrl", ""
             ):
                 continue
-            logger.debug(
-                "Working dead torrent %s (size %s (%s), sortTitle '%s')",
+            logger.info(
+                "Working torrent %s (size %s (%s), sortTitle '%s')",
                 result["title"],
                 result["size"],
                 bytes_to_human(int(result["size"])),
@@ -203,7 +212,7 @@ def find_match(ptp_movie, torrent_id=0):
             # If no match found, search again by release title
             if not download:
                 release_title_resp = session.get(
-                    config.get("Prowlarr", "url") + "api/v1/search",
+                    urljoin(config.get("Prowlarr", "url"), "api/v1/search"),
                     params={
                         "query": result["title"],
                         "type": "search",
@@ -223,7 +232,7 @@ def find_match(ptp_movie, torrent_id=0):
                     download["indexer"],
                 )
                 r = session.post(
-                    config.get("Prowlarr", "url") + "api/v1/search",
+                    urljoin(config.get("Prowlarr", "url"), "api/v1/search"),
                     json={
                         "guid": download["guid"],
                         "indexerId": download["indexerId"],
