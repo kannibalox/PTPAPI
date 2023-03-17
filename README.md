@@ -127,6 +127,47 @@ install the guessit library (`pip install 'guessit>=3'`), and if the
 filename search fails, the script will attempt to parse the movie name
 out of the file with guessit.
 
+### `ptp-reseed-machine`
+
+This tool is meant to complement `ptp-reseed`, by taking using
+[Prowlarr](https://github.com/Prowlarr/Prowlarr) to find and download
+peotential reseeds from any supported site.
+
+To get it set up, first [install
+Prowlarr](https://wiki.servarr.com/prowlarr/installation). Be sure
+your instance (or any of the *arrs) isn't exposed to the internet!
+From, simply use the UI to add any trackers/indexers you'd like to
+search, as well as any downloaders. Then, add the following config to
+`~/.ptpapi.conf`:
+
+```ini
+[Prowlarr]
+url=http://YOUR_PROWLER_HOSTNAME_OR_IP/
+api_key=YOUR_API_KEY
+```
+
+If everything thing is all setup, running `ptp-reseed-machine` will
+scrape the first page of needforseed.php and attempt to download any
+potential matches. See `--help` for passing additional parameters or
+different search targets.
+
+After a download has been triggered, you can then use `ptp-reseed`
+with your download client of choice to automatically reseed the path
+into a client. Here's a simple example of a post script for sabnzbd:
+
+```bash
+#!/bin/bash
+if [[ "$SAB_PP_STATUS" -eq 0 ]]; then
+  ls *.iso *.img 2>/dev/null | xargs -r 7z x
+  ptp-reseed "$SAB_COMPLETE_DIR"
+fi
+```
+
+or for a `rtorrent.rc`:
+```ini
+method.set_key = event.download.finished, ptp_reseed, "execute.nothrow.bg={ptp-reseed,$d.base_path=}"
+```
+
 ## Concepts
 
 ### Filters
