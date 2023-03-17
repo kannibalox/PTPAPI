@@ -4,7 +4,7 @@ reseeds."""
 import argparse
 import logging
 
-from urllib.parse import parse_qs, urlparse, urljoin
+from urllib.parse import parse_qs, urljoin, urlparse
 
 import requests
 
@@ -97,7 +97,7 @@ def main():
 def levenshtein(s1: str, s2: str):
     """Measure the edit distance between two strings"""
     if len(s1) < len(s2):
-        return levenshtein(s2, s1)
+        return levenshtein(s2, s1)  # pylint: disable=arguments-out-of-order
 
     if len(s2) == 0:
         return len(s1)
@@ -197,10 +197,6 @@ def match_results(ptp_result: dict, other_result: dict, title_distance=1) -> dic
                     other_result["title"],
                     other_result["sortTitle"],
                 )
-            sortTitles = [
-                ptp_result["sortTitle"],
-                ptp_result["sortTitle"].replace("blu ray", "bluray"),
-            ]
     return {}
 
 
