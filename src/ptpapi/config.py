@@ -29,17 +29,18 @@ env_prefix = "PTPAPI_"
 env_keys = {
     "BASEURL": ("Main", "baseURL"),
     "COOKIESFILE": ("Main", "cookiesFile"),
+    "DOWNLOADDIRECTORY": ("Main", "downloadDirectory"),
     "FILTER": ("Main", "filter"),
     "RETRY": ("Main", "retry"),
-    "APIUSER": ("PTP", "ApiUser"),
     "APIKEY": ("PTP", "ApiKey"),
-    "RESEED_ACTION": ("Reseed", "action"),
-    "RESEED_FINDBY": ("Reseed", "findBy"),
+    "APIUSER": ("PTP", "ApiUser"),
     "ARCHIVE_CONTAINER_NAME": ("PTP", "archiveContainerName"),
     "ARCHIVE_CONTAINER_SIZE": ("PTP", "archiveContainerSize"),
     "ARCHIVE_MAX_STALLED": ("PTP", "archiveContainerMaxStalled"),
-    "PROWLARR_URL": ("Prowlarr", "url"),
+    "RESEED_ACTION": ("Reseed", "action"),
+    "RESEED_FINDBY": ("Reseed", "findBy"),
     "PROWLARR_API_KEY": ("Prowlarr", "api_key"),
+    "PROWLARR_URL": ("Prowlarr", "url"),
 }
 
 
