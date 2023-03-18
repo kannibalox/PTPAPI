@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unrelease]
+
+### Added
+- Utility script for downloading and running archiver.py
+- [`tinycron`](https://github.com/bcicen/tinycron) has been added to
+  docker to allow for simple cron-like containers
+
 ## [0.8.0] - 2023-03-18
 
 ### Fixed
