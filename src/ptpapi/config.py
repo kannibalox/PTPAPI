@@ -57,4 +57,6 @@ else:
 
 for key, section in env_keys.items():
     if os.getenv(env_prefix + key) is not None:
+        if section[0] not in config.sections():
+            config.add_section(section[0])
         config.set(section[0], section[1], os.getenv(env_prefix + key))
