@@ -3,10 +3,14 @@
 import configparser
 import os
 
-from pathlib import Path
 from io import StringIO
+from pathlib import Path
 
-conf_files = [Path(p) for p in ["~/.ptpapi.conf", "~/.config/ptpapi.conf", "~/.config/ptpapi/ptpapi.conf"]]
+
+conf_files = [
+    Path(p)
+    for p in ["~/.ptpapi.conf", "~/.config/ptpapi.conf", "~/.config/ptpapi/ptpapi.conf"]
+]
 
 default = """
 [Main]
