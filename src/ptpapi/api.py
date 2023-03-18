@@ -5,6 +5,7 @@ import logging
 import os
 import pickle
 import re
+from pathlib import Path
 
 import requests
 
@@ -34,7 +35,7 @@ class API:
     ):
         self.current_user_id = None
         j = None
-        self.cookies_file = os.path.expanduser(config.get("Main", "cookiesFile"))
+        self.cookies_file = Path(config.get("Main", "cookiesFile"))
         logger = logging.getLogger(__name__)
 
         if config.has_option("PTP", "ApiUser") and config.has_option("PTP", "ApiKey"):
@@ -67,7 +68,7 @@ class API:
                     "ApiKey": api_key,
                 }
             )
-        elif os.path.isfile(self.cookies_file):
+        elif self.cookies_file.is_file():
             LOGGER.debug("Initiating login sequence.")
             self.__load_cookies()
             # A really crude test to see if we're logged in
@@ -76,14 +77,12 @@ class API:
                 req = session.base_get("torrents.php")
                 util.raise_for_cloudflare(req.text)
             except requests.exceptions.TooManyRedirects:
-                if os.path.isfile(self.cookies_file):
-                    os.remove(self.cookies_file)
+                if self.cookies_file.is_file():
+                    self.cookies_file.unlink()
                 session.cookies = requests.cookies.RequestsCookieJar()
             session.max_redirects = 3
         # If we're not using the new method and we don't have a cookie, get one
-        if not config.has_option("PTP", "ApiUser") and not os.path.isfile(
-            self.cookies_file
-        ):
+        if not config.has_option("PTP", "ApiUser") and not self.cookies_file.is_file():
             password = password or config.get("PTP", "password")
             username = username or config.get("PTP", "username")
             passkey = passkey or config.get("PTP", "passkey")
@@ -138,18 +137,18 @@ class API:
         """Forces a logout. In ApiUser mode, essentially a waste of two request tokens."""
         req = session.base_get("index.php")
         auth_key = re.search(r"auth=([0-9a-f]{32})", req.text).group(1)
-        os.remove(self.cookies_file)
+        self.cookies_file.unlink()
         return session.base_get("logout.php", params={"auth": auth_key})
 
     def __save_cookie(self):
         """Save requests' cookies to a file"""
-        with open(self.cookies_file, "wb") as fileh:
+        with self.cookies_file.open("wb") as fileh:
             LOGGER.debug("Pickling HTTP cookies to %s", self.cookies_file)
             pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), fileh)
 
     def __load_cookies(self):
         """Reload requests' cookies"""
-        with open(self.cookies_file, "rb") as fileh:
+        with self.cookies_file.open("rb") as fileh:
             LOGGER.debug("Unpickling HTTP cookies from file %s", self.cookies_file)
             session.cookies = requests.utils.cookiejar_from_dict(pickle.load(fileh))
 

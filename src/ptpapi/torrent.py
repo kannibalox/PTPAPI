@@ -3,7 +3,7 @@ import html
 import logging
 import os
 import re
-
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import humanize
@@ -200,11 +200,11 @@ class Torrent:
         req_params.update({"action": "download", "id": self.ID})
         req = session.base_get("torrents.php", params=req_params)
         if not dest:
-            dest = config.get("Main", "downloadDirectory")
+            dest = Path(config.get("Main", "downloadDirectory"))
         name = re.search(r'filename="(.*)"', req.headers["Content-Disposition"]).group(
             1
         )
-        dest = os.path.join(dest, name)
-        with open(dest, "wb") as fileh:
+        dest = Path(dest, name)
+        with dest.open("wb") as fileh:
             fileh.write(req.content)
         return dest
