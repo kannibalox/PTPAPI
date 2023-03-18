@@ -221,6 +221,15 @@ def find_match(ptp_movie, torrent_id=0):
         },
     ).json()
 
+    # Some indexers return completely irrelevant results when the
+    # title isn't present.
+    ignore_title_indexers = [
+        i
+        for i in config.get("ReseedMachine", "ignoreTitleResults", fallback="").split(
+            ","
+        )
+        if i
+    ]
     for result in resp:
         if result["indexer"] == "PassThePopcorn" and result["seeders"] == 0:
             if torrent_id and f"torrentid={torrent_id}" not in result.get(
@@ -250,9 +259,10 @@ def find_match(ptp_movie, torrent_id=0):
                     },
                 ).json()
                 for release_result in release_title_resp:
-                    download = match_results(result, release_result)
-                    if download:
-                        break
+                    if release_result["indexer"] not in ignore_title_indexers:
+                        download = match_results(result, release_result)
+                        if download:
+                            break
 
             if download:
                 logger.info(

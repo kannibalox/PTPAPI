@@ -7,10 +7,13 @@
 
 ### Changed
 - Cleaned up and documented `ptp-reseed-machine` for general usage
-- Allow reading config from multiple locations: `~/.ptpapi.conf`, `~/.config/ptpapi.conf`, `~/.config/ptpapi/ptpapi.conf`
-- Override configuration settings with environment variables
 
 ### Added
+- Add `ReseedMachine -> ignoreTitleResults` config setting to allow
+  filtering out trackers from the title search
+- Allow reading config from multiple locations: `~/.ptpapi.conf`,
+  `~/.config/ptpapi.conf`, `~/.config/ptpapi/ptpapi.conf`
+- Config values can now be loaded from environment variables
 - Added a changelog
 - Created dockerfile
 
