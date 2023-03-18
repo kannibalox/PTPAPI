@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+- Size comparisons in filters were be compared case-sensitively
+
+### Changed
+- Cleaned up and documented `ptp-reseed-machine` for general usage
+
 ### Added
 - Added a changelog
 - Created dockerfile

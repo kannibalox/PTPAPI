@@ -225,7 +225,11 @@ class Movie:
             # lambdas that take a torrent, a function for comparison, and a value-as-a-string
             comparative_filter_dict = {
                 "seeders": (lambda t, f, v: f(int(t["Seeders"]), int(v))),
-                "size": (lambda t, f, v: f(int(t["Size"]), human_to_bytes(v))),
+                "size": (
+                    lambda t, f, v: f(
+                        int(t["Size"]), human_to_bytes(v, case_sensitive=False)
+                    )
+                ),
             }
             comparisons = {
                 ">": operator.gt,
@@ -253,9 +257,15 @@ class Movie:
                     True,
                     (lambda t: datetime.strptime(t["UploadTime"], "%Y-%m-%d %H:%M:%S")),
                 ),
-                "smallest": (False, (lambda t: human_to_bytes(t["Size"]))),
+                "smallest": (
+                    False,
+                    (lambda t: human_to_bytes(t["Size"], case_sensitive=False)),
+                ),
                 "most seeders": (True, (lambda t: int(t["Seeders"]))),
-                "largest": (True, (lambda t: human_to_bytes(t["Size"]))),
+                "largest": (
+                    True,
+                    (lambda t: human_to_bytes(t["Size"], case_sensitive=False)),
+                ),
             }
             if len(matches) == 1:
                 return matches[0]

@@ -48,7 +48,7 @@ SYMBOLS = {
 }
 
 
-def human_to_bytes(s):
+def human_to_bytes(s, case_sensitive=True):
     """
     Attempts to guess the string format based on default symbols
     set and return the corresponding bytes as an integer.
@@ -91,6 +91,8 @@ def human_to_bytes(s):
     for _, sset in SYMBOLS.items():
         if letter in sset:
             break
+        elif not case_sensitive and letter.lower() in [s.lower() for s in sset]:
+            break
     else:
         if letter == "k":
             # treat 'k' as an alias for 'K' as per: http://goo.gl/kTQMs
@@ -100,7 +102,11 @@ def human_to_bytes(s):
             raise ValueError("can't interpret %r" % init)
     prefix = {sset[0]: 1}
     for i, sval in enumerate(sset[1:]):
-        prefix[sval] = 1 << (i + 1) * 10
+        if case_sensitive:
+            prefix[sval] = 1 << (i + 1) * 10
+        else:
+            prefix[sval.lower()] = 1 << (i + 1) * 10
+            letter = letter.lower()
     return int(num * prefix[letter])
 
 
