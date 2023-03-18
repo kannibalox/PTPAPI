@@ -32,6 +32,7 @@ FROM base as final
 ENV PATH="/venv/bin:${PATH}"
 ENV VIRTUAL_ENV="/venv"
 
-RUN bash -c 'echo -e "[Main]\nbaseURL=https://passthepopcorn.me/" > ~/.ptpapi.conf'
+RUN bash -c 'echo -e "[Main]\nbaseURL=https://passthepopcorn.me/\ndownloadDirectory=/data/" > ~/.ptpapi.conf'
 
+COPY ./resources/archiver.sh /usr/local/bin/
 COPY --from=builder /venv /venv
