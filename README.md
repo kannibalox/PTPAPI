@@ -1,6 +1,6 @@
 # PTPAPI
 
-[![PyPI](https://img.shields.io/pypi/v/pyrosimple)](https://pypi.org/project/ptpapi/)
+[![PyPI](https://img.shields.io/pypi/v/ptpapi)](https://pypi.org/project/ptpapi/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ptpapi)
 
 A small API for a mildly popular movie site. The goal was to be able
