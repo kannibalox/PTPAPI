@@ -32,4 +32,6 @@ FROM base as final
 ENV PATH="/venv/bin:${PATH}"
 ENV VIRTUAL_ENV="/venv"
 
+RUN bash -c 'echo -e "[Main]\nbaseURL=https://passthepopcorn.me/" > ~/.ptpapi.conf'
+
 COPY --from=builder /venv /venv
