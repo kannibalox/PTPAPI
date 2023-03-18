@@ -36,7 +36,6 @@ class API:
         j = None
         self.cookies_file = os.path.expanduser(config.get("Main", "cookiesFile"))
         logger = logging.getLogger(__name__)
-        LOGGER.info("Initiating login sequence.")
 
         if config.has_option("PTP", "ApiUser") and config.has_option("PTP", "ApiKey"):
             pass
@@ -69,6 +68,7 @@ class API:
                 }
             )
         elif os.path.isfile(self.cookies_file):
+            LOGGER.debug("Initiating login sequence.")
             self.__load_cookies()
             # A really crude test to see if we're logged in
             session.max_redirects = 1
@@ -128,7 +128,7 @@ class API:
             # Get some information that will be useful for later
             req = session.base_get("index.php")
             util.raise_for_cloudflare(req.text)
-        LOGGER.info("Login successful.")
+            LOGGER.info("Login successful.")
 
     def is_api(self):
         """Helper function to check for the use of ApiUser"""
