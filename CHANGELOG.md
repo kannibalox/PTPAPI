@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.8.0] - 2023-03-18
 
 ### Fixed
 - Size comparisons in filters were be compared case-sensitively
@@ -17,4 +17,5 @@
 - Added a changelog
 - Created dockerfile
 
-[Unreleased]: https://github.com/kannibalox/pyrosimple/compare/v0.7.2...HEAD
+[Unreleased]: https://github.com/kannibalox/pyrosimple/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/kannibalox/pyrosimple/compare/v0.7.2...v0.8.0
