@@ -22,9 +22,9 @@ classifiers = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.7,<4.0"
+python = ">=3.7.2,<4.0"
 guessit = "^3.4.3"
-pyrosimple = "^2.0.0"
+pyrosimple = "^2.7.0"
 requests = "^2.27.1"
 Tempita = "^0.5.2"
 beautifulsoup4 = "^4.10.0"
