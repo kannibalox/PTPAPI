@@ -7,6 +7,8 @@
 
 ### Changed
 - Cleaned up and documented `ptp-reseed-machine` for general usage
+- Allow reading config from multiple locations: `~/.ptpapi.conf`, `~/.config/ptpapi.conf`, `~/.config/ptpapi/ptpapi.conf`
+- Override configuration settings with environment variables
 
 ### Added
 - Added a changelog
