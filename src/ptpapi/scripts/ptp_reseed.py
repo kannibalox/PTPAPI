@@ -8,7 +8,7 @@ import sys
 
 from pathlib import Path
 from time import sleep, time
-from typing import List
+from typing import List, Optional
 from urllib.parse import parse_qs, urlparse
 from xmlrpc import client as xmlrpc_client
 
@@ -30,7 +30,7 @@ class Match:
     ID is an integer-as-a-string, and path is filepath"""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, ID=None, path=None, matched_files=None):
+    def __init__(self, ID: str = None, path: os.PathLike = None, matched_files: Optional[dict] =None):
         """A defined match"""
         self.ID = ID
         self.path = path
