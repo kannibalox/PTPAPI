@@ -1,11 +1,15 @@
 # Changelog
 
-## [Unrelease]
+## [Unreleased]
 
 ### Added
 - Utility script for downloading and running archiver.py
 - [`tinycron`](https://github.com/bcicen/tinycron) has been added to
   docker to allow for simple cron-like containers
+- `ptp-reseed`
+  - simple file downloading: use `file://<path>` with `--client`
+  - Add flag for pre-hash-checking: `--hash-check`
+  - Add flag for changing the path of an existing incomplete torrent: `--overwrite-incomplete`
 
 ## [0.8.0] - 2023-03-18
 

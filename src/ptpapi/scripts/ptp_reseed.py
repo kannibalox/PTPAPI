@@ -8,7 +8,7 @@ import sys
 
 from pathlib import Path
 from time import sleep, time
-from typing import List, Optional
+from typing import Optional
 from urllib.parse import parse_qs, urlparse
 from xmlrpc import client as xmlrpc_client
 
@@ -30,7 +30,12 @@ class Match:
     ID is an integer-as-a-string, and path is filepath"""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, ID: str = None, path: os.PathLike = None, matched_files: Optional[dict] =None):
+    def __init__(
+        self,
+        ID: Optional[str] = None,
+        path: Optional[os.PathLike] = None,
+        matched_files: Optional[dict] = None,
+    ):
         """A defined match"""
         self.ID = ID
         self.path = path
@@ -157,7 +162,7 @@ def match_by_torrent(torrent, filepath: str) -> Match:
     if len(path2_files) > 0:
         logger.info("Not all files could be matched, returning...")
         return Match(None)
-    return Match(torrent.ID, os.path.dirname(path1), matched_files)
+    return Match(torrent.ID, Path(os.path.dirname(path1)), matched_files)
 
 
 def match_by_movie(movie, filepath) -> Match:
@@ -256,7 +261,9 @@ def create_matched_files(match, directory=None, action="hard", dry_run=False):
     return match
 
 
-def load_torrent(ID, path, client=None):
+def load_torrent(
+    ID, path, client=None, hash_check=False, overwrite_incomplete=False
+) -> bool:
     """Send a torrent to rtorrent and kick off the hash recheck"""
     proxy = pyrosimple.connect().open()
     logger = logging.getLogger(__name__)
@@ -264,17 +271,39 @@ def load_torrent(ID, path, client=None):
     torrent_data = torrent.download()
     data = metafile.Metafile(bencode.bdecode(torrent_data))
     thash = data.info_hash()
+    path = Path(path)
+    if hash_check:
+        from pyrosimple.util.metafile import PieceFailer
+
+        logger.debug("Starting hash check against %r", path)
+        pf = PieceFailer(data)
+        try:
+            data.hash_check(path, piece_callback=pf.piece_index)
+            data.add_fast_resume(path)
+        except OSError as exc:
+            logger.error("Could not complete hash check: %s", exc)
+            return False
     if client is None:
+        hash_exists = True
         try:
             logger.debug("Testing for hash {0}".format(proxy.d.hash(thash)))
+            if proxy.d.complete(thash):
+                logger.error(
+                    "Hash {0} is already completed in rtorrent as {1}, cannot load.".format(
+                        thash, proxy.d.name(thash)
+                    )
+                )
+                return False
+            hash_exists = True
+        except rpc.HashNotFound:
+            pass
+        if hash_exists and not overwrite_incomplete:
             logger.error(
                 "Hash {0} already exists in rtorrent as {1}, cannot load.".format(
                     thash, proxy.d.name(thash)
                 )
             )
             return False
-        except (xmlrpc_client.Fault, rpc.HashNotFound):
-            pass
         proxy.load.raw("", xmlrpc_client.Binary(torrent_data))
         # Wait until the torrent is loaded and available
         while True:
@@ -289,6 +318,8 @@ def load_torrent(ID, path, client=None):
         proxy.d.directory.set(thash, str(path))
         proxy.d.check_hash(thash)
         return True
+    elif isinstance(client, str) and client.startswith("file://"):
+        torrent.download_to_dir(Path(client[7:]).expanduser())
     else:
         bd = bencodepy.BencodeDecoder()
         return bool(client.add(bd.decode(torrent_data), path))
@@ -364,6 +395,16 @@ def define_parser():
         type=int,
         default=5,
     )
+    parser.add_argument(
+        "--hash-check",
+        help="Hash check against any found matches before loading",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--overwrite-incomplete",
+        help="If the torrent exists as incomplete, change the path of the existing torrent (rtorrent only)",
+        action="store_true",
+    )
     return parser
 
 
@@ -383,7 +424,7 @@ def process(cli_args):
 
     loaded = []
     would_load = []
-    already_loaded = []
+    could_not_load = []
     not_found = []
 
     if args.files in (["-"], []):
@@ -394,7 +435,10 @@ def process(cli_args):
     loaded_paths = []
 
     if args.client:
-        client = libtc.parse_libtc_url(args.client[0])
+        if args.client.startswith("file://"):
+            client = args.client
+        else:
+            client = libtc.parse_libtc_url(args.client[0])
     else:
         client = None
 
@@ -473,16 +517,23 @@ def process(cli_args):
                 match.ID, match.path
             )
         )
+        match_log_line = (
+            f"https://passthepopcorn.me/torrents.php?torrentid={match.ID} -> {filename}"
+        )
         if args.dry_run:
-            would_load.append(
-                f"https://passthepopcorn.me/torrents.php?torrentid={match.ID} -> {filename}"
-            )
+            would_load.append(match_log_line)
             logger.debug("Dry-run: Stopping before actual load")
             continue
-        if load_torrent(match.ID, Path(match.path), client):
-            loaded.append(filename)
+        if load_torrent(
+            match.ID,
+            Path(match.path),
+            client,
+            hash_check=args.hash_check,
+            overwrite_incomplete=args.overwrite_incomplete,
+        ):
+            loaded.append(match_log_line)
         else:
-            already_loaded.append(filename)
+            could_not_load.append(match_log_line)
 
     if args.summary:
         if loaded:
@@ -491,9 +542,9 @@ def process(cli_args):
         if would_load:
             print("==> Would have loaded:")
             print("\n".join(would_load))
-        if already_loaded:
-            print("==> Already loaded:")
-            print("\n".join(already_loaded))
+        if could_not_load:
+            print("==> Could not load:")
+            print("\n".join(could_not_load))
         if not_found:
             print("==> Not found:")
             print("\n".join(not_found))
@@ -503,7 +554,7 @@ def process(cli_args):
         exit_code = 1
     elif len(not_found) > 1:
         exit_code = 2
-    elif len(already_loaded) > 0:
+    elif len(could_not_load) > 0:
         exit_code = 3
 
     logger.debug(
