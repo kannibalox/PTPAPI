@@ -275,10 +275,10 @@ def load_torrent(
     if hash_check:
         from pyrosimple.util.metafile import PieceFailer
 
-        logger.debug("Starting hash check against %r", path)
+        logger.debug("Starting hash check against %r", str(path))
         pf = PieceFailer(data)
         try:
-            data.hash_check(path, piece_callback=pf.piece_index)
+            data.hash_check(path, piece_callback=pf.check_piece)
             data.add_fast_resume(path)
         except OSError as exc:
             logger.error("Could not complete hash check: %s", exc)
@@ -313,13 +313,15 @@ def load_torrent(
                 break
             except (xmlrpc_client.Fault, rpc.HashNotFound):
                 pass
-        logger.info("Torrent loaded at {0}".format(path))
+        logger.info("Torrent loaded at %r", str(path))
         proxy.d.custom.set(thash, "tm_completed", str(int(time())))
         proxy.d.directory.set(thash, str(path))
         proxy.d.check_hash(thash)
         return True
     elif isinstance(client, str) and client.startswith("file://"):
-        torrent.download_to_dir(Path(client[7:]).expanduser())
+        dest = Path(client[7:], data["info"]["name"] + ".torrent").expanduser()
+        logger.info("Saving file to %r", str(dest))
+        data.save(dest)
     else:
         bd = bencodepy.BencodeDecoder()
         return bool(client.add(bd.decode(torrent_data), path))
