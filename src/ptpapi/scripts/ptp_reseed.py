@@ -265,7 +265,6 @@ def load_torrent(
     ID, path, client=None, hash_check=False, overwrite_incomplete=False
 ) -> bool:
     """Send a torrent to rtorrent and kick off the hash recheck"""
-    proxy = pyrosimple.connect().open()
     logger = logging.getLogger(__name__)
     torrent = ptpapi.Torrent(ID=ID)
     torrent_data = torrent.download()
@@ -285,6 +284,7 @@ def load_torrent(
             return False
     if client is None:
         hash_exists = True
+        proxy = pyrosimple.connect().open()
         try:
             logger.debug("Testing for hash {0}".format(proxy.d.hash(thash)))
             if proxy.d.complete(thash):

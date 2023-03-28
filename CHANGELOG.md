@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.1] - 2023-03-28
+### Fixed
+- `ptp-reseed` now only tries to connect to rtorrent when not using
+  `--client`
+
 ## [0.9.0] - 2023-03-28
 ### Added
 - Utility script for downloading and running archiver.py
