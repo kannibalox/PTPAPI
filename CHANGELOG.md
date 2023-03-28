@@ -9,7 +9,7 @@
 - `ptp-reseed`
   - simple file downloading: use `file://<path>` with `--client`
   - Add flag for pre-hash-checking: `--hash-check`
-  - Add flag for changing the path of an existing incomplete torrent: `--overwrite-incomplete`
+  - Add flag for changing the path of an existing incomplete torrent: `--overwrite-incomplete` (rtorrent only)
 
 ## [0.8.0] - 2023-03-18
 
