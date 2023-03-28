@@ -1,7 +1,6 @@
 # Changelog
 
-## [Unreleased]
-
+## [0.9.0] - 2023-03-28
 ### Added
 - Utility script for downloading and running archiver.py
 - [`tinycron`](https://github.com/bcicen/tinycron) has been added to
@@ -12,7 +11,6 @@
   - Add flag for changing the path of an existing incomplete torrent: `--overwrite-incomplete` (rtorrent only)
 
 ## [0.8.0] - 2023-03-18
-
 ### Fixed
 - Size comparisons in filters were be compared case-sensitively
 
@@ -28,5 +26,6 @@
 - Added a changelog
 - Created dockerfile
 
-[Unreleased]: https://github.com/kannibalox/pyrosimple/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/kannibalox/pyrosimple/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/kannibalox/pyrosimple/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/kannibalox/pyrosimple/compare/v0.7.2...v0.8.0

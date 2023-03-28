@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "PTPAPI"
-version = "0.8.0"
+version = "0.9.0"
 description = "A small API for a mildly popular movie site"
 authors = ["kannibalox <kannibalox@gmail.com>"]
 repository = "https://github.com/kannibalox/PTPAPI"
