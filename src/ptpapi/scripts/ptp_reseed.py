@@ -435,8 +435,8 @@ def process(cli_args):
     loaded_paths = []
 
     if args.client:
-        if args.client.startswith("file://"):
-            client = args.client
+        if args.client[0].startswitsh("file://"):
+            client = args.client[0]
         else:
             client = libtc.parse_libtc_url(args.client[0])
     else:
