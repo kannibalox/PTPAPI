@@ -286,7 +286,7 @@ def load_torrent(
             logger.error("Could not complete hash check: %s", exc)
             return False
     if client is None:
-        hash_exists = True
+        hash_exists = False
         proxy = pyrosimple.connect().open()
         try:
             logger.debug("Testing for hash {0}".format(proxy.d.hash(thash)))
