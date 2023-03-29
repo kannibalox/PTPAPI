@@ -1,7 +1,7 @@
 # Changelog
 ## [Unreleased]
 ### Added
-- UHD/HDR/proprietary codecs filters (#18, @einsern)
+- UHD/HDR/proprietary codecs filters ([#18](https://github.com/kannibalox/PTPAPI/pull/18), [@einsern](https://github.com/einsern))
 ### Fixed
 - `ptp-reseed`: Fix rtorrent existence check
 
