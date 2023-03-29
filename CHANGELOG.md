@@ -1,4 +1,9 @@
 # Changelog
+## [Unreleased]
+### Added
+- UHD/HDR/proprietary codecs filters (#18, @einsern)
+### Fixed
+- `ptp-reseed`: Fix rtorrent existence check
 
 ## [0.9.2] - 2023-03-28
 ### Fixed
