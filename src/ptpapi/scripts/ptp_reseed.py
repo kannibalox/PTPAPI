@@ -322,6 +322,7 @@ def load_torrent(
         dest = Path(client[7:], data["info"]["name"] + ".torrent").expanduser()
         logger.info("Saving file to %r", str(dest))
         data.save(dest)
+        return True
     else:
         bd = bencodepy.BencodeDecoder()
         return bool(client.add(bd.decode(torrent_data), path))
