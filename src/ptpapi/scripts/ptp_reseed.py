@@ -277,8 +277,11 @@ def load_torrent(
         logger.debug("Starting hash check against %r", str(path))
         pf = PieceFailer(data)
         try:
-            data.hash_check(path, piece_callback=pf.check_piece)
-            data.add_fast_resume(path)
+            check_path = path
+            if data.is_multi_file:
+                check_path = Path(path, data["info"]["name"])
+            data.hash_check(check_path, piece_callback=pf.check_piece)
+            data.add_fast_resume(check_path)
         except OSError as exc:
             logger.error("Could not complete hash check: %s", exc)
             return False
