@@ -62,8 +62,16 @@ def main():
         "-t",
         "--query-type",
         nargs="*",
+        help="Set the query type to use (can be specified multiple times)",
         default=["imdb", "title"],
-        choices=["imdb", "title", "sortTitle", "dashToSpace"],
+        choices=[
+            "imdb",
+            "title",
+            "sortTitle",
+            "dotToSpace",
+            "underscoreToDot",
+            "underscoreToSpace",
+        ],
     )
     args = parser.parse_args()
 
@@ -257,7 +265,9 @@ def find_match(args, torrent):
     queries = {
         "title": lambda r: {"query": r["title"]},
         "sortTitle": lambda r: {"query": r["sortTitle"]},
-        "dashToSpace": lambda r: {"query": r["title"].replace("")},
+        "dotToSpace": lambda r: {"query": r["title"].replace(".", " ")},
+        "underscoreToDot": lambda r: {"query": r["title"].replace("_", ".")},
+        "underscoreToSpace": lambda r: {"query": r["title"].replace("_", " ")},
     }
 
     # Some indexers return completely irrelevant results when the
