@@ -62,7 +62,7 @@ def main():
         "-t",
         "--query-type",
         help="Set the query type to use (can be specified multiple times)",
-        default=["imdb", "title"],
+        default=[],
         choices=[
             "imdb",
             "title",
@@ -79,6 +79,9 @@ def main():
 
     ptp = ptpapi.login()
 
+
+    if not args.query_type:
+        args.query_type = ["imdb", "title"]
     if args.id:
         torrents = []
         for t in args.id:
