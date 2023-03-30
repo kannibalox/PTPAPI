@@ -58,6 +58,13 @@ def main():
         default=0,
         type=int,
     )
+    parser.add_argument(
+        "-t",
+        "--query-type",
+        nargs="*",
+        default=["imdb", "title"],
+        choices=["imdb", "title", "sortTitle", "dashToSpace"],
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=args.loglevel)
@@ -90,7 +97,7 @@ def main():
                 logger.warning("ImdbId not found from '{0}', skipping".format(i))
                 continue
             if ptp_movie["ImdbId"]:
-                find_match(ptp_movie, torrent_id)
+                find_match(args, ptp_movie, torrent_id)
 
 
 # Stolen from https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
@@ -102,7 +109,7 @@ def levenshtein(s1: str, s2: str):
     if len(s2) == 0:
         return len(s1)
 
-    previous_row = range(len(s2) + 1)
+    previous_row = list(range(len(s2) + 1))
     for i, c1 in enumerate(s1):
         current_row = [i + 1]
         for j, c2 in enumerate(s2):
@@ -121,8 +128,8 @@ def match_results(ptp_result: dict, other_result: dict, title_distance=1) -> dic
     logger = logging.getLogger("reseed-machine.match")
     percent_diff = 1
     if (
-        "imdbid" in other_result
-        and other_result["imdbid"]
+        "imdbId" in other_result
+        and other_result["imdbId"]
         and ptp_result["imdbId"] != other_result["imdbId"]
     ):
         logger.debug(
@@ -208,7 +215,7 @@ def bytes_to_human(b: int):
     return "%3.1f TiB" % b
 
 
-def find_match(ptp_movie, torrent_id=0):
+def find_match(args, ptp_movie, torrent_id=0):
     logger = logging.getLogger("reseed-machine.find")
     session = requests.Session()
     session.headers.update({"X-Api-Key": config.get("Prowlarr", "api_key")})
@@ -220,6 +227,11 @@ def find_match(ptp_movie, torrent_id=0):
             "type": "movie",
         },
     ).json()
+    queries = {
+        "title": lambda r: {"query": r["title"]},
+        "sortTitle": lambda r: {"query": r["sortTitle"]},
+        "dashToSpace": lambda r: {"query": r["title"].replace("")},
+    }
 
     # Some indexers return completely irrelevant results when the
     # title isn't present.
@@ -244,25 +256,27 @@ def find_match(ptp_movie, torrent_id=0):
                 result["sortTitle"],
             )
             download = {}
-            for other_result in resp:
-                download = match_results(result, other_result)
-                if download:
-                    break
+            print(args.query_type)
+            if "imdb" in args.query_type:
+                for other_result in resp:
+                    download = match_results(result, other_result)
+                    if download:
+                        break
             # If no match found, search again by release title
             if not download:
-                release_title_resp = session.get(
-                    urljoin(config.get("Prowlarr", "url"), "api/v1/search"),
-                    params={
-                        "query": result["title"],
-                        "type": "search",
-                        "limit": 100,
-                    },
-                ).json()
-                for release_result in release_title_resp:
-                    if release_result["indexer"] not in ignore_title_indexers:
-                        download = match_results(result, release_result)
-                        if download:
-                            break
+                for q_type in args.query_type:
+                    params = queries[q_type](result)
+                    params.setdefault("type", "search")
+                    params.setdefault("limit", "100")
+                    release_title_resp = session.get(
+                        urljoin(config.get("Prowlarr", "url"), "api/v1/search"),
+                        params=params,
+                    ).json()
+                    for release_result in release_title_resp:
+                        if release_result["indexer"] not in ignore_title_indexers:
+                            download = match_results(result, release_result)
+                            if download:
+                                break
 
             if download:
                 logger.info(
