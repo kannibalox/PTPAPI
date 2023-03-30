@@ -250,7 +250,7 @@ def find_match(args, torrent):
                 sortTitle += " "
         result = {
             "title": torrent["ReleaseName"],
-            "size": torrent["Size"],
+            "size": int(torrent["Size"]),
             "indexer": "PassThePopcorn",
             "infoUrl": torrent["Link"],
             "sortTitle": " ".join(sortTitle.split()).lower(),
