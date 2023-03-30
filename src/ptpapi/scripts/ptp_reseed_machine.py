@@ -128,7 +128,7 @@ def match_results(ptp_result: dict, other_result: dict, title_distance=1) -> dic
     if (
         "imdbId" in other_result
         and other_result["imdbId"]
-        and ptp_result["imdbId"] != other_result["imdbId"]
+        and ptp_result.get("imdbId", "xxx") != other_result["imdbId"]
     ):
         logger.debug(
             "%s IMDb ID mismatch: %s %s %s",
