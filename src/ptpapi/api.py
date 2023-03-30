@@ -16,6 +16,7 @@ from ptpapi import util
 from ptpapi.config import config
 from ptpapi.error import PTPAPIException
 from ptpapi.movie import Movie
+from ptpapi.torrent import Torrent
 from ptpapi.session import session
 from ptpapi.user import CurrentUser
 
@@ -263,11 +264,14 @@ class API:
         torrents = []
         for m in data:
             torrent = m["GroupingQualities"][0]["Torrents"][0]
+            movie = Movie(data=m)
             torrent["Link"] = (
                 config.get("Main", "baseURL")
                 + bs4(torrent["Title"], "html.parser").find("a")["href"]
             )
-            torrents.append(torrent)
+            torrent["Movie"] = movie
+            del torrent["Size"] # The size provided here isn't exact, it's better to load it if needed
+            torrents.append(Torrent(data=torrent))
         return torrents
 
     def contest_leaders(self):
