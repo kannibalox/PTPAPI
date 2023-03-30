@@ -61,7 +61,6 @@ def main():
     parser.add_argument(
         "-t",
         "--query-type",
-        nargs="*",
         help="Set the query type to use (can be specified multiple times)",
         default=["imdb", "title"],
         choices=[
@@ -72,6 +71,7 @@ def main():
             "underscoreToDot",
             "underscoreToSpace",
         ],
+        action="append"
     )
     args = parser.parse_args()
 
