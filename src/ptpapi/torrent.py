@@ -1,3 +1,4 @@
+
 """Represent a single torrent object"""
 import html
 import logging
@@ -48,6 +49,7 @@ class Torrent:
             "torrent_json": ["Description", "Nfo"],
             "movie_html": ["Filelist"],
             "inferred": ["Link", "Id", "HumanSize"],
+            "inferred_size": ["HumanSize"],
             "torrent_description": ["BBCodeDescription"],
             "parent": [
                 "Movie"  # Would be 'inferred' if it didn't have a chance to trigger a request
@@ -156,6 +158,8 @@ class Torrent:
         self.data["Link"] = "https://passthepopcorn.me/torrents.php?torrentid=" + str(
             self.ID
         )
+
+    def load_inferred_size_data(self):
         self.data["HumanSize"] = humanize.naturalsize(
             int(self.data["Size"]), binary=True
         )
