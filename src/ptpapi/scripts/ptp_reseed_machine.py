@@ -248,12 +248,20 @@ def find_match(args, torrent):
                 sortTitle += c
             else:
                 sortTitle += " "
+        sortTitle = sortTitle.lower()
+        splitTitle = sortTitle.split()
+        for s in ["a", "the", "of"]:
+            try:
+                splitTitle.remove(s)
+            except ValueError:
+                pass
+        sortTitle = " ".join(splitTitle)
         result = {
             "title": torrent["ReleaseName"],
             "size": int(torrent["Size"]),
             "indexer": "PassThePopcorn",
             "infoUrl": torrent["Link"],
-            "sortTitle": " ".join(sortTitle.split()).lower(),
+            "sortTitle": sortTitle,
         }
         if torrent["Movie"]["ImdbId"]:
             result.update({"imdbId": torrent["Movie"]["ImdbId"]})
