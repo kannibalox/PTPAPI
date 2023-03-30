@@ -288,8 +288,10 @@ class API:
             )
         return ret_array
 
-    def collage_all(self, coll_id, search_terms={}):
+    def collage_all(self, coll_id, search_terms=None):
         """Gets all the movies in a collage in one request, only fills torrentid"""
+        if search_terms is None:
+            search_terms = {}
         search_terms["id"] = coll_id
         req = session.base_get("collages.php", params=search_terms)
         soup = bs4(req.content, "html.parser")
