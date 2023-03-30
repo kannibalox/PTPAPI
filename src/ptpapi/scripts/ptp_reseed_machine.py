@@ -68,36 +68,26 @@ def main():
     args = parser.parse_args()
 
     logging.basicConfig(level=args.loglevel)
-    logger = logging.getLogger("reseed-machine")
 
     ptp = ptpapi.login()
 
     if args.id:
-        movies = args.id
+        torrents = []
+        for t in args.id:
+            if "://passthepopcorn.me" in t:
+                parsed_url = parse_qs(urlparse(t).query)
+                # ptp_movie = ptpapi.Movie(ID=parsed_url["id"][0])
+                torrent_id = int(parsed_url.get("torrentid", ["0"])[0])
+                torrents.append(ptpapi.Torrent(ID=torrent_id))
     else:
         filters = {}
         if args.search:
             for arg in args.search.split(","):
                 filters[arg.split("=")[0]] = arg.split("=")[1]
-        movies = [t["Link"] for t in ptp.need_for_seed(filters)][: args.limit]
+        torrents = ptp.need_for_seed(filters)[: args.limit]
 
-    for i in movies:
-        ptp_movie = None
-        if "://passthepopcorn.me" in i:
-            parsed_url = parse_qs(urlparse(i).query)
-            ptp_movie = ptpapi.Movie(ID=parsed_url["id"][0])
-            torrent_id = int(parsed_url.get("torrentid", ["0"])[0])
-
-        if ptp_movie is None:
-            logger.error("Could not figure out ID '{0}'".format(i))
-        else:
-            try:
-                ptp_movie["ImdbId"]
-            except KeyError:
-                logger.warning("ImdbId not found from '{0}', skipping".format(i))
-                continue
-            if ptp_movie["ImdbId"]:
-                find_match(args, ptp_movie, torrent_id)
+    for t in torrents:
+        find_match(args, t)
 
 
 # Stolen from https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
@@ -215,18 +205,55 @@ def bytes_to_human(b: int):
     return "%3.1f TiB" % b
 
 
-def find_match(args, ptp_movie, torrent_id=0):
+def find_match(args, torrent):
     logger = logging.getLogger("reseed-machine.find")
     session = requests.Session()
     session.headers.update({"X-Api-Key": config.get("Prowlarr", "api_key")})
-    resp = session.get(
-        urljoin(config.get("Prowlarr", "url"), "api/v1/search"),
-        params={
-            "query": "{ImdbId:" + ptp_movie["ImdbId"] + "}",
-            "categories": "2000",
-            "type": "movie",
-        },
-    ).json()
+    result = {}
+    imdb_resp = []  # Might be cached for later usage
+    download = {}
+    if "imdb" in args.query_type and torrent["Movie"]["ImdbId"]:
+        imdb_resp = session.get(
+            urljoin(config.get("Prowlarr", "url"), "api/v1/search"),
+            params={
+                "query": "{ImdbId:" + torrent["Movie"]["ImdbId"] + "}",
+                "categories": "2000",
+                "type": "movie",
+            },
+        ).json()
+        for r in imdb_resp:
+            if r[
+                "indexer"
+            ] == "PassThePopcorn" and f"torrentid={torrent['Id']}" in r.get(
+                "infoUrl", ""
+            ):
+                result = r
+                break
+    if not result:
+        # Build a result object that resembles what prowlarr would return
+        sortTitle = ""
+        for c in torrent["ReleaseName"]:
+            if c.isalnum():
+                sortTitle += c
+            else:
+                sortTitle += " "
+        result = {
+            "title": torrent["ReleaseName"],
+            "size": torrent["Size"],
+            "indexer": "PassThePopcorn",
+            "infoUrl": torrent["Link"],
+            "sortTitle": " ".join(sortTitle.split()).lower(),
+        }
+        if torrent["Movie"]["ImdbId"]:
+            result.update({"imdbId": torrent["Movie"]["ImdbId"]})
+    logger.info(
+        "Working torrent %s (size %s (%s), sortTitle '%s')",
+        result["title"],
+        result["size"],
+        bytes_to_human(int(result["size"])),
+        result["sortTitle"],
+    )
+
     queries = {
         "title": lambda r: {"query": r["title"]},
         "sortTitle": lambda r: {"query": r["sortTitle"]},
@@ -242,57 +269,46 @@ def find_match(args, ptp_movie, torrent_id=0):
         )
         if i
     ]
-    for result in resp:
-        if result["indexer"] == "PassThePopcorn" and result["seeders"] == 0:
-            if torrent_id and f"torrentid={torrent_id}" not in result.get(
-                "infoUrl", ""
-            ):
+
+    # We already have this result from before, and it'll be empty if
+    # the imdb query is disabled
+    for other_result in imdb_resp:
+        download = match_results(result, other_result)
+        if download:
+            break
+    if not download:
+        for q_type in args.query_type:
+            if q_type == "imdb":
                 continue
-            logger.info(
-                "Working torrent %s (size %s (%s), sortTitle '%s')",
-                result["title"],
-                result["size"],
-                bytes_to_human(int(result["size"])),
-                result["sortTitle"],
-            )
-            download = {}
-            print(args.query_type)
-            if "imdb" in args.query_type:
-                for other_result in resp:
-                    download = match_results(result, other_result)
+            if download:
+                break
+            params = queries[q_type](result)
+            params.setdefault("type", "search")
+            params.setdefault("limit", "100")
+            release_title_resp = session.get(
+                urljoin(config.get("Prowlarr", "url"), "api/v1/search"),
+                params=params,
+            ).json()
+            for release_result in release_title_resp:
+                if release_result["indexer"] not in ignore_title_indexers:
+                    download = match_results(result, release_result)
                     if download:
                         break
-            # If no match found, search again by release title
-            if not download:
-                for q_type in args.query_type:
-                    params = queries[q_type](result)
-                    params.setdefault("type", "search")
-                    params.setdefault("limit", "100")
-                    release_title_resp = session.get(
-                        urljoin(config.get("Prowlarr", "url"), "api/v1/search"),
-                        params=params,
-                    ).json()
-                    for release_result in release_title_resp:
-                        if release_result["indexer"] not in ignore_title_indexers:
-                            download = match_results(result, release_result)
-                            if download:
-                                break
-
-            if download:
-                logger.info(
-                    "Downloading %s (%s) from %s",
-                    download["title"],
-                    download["infoUrl"],
-                    download["indexer"],
-                )
-                r = session.post(
-                    urljoin(config.get("Prowlarr", "url"), "api/v1/search"),
-                    json={
-                        "guid": download["guid"],
-                        "indexerId": download["indexerId"],
-                    },
-                )
-                r.raise_for_status()
+    if download:
+        logger.info(
+            "Downloading %s (%s) from %s",
+            download["title"],
+            download["infoUrl"],
+            download["indexer"],
+        )
+        r = session.post(
+            urljoin(config.get("Prowlarr", "url"), "api/v1/search"),
+            json={
+                "guid": download["guid"],
+                "indexerId": download["indexerId"],
+            },
+        )
+        r.raise_for_status()
 
 
 if __name__ == "__main__":

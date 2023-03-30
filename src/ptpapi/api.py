@@ -16,8 +16,8 @@ from ptpapi import util
 from ptpapi.config import config
 from ptpapi.error import PTPAPIException
 from ptpapi.movie import Movie
-from ptpapi.torrent import Torrent
 from ptpapi.session import session
+from ptpapi.torrent import Torrent
 from ptpapi.user import CurrentUser
 
 
@@ -270,7 +270,8 @@ class API:
                 + bs4(torrent["Title"], "html.parser").find("a")["href"]
             )
             torrent["Movie"] = movie
-            del torrent["Size"] # The size provided here isn't exact, it's better to load it if needed
+            # The size provided here isn't exact, it's better to load it if needed
+            del torrent["Size"]
             torrents.append(Torrent(data=torrent))
         return torrents
 
