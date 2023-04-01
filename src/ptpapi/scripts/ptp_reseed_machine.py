@@ -67,18 +67,19 @@ def main():
             "imdb",
             "title",
             "sortTitle",
+            "sortTitleNoQuotes",
             "dotToSpace",
+            "spaceToDot",
             "underscoreToDot",
             "underscoreToSpace",
         ],
-        action="append"
+        action="append",
     )
     args = parser.parse_args()
 
     logging.basicConfig(level=args.loglevel)
 
     ptp = ptpapi.login()
-
 
     if not args.query_type:
         args.query_type = ["imdb", "title"]
@@ -125,9 +126,27 @@ def levenshtein(s1: str, s2: str):
     return previous_row[-1]
 
 
+def sort_title(title: str) -> str:
+    sortTitle = ""
+    for c in title:
+        if c.isalnum():
+            sortTitle += c.lower()
+        else:
+            sortTitle += " "
+    splitTitle = sortTitle.split()
+    # Clean out articles
+    for s in ["a", "the", "of"]:
+        try:
+            splitTitle.remove(s)
+        except ValueError:
+            pass
+    return " ".join(splitTitle)
+
+
 def match_results(ptp_result: dict, other_result: dict, title_distance=1) -> dict:
     logger = logging.getLogger("reseed-machine.match")
     percent_diff = 1
+    # How useful is this check? IMDb IDs can change, or may not be present at all
     if (
         "imdbId" in other_result
         and other_result["imdbId"]
@@ -208,7 +227,7 @@ def match_results(ptp_result: dict, other_result: dict, title_distance=1) -> dic
     return {}
 
 
-def bytes_to_human(b: int):
+def bytes_to_human(b: float):
     for count in ["B", "KiB", "MiB", "GiB"]:
         if b < 1024.0:
             return "%3.1f %s" % (b, count)
@@ -242,26 +261,12 @@ def find_match(args, torrent):
                 break
     if not result:
         # Build a result object that resembles what prowlarr would return
-        sortTitle = ""
-        for c in torrent["ReleaseName"]:
-            if c.isalnum():
-                sortTitle += c
-            else:
-                sortTitle += " "
-        sortTitle = sortTitle.lower()
-        splitTitle = sortTitle.split()
-        for s in ["a", "the", "of"]:
-            try:
-                splitTitle.remove(s)
-            except ValueError:
-                pass
-        sortTitle = " ".join(splitTitle)
         result = {
             "title": torrent["ReleaseName"],
             "size": int(torrent["Size"]),
             "indexer": "PassThePopcorn",
             "infoUrl": torrent["Link"],
-            "sortTitle": sortTitle,
+            "sortTitle": sort_title(torrent["ReleaseName"]),
         }
         if torrent["Movie"]["ImdbId"]:
             result.update({"imdbId": torrent["Movie"]["ImdbId"]})
@@ -276,9 +281,13 @@ def find_match(args, torrent):
     queries = {
         "title": lambda r: {"query": r["title"]},
         "sortTitle": lambda r: {"query": r["sortTitle"]},
+        "sortTitleNoQuotes": lambda r: {
+            "query": sort_title(r["title"].replace("'", ""))
+        },
         "dotToSpace": lambda r: {"query": r["title"].replace(".", " ")},
         "underscoreToDot": lambda r: {"query": r["title"].replace("_", ".")},
         "underscoreToSpace": lambda r: {"query": r["title"].replace("_", " ")},
+        "spaceToDot": lambda r: {"query": r["title"].replace(" ", ".")},
     }
 
     # Some indexers return completely irrelevant results when the
