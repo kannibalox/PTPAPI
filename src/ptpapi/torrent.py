@@ -1,8 +1,6 @@
-
 """Represent a single torrent object"""
 import html
 import logging
-import os
 import re
 
 from pathlib import Path
@@ -16,6 +14,7 @@ from ptpapi import movie
 from ptpapi.config import config
 from ptpapi.error import PTPAPIException
 from ptpapi.session import session
+from ptpapi.util import title_time_to_json_format
 
 
 LOGGER = logging.getLogger(__name__)
@@ -47,7 +46,13 @@ class Torrent:
                 "UploadTime",
             ],
             "torrent_json": ["Description", "Nfo"],
-            "movie_html": ["Filelist"],
+            "movie_html": [
+                "Filelist",
+                "LastActive",
+                "LastReseedRequest",
+                "ReseedWaitingUsers",
+                "Trumpable",
+            ],
             "inferred": ["Link", "Id", "HumanSize"],
             "inferred_size": ["HumanSize"],
             "torrent_description": ["BBCodeDescription"],
@@ -117,6 +122,7 @@ class Torrent:
             ).content,
             "html.parser",
         )
+        # Scrape file list
         filediv = soup.find("div", id="files_%s" % self.ID)
         self.data["Filelist"] = {}
         for elem in filediv.find("tbody").find_all("tr"):
@@ -131,6 +137,21 @@ class Torrent:
             ]
         else:
             self.data["Trumpable"] = []
+        # Get reseed information
+        tor_row = soup.find("tr", id="torrent_%s" % self.ID)
+        self.data.update(
+            {"LastActive": "", "LastReseedRequest": "", "ReseedWaitingUsers": ""}
+        )
+        for elem in tor_row.find_all(class_="torrent_quick_edit_ignore"):
+            if "Last active:" in str(elem):
+                self.data["LastActive"] = title_time_to_json_format(elem.span["title"])
+            if "Last re-seed request sent" in str(elem):
+                self.data["LastReseedRequest"] = title_time_to_json_format(
+                    elem.span["title"]
+                )
+                self.data["ReseedWaitingUsers"] = re.search(
+                    r"(\d+) user", str(elem)
+                ).group(1)
 
     def load_movie_json_data(self):
         """Load data from the movie page"""

@@ -1,3 +1,4 @@
+import datetime
 import html
 import json
 import math
@@ -162,3 +163,10 @@ def find_page_range(text) -> int:
     url = soup.select("a.pagination__link--last")[0]["href"]
     qs = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
     return int(qs["page"][0])
+
+
+def title_time_to_json_format(timestr: str) -> str:
+    """Massage to match JSON output"""
+    return datetime.datetime.strptime(timestr, "%b %d %Y, %H:%M").strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )

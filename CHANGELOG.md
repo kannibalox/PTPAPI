@@ -6,6 +6,7 @@
   - Support searching for movies without an IMDb
   - Allow adding more query types (still defaults to just IMDb and title queries)
   - Reduce number of requests when scraping needforseed.php
+- New torrent fields: `LastActive`, `LastReseedRequest`, `ReseedWaitingUsers`, `Trumpable`
 ### Fixed
 - `ptp-reseed`: Fix rtorrent existence check
 
