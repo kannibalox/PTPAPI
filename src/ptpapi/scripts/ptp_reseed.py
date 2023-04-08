@@ -373,7 +373,7 @@ def define_parser():
     parser.add_argument(
         "--client",
         help="Experimental: use a custom libtc URL. See https://github.com/JohnDoee/libtc#url-syntax for examples",
-        nargs=1,
+        default=ptpapi.config.config.get("Reseed", "client", fallback=None),
     )
     parser.add_argument(
         "-v",
@@ -444,7 +444,7 @@ def process(cli_args):
         if args.client[0].startswith("file://"):
             client = args.client[0]
         else:
-            client = libtc.parse_libtc_url(args.client[0])
+            client = libtc.parse_libtc_url(args.client)
     else:
         client = None
 

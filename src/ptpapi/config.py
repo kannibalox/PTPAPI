@@ -39,6 +39,7 @@ env_keys = {
     "ARCHIVE_MAX_STALLED": ("PTP", "archiveContainerMaxStalled"),
     "RESEED_ACTION": ("Reseed", "action"),
     "RESEED_FINDBY": ("Reseed", "findBy"),
+    "RESEED_CLIENT": ("Reseed", "client"),
     "PROWLARR_API_KEY": ("Prowlarr", "api_key"),
     "PROWLARR_URL": ("Prowlarr", "url"),
 }
