@@ -260,6 +260,26 @@ def create_matched_files(match, directory=None, action="hard", dry_run=False):
     match.path = directory
     return match
 
+def is_torrent_complete(infohash: str, client=None) -> Union[bool, None]:
+    """This returns a sort of horrible ternary: None if the torrent
+    does not exist, True if it's complete, and false otherwise."""
+    if client is None:
+        proxy = pyrosimple.connect().open()
+        try:
+            if proxy.d.complete(infohash):
+                return True
+            return False
+        except rpc.HashNotFound:
+            return None
+    elif isinstance(client, str) and client.startswith("file://"):
+        return None
+    else:
+        for torrent in client.list():
+            if torrent.infohash == infohash:
+                if torrent.progress == 100:
+                    return True
+                return False
+        return None
 
 def load_torrent(
     ID, path, client=None, hash_check=False, overwrite_incomplete=False
@@ -273,6 +293,9 @@ def load_torrent(
     path = Path(path)
     if hash_check:
         from pyrosimple.util.metafile import PieceFailer
+        if is_torrent_complete(thash, client) is not None:
+            logger.error("Hash %s is already in client, cannot load.", thash)
+            return False
 
         logger.debug("Starting hash check against %r", str(path))
         pf = PieceFailer(data)
