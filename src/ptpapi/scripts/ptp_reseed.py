@@ -8,7 +8,7 @@ import sys
 
 from pathlib import Path
 from time import sleep, time
-from typing import Optional
+from typing import Optional, Union
 from urllib.parse import parse_qs, urlparse
 from xmlrpc import client as xmlrpc_client
 
@@ -34,7 +34,8 @@ class Match:
         self,
         ID: Optional[str] = None,
         path: Optional[os.PathLike] = None,
-        matched_files: Optional[dict] = None,
+        matched_files: Optional[dict[str, str]] = None,
+        failure_reason: str = "No match",
     ):
         """A defined match"""
         self.ID = ID
@@ -42,6 +43,7 @@ class Match:
         if matched_files is None:
             matched_files = {}
         self.matched_files = matched_files
+        self.failure_reason = failure_reason
 
     def __nonzero__(self):
         if self.ID is not None and self.path is not None:
@@ -86,7 +88,12 @@ def match_by_torrent(torrent, filepath: str) -> Match:
                 len(path1_files), len(path2_files)
             )
         )
-        return Match(None)
+        return Match(
+            None,
+            failure_reason="Too little files to match torrent ({0} locally, {1} in torrent)".format(
+                len(path1_files), len(path2_files)
+            ),
+        )
 
     matched_files = {}
     logger.debug("Looking for exact matches")
@@ -161,23 +168,28 @@ def match_by_torrent(torrent, filepath: str) -> Match:
 
     if len(path2_files) > 0:
         logger.info("Not all files could be matched, returning...")
-        return Match(None)
+        return Match(
+            None, f"Not all files could be matched ({len(path2_files)} remaining)"
+        )
     return Match(torrent.ID, Path(os.path.dirname(path1)), matched_files)
 
 
 def match_by_movie(movie, filepath) -> Match:
     """Tries to match a torrent against a single movie"""
     logger = logging.getLogger(__name__)
-    logger.info(
-        "Attempting to match against movie {0} ({1})".format(movie.ID, movie["Title"])
-    )
+    logger.info(f"Attempting to match against movie {movie.ID} ({movie['Title']})")
 
     movie.load_html_data()
     for torrent in movie["Torrents"]:
         match = match_by_torrent(torrent, os.path.abspath(filepath))
         if match:
             return match
-    return Match(None)
+    return Match(
+        None,
+        failure_reason="No match found against movie {0} ({1})".format(
+            movie.ID, movie["Title"]
+        ),
+    )
 
 
 def match_by_guessed_name(ptp, filepath, limit, name=None) -> Match:
@@ -188,7 +200,7 @@ def match_by_guessed_name(ptp, filepath, limit, name=None) -> Match:
         import guessit  # pylint: disable=import-error
     except ImportError:
         logger.warning("Error importing 'guessit' module, skipping name guess")
-        return Match(None)
+        return Match(None, failure_reason="Error importing 'guessit' module")
     logger.info("Guessing name from filepath with guessit")
     if not name:
         name = os.path.basename(filepath)
@@ -206,7 +218,9 @@ def match_by_guessed_name(ptp, filepath, limit, name=None) -> Match:
             match = match_by_movie(movie, filepath)
             if match:
                 return match
-    return Match(None)
+    return Match(
+        None, failure_reason="Could not find any movies by search with a guessed name"
+    )
 
 
 def match_against_file(ptp, filepath, movie_limit) -> Match:
@@ -218,7 +232,7 @@ def match_against_file(ptp, filepath, movie_limit) -> Match:
         match = match_by_movie(movie, filepath)
         if match:
             return match
-    return Match(None)
+    return Match(None, failure_reason="Could not find any match by filename")
 
 
 def create_matched_files(match, directory=None, action="hard", dry_run=False):
@@ -260,6 +274,7 @@ def create_matched_files(match, directory=None, action="hard", dry_run=False):
     match.path = directory
     return match
 
+
 def is_torrent_complete(infohash: str, client=None) -> Union[bool, None]:
     """This returns a sort of horrible ternary: None if the torrent
     does not exist, True if it's complete, and false otherwise."""
@@ -281,6 +296,7 @@ def is_torrent_complete(infohash: str, client=None) -> Union[bool, None]:
                 return False
         return None
 
+
 def load_torrent(
     ID, path, client=None, hash_check=False, overwrite_incomplete=False
 ) -> bool:
@@ -293,6 +309,7 @@ def load_torrent(
     path = Path(path)
     if hash_check:
         from pyrosimple.util.metafile import PieceFailer
+
         if is_torrent_complete(thash, client) is not None:
             logger.error("Hash %s is already in client, cannot load.", thash)
             return False
@@ -526,9 +543,9 @@ def process(cli_args):
         if not match:
             not_found.append(filename)
             logger.error(
-                "Could not find an associated torrent for '{0}', cannot reseed".format(
-                    filename
-                )
+                "Could not find an associated torrent for '%s', cannot reseed: %s",
+                filename,
+                match.failure_reason,
             )
             continue
 
