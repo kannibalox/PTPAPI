@@ -6,6 +6,7 @@
   - Support searching for movies without an IMDb
   - Allow adding more query types (still defaults to just IMDb and title queries)
   - Reduce number of requests when scraping needforseed.php
+  - Add `--history-file` flag for capturing history and skipping duplicate checks
 - New torrent fields: `LastActive`, `LastReseedRequest`, `ReseedWaitingUsers`, `Trumpable`
 - `ptp-reseed`: Add client configuration section in ptpapi.conf
 ### Fixed

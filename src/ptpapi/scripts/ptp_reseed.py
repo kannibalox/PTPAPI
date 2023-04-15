@@ -215,7 +215,8 @@ def match_by_guessed_name(ptp, filepath, limit, name=None) -> Match:
         if len(movies) == 0:
             logger.debug("Could not find any movies by search with a guessed name")
             return Match(
-                None, failure_reason="Could not find any movies by search with a guessed name"
+                None,
+                failure_reason="Could not find any movies by search with a guessed name",
             )
         for movie in movies[:limit]:
             match = match_by_movie(movie, filepath)

@@ -3,6 +3,9 @@
 reseeds."""
 import argparse
 import logging
+import json
+from datetime import datetime
+from pathlib import Path
 
 from urllib.parse import parse_qs, urljoin, urlparse
 
@@ -45,6 +48,12 @@ def main():
         "-s", "--search", help="Allow filtering the need-for-seed results", default=None
     )
     parser.add_argument(
+        "--history-file",
+        help="Keep track of previously searched results, and skip duplicate requests",
+        default=None,
+        type=Path,
+    )
+    parser.add_argument(
         "-r",
         "--required-remote-seeds",
         help="The number of seeds required on remote torrent",
@@ -83,6 +92,13 @@ def main():
 
     if not args.query_type:
         args.query_type = ["imdb", "title"]
+    history = []
+    if args.history_file and args.history_file.exists():
+        for line in args.history_file.read_text().split("\n"):
+            if line:
+                data = json.loads(line)
+                if data["search"]:
+                    history.append(data["search"])
     if args.id:
         torrents = []
         for t in args.id:
@@ -99,7 +115,8 @@ def main():
         torrents = ptp.need_for_seed(filters)[: args.limit]
 
     for t in torrents:
-        find_match(args, t)
+        if not any(f"torrentid={t.ID}" in h["infoUrl"] for h in history):
+            find_match(args, t)
 
 
 # Stolen from https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
@@ -339,6 +356,24 @@ def find_match(args, torrent):
             },
         )
         r.raise_for_status()
+    if args.history_file:
+        with args.history_file.open("ta") as fh:
+            info_keys = ["title", "infoUrl", "indexer", "imdbId"]
+            match_info = {}
+            if download:
+                match_info = {k: v for k, v in download.items() if k in info_keys}
+            search_info = {k: v for k, v in result.items() if k in info_keys}
+            fh.write(
+                json.dumps(
+                    {
+                        "checked": datetime.now().isoformat(),
+                        "found_match": bool(download),
+                        "match": match_info,
+                        "search": search_info,
+                    }
+                )
+                + "\n"
+            )
 
 
 if __name__ == "__main__":
