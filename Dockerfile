@@ -34,6 +34,6 @@ ENV VIRTUAL_ENV="/venv"
 
 RUN bash -c 'echo -e "[Main]\nbaseURL=https://passthepopcorn.me/\ndownloadDirectory=/data/" > ~/.ptpapi.conf'
 
-RUN wget https://github.com/bcicen/tinycron/releases/download/v0.4/tinycron-0.4-linux-amd64 > /usr/local/bin/tinycron && chmod +x /usr/local/bin/tinycron
+RUN curl -sSL https://github.com/bcicen/tinycron/releases/download/v0.4/tinycron-0.4-linux-amd64 > /usr/local/bin/tinycron && chmod +x /usr/local/bin/tinycron
 COPY ./resources/archiver.sh /usr/local/bin/
 COPY --from=builder /venv /venv
