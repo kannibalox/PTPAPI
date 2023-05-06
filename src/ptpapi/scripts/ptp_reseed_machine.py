@@ -48,6 +48,9 @@ def main():
         "-s", "--search", help="Allow filtering the need-for-seed results", default=None
     )
     parser.add_argument(
+        "--target-tracker", help="Specify the tracker to try and reseed to", default="PassThePopcorn"
+    )
+    parser.add_argument(
         "--history-file",
         help="Keep track of previously searched results, and skip duplicate requests",
         default=None,
@@ -99,24 +102,25 @@ def main():
                 data = json.loads(line)
                 if data["search"]:
                     history.append(data["search"])
-    if args.id:
-        torrents = []
-        for t in args.id:
-            if "://passthepopcorn.me" in t:
-                parsed_url = parse_qs(urlparse(t).query)
-                # ptp_movie = ptpapi.Movie(ID=parsed_url["id"][0])
-                torrent_id = int(parsed_url.get("torrentid", ["0"])[0])
-                torrents.append(ptpapi.Torrent(ID=torrent_id))
-    else:
-        filters = {}
-        if args.search:
-            for arg in args.search.split(","):
-                filters[arg.split("=")[0]] = arg.split("=")[1]
-        torrents = ptp.need_for_seed(filters)[: args.limit]
+    if args.target_tracker == "PassThePopcorn":
+        if args.id:
+            torrents = []
+            for t in args.id:
+                if "://passthepopcorn.me" in t:
+                    parsed_url = parse_qs(urlparse(t).query)
+                    # ptp_movie = ptpapi.Movie(ID=parsed_url["id"][0])
+                    torrent_id = int(parsed_url.get("torrentid", ["0"])[0])
+                    torrents.append(ptpapi.Torrent(ID=torrent_id))
+        else:
+            filters = {}
+            if args.search:
+                for arg in args.search.split(","):
+                    filters[arg.split("=")[0]] = arg.split("=")[1]
+            torrents = ptp.need_for_seed(filters)[: args.limit]
 
-    for t in torrents:
-        if not any(f"torrentid={t.ID}" in h["infoUrl"] for h in history):
-            find_match(args, t)
+        for t in torrents:
+            if not any(f"torrentid={t.ID}" in h["infoUrl"] for h in history):
+                find_match(args, t)
 
 
 # Stolen from https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
@@ -160,7 +164,7 @@ def sort_title(title: str) -> str:
     return " ".join(splitTitle)
 
 
-def match_results(ptp_result: dict, other_result: dict, title_distance=1) -> dict:
+def match_results(ptp_result: dict, other_result: dict, ignore_tracker: str, title_distance=1) -> dict:
     logger = logging.getLogger("reseed-machine.match")
     percent_diff = 1
     # How useful is this check? IMDb IDs can change, or may not be present at all
@@ -180,7 +184,7 @@ def match_results(ptp_result: dict, other_result: dict, title_distance=1) -> dic
         size_diff = round(
             abs(((other_result["size"] / ptp_result["size"]) - 1) * 100), 2
         )
-        if other_result["indexer"] == "PassThePopcorn":
+        if other_result["indexer"] == ignore_tracker:
             return {}
         if other_result["seeders"] == 0:
             logger.debug(
@@ -271,7 +275,7 @@ def find_match(args, torrent):
         for r in imdb_resp:
             if r[
                 "indexer"
-            ] == "PassThePopcorn" and f"torrentid={torrent['Id']}" in r.get(
+            ] == args.target_tracker and f"torrentid={torrent['Id']}" in r.get(
                 "infoUrl", ""
             ):
                 result = r
@@ -281,7 +285,7 @@ def find_match(args, torrent):
         result = {
             "title": torrent["ReleaseName"],
             "size": int(torrent["Size"]),
-            "indexer": "PassThePopcorn",
+            "indexer": args.target_tracker,
             "infoUrl": torrent["Link"],
             "sortTitle": sort_title(torrent["ReleaseName"]),
         }
@@ -320,7 +324,7 @@ def find_match(args, torrent):
     # We already have this result from before, and it'll be empty if
     # the imdb query is disabled
     for other_result in imdb_resp:
-        download = match_results(result, other_result)
+        download = match_results(result, other_result, args.target_tracker)
         if download:
             break
     if not download:
@@ -338,7 +342,7 @@ def find_match(args, torrent):
             ).json()
             for release_result in release_title_resp:
                 if release_result["indexer"] not in ignore_title_indexers:
-                    download = match_results(result, release_result)
+                    download = match_results(result, release_result, args.target_tracker)
                     if download:
                         break
     if download:
