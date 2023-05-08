@@ -9,6 +9,9 @@
   - Add `--history-file` flag for capturing history and skipping duplicate checks
 - New torrent fields: `LastActive`, `LastReseedRequest`, `ReseedWaitingUsers`, `Trumpable`
 - `ptp-reseed`: Add client configuration section in ptpapi.conf
+- Allow specifying a config file path with the `PTPAPI_CONFIG`
+  environment variable (set to `/dev/null` to disable the config file
+  altogether)
 ### Fixed
 - `ptp-reseed`: Fix rtorrent existence check
 

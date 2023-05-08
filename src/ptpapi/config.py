@@ -47,14 +47,18 @@ env_keys = {
 
 config = configparser.ConfigParser()
 config.read_file(StringIO(default))
-for c in conf_files:
-    if c.expanduser().exists():
-        config.read(c.expanduser())
-        break
+
+if os.getenv("PTPAPI_CONFIG"):
+    config.read(Path(os.getenv("PTPAPI_CONFIG")).expanduser())
 else:
-    raise ValueError(
-        f"Config file not found in any of the following paths: {conf_files!r}"
-    )
+    for c in conf_files:
+        if c.expanduser().exists():
+            config.read(c.expanduser())
+            break
+    else:
+        raise ValueError(
+            f"Config file not found in any of the following paths: {conf_files!r}"
+        )
 
 for key, section in env_keys.items():
     if os.getenv(env_prefix + key) is not None:
