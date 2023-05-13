@@ -29,7 +29,7 @@ class User:
         search_terms.update({"userid": self.ID})
         req = session.base_get("bookmarks.php", params=search_terms)
         movies = []
-        for movie in snarf_cover_view_data(req.text):
+        for movie in snarf_cover_view_data(req.content):
             movies.append(Movie(data=movie))
         return movies
 
