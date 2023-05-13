@@ -222,7 +222,7 @@ class Movie:
                 "unseen": (lambda t, m: not m["Seen"]),
                 "unsnatched": (lambda t, m: not m["Snatched"]),
             }
-            for (name, func) in simple_filter_dict.items():
+            for name, func in simple_filter_dict.items():
                 if name.lower() in subprofile.split(" "):
                     matches = [t for t in matches if func(t, self)]
                     LOGGER.debug(
@@ -249,7 +249,7 @@ class Movie:
                 "<": operator.lt,
                 "<=": operator.le,
             }
-            for (name, func) in comparative_filter_dict.items():
+            for name, func in comparative_filter_dict.items():
                 match = re.search(r"\b%s([<>=!]+)(.+?)\b" % name, subprofile)
                 if match is not None:
                     comp_func = comparisons[match.group(1)]

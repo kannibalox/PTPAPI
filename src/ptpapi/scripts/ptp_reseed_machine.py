@@ -48,7 +48,9 @@ def main():
         "-s", "--search", help="Allow filtering the need-for-seed results", default=None
     )
     parser.add_argument(
-        "--target-tracker", help="Specify the tracker to try and reseed to", default="PassThePopcorn"
+        "--target-tracker",
+        help="Specify the tracker to try and reseed to",
+        default="PassThePopcorn",
     )
     parser.add_argument(
         "--history-file",
@@ -164,7 +166,9 @@ def sort_title(title: str) -> str:
     return " ".join(splitTitle)
 
 
-def match_results(ptp_result: dict, other_result: dict, ignore_tracker: str, title_distance=1) -> dict:
+def match_results(
+    ptp_result: dict, other_result: dict, ignore_tracker: str, title_distance=1
+) -> dict:
     logger = logging.getLogger("reseed-machine.match")
     percent_diff = 1
     # How useful is this check? IMDb IDs can change, or may not be present at all
@@ -342,7 +346,9 @@ def find_match(args, torrent):
             ).json()
             for release_result in release_title_resp:
                 if release_result["indexer"] not in ignore_title_indexers:
-                    download = match_results(result, release_result, args.target_tracker)
+                    download = match_results(
+                        result, release_result, args.target_tracker
+                    )
                     if download:
                         break
     if download:
