@@ -314,10 +314,6 @@ def load_torrent(
     if hash_check:
         from pyrosimple.util.metafile import PieceFailer
 
-        if is_torrent_complete(thash, client) is not None:
-            logger.error("Hash %s is already in client, cannot load.", thash)
-            return False
-
         logger.debug("Starting hash check against %r", str(path))
         pf = PieceFailer(data)
         try:
@@ -363,7 +359,10 @@ def load_torrent(
         logger.info("Torrent loaded at %r", str(path))
         proxy.d.custom.set(thash, "tm_completed", str(int(time())))
         proxy.d.directory.set(thash, str(path))
-        proxy.d.check_hash(thash)
+        if hash_check and not overwrite_incomplete:
+            proxy.d.start(thash)
+        else:
+            proxy.d.check_hash(thash)
         return True
     elif isinstance(client, str) and client.startswith("file://"):
         dest = Path(client[7:], data["info"]["name"] + ".torrent").expanduser()

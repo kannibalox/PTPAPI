@@ -14,6 +14,7 @@
   altogether)
 ### Fixed
 - `ptp-reseed`: Fix rtorrent existence check
+- `ptp-reseed`: Allow `--overwrite-incomplete` to work correctly with `--hash-check`
 
 ## [0.9.2] - 2023-03-28
 ### Fixed
