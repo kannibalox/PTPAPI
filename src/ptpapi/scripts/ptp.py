@@ -126,7 +126,10 @@ def do_search(api, args):
     if "page" not in terms:
         terms["page"] = "1"
     else:
-        page = terms["page"][0]
+        if isinstance(terms["page"], list):
+            page = int(terms["page"][0])
+        else:
+            page = int(terms["page"])
         terms["page"] = page
     for _ in range(args.pages):
         search_page(api, args, target, movies, torrents, terms.copy())
@@ -174,10 +177,12 @@ def search_page(api, args, target, movies, torrents, terms):
             movies = api.collage(terms["id"], terms)
         elif target == "artist":
             movies = api.artist(terms["id"], terms)
-        movies = movies[: args.limit]
+        if not args.download:
+            movies = movies[: args.limit]
 
     if args.download:
-        for movie in movies[: args.limit]:
+        downloaded=0
+        for movie in movies:
             if movie_template:
                 print(movie_template.substitute(movie))
             match = movie.best_match(args.filter)
@@ -188,6 +193,9 @@ def search_page(api, args, target, movies, torrents, terms):
                     match.download_to_dir(args.output_directory)
                 else:
                     logger.info("Dry-run, not downloading %s", match)
+                downloaded =+ 1
+                if downloaded >= args.limit:
+                    break
             else:
                 logger.info(
                     "No match found for for movie %s (%s)",
