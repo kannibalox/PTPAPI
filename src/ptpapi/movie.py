@@ -152,7 +152,7 @@ class Movie:
             self.data["Snatched"] = True
 
         # File list & trumpability for torrents
-        for tor in self["Torrents"]:
+        for tor in self.data["Torrents"]:
             # Get file list
             filediv = soup.find("div", id="files_%s" % tor.ID)
             tor.data["Filelist"] = {}
