@@ -30,10 +30,10 @@ class Movie:
                 "Torrents",
                 "CoverImage",
                 "Name",
+                "Year",
             ],
             "html": [
                 "Title",
-                "Year",
                 "Cover",
                 "Tags",
                 "Directors",
@@ -116,7 +116,6 @@ class Movie:
             soup.find("h2", class_="page__title").encode_contents(),
         )
         self.data["Title"] = match.group(1)
-        self.data["Year"] = "0" if match.group(2) is None else match.group(2)
         # Genre tags
         self.data["Tags"] = []
         for tagbox in soup.find_all("div", class_="box_tags"):
