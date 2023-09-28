@@ -82,7 +82,7 @@ def write_origin(t, args):
     }
     buf = io.StringIO()
     YAML.dump(data, buf)
-    output += buf.read()
+    output += buf.getvalue()
     # Nicely format multi-line descriptions
     desc = torrent["BBCodeDescription"]
     output += "Description: |\n"
