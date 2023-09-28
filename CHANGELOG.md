@@ -1,4 +1,8 @@
 # Changelog
+## [0.10.1] - 2023-09-28
+### Fixed
+- `ptp-origin`: Fix writing output on newer python versions
+
 ## [0.10.0] - 2023-06-04
 ### Added
 - UHD/HDR/proprietary codecs filters ([#18](https://github.com/kannibalox/PTPAPI/pull/18), [@einsern](https://github.com/einsern))
@@ -56,8 +60,9 @@
 - Added a changelog
 - Created dockerfile
 
-[Unreleased]: https://github.com/kannibalox/pyrosimple/compare/v0.10.0...HEAD
-[0.9.3]: https://github.com/kannibalox/pyrosimple/compare/v0.9.3...v0.10.0
+[Unreleased]: https://github.com/kannibalox/pyrosimple/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/kannibalox/pyrosimple/compare/v0.10.0...v0.10.1
+[0.10.0]: https://github.com/kannibalox/pyrosimple/compare/v0.9.3...v0.10.0
 [0.9.3]: https://github.com/kannibalox/pyrosimple/compare/v0.9.2...v0.9.3
 [0.9.2]: https://github.com/kannibalox/pyrosimple/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/kannibalox/pyrosimple/compare/v0.9.0...v0.9.1
