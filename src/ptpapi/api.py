@@ -254,6 +254,39 @@ class API:
         data["AntiCsrfToken"] = soup.find("body")["data-anticsrftoken"]
         return data
 
+    def requests(self, filters=None):
+        if filters is None:
+            filters = {}
+        request_list = []
+        soup = bs4(
+            session.base_get("requests.php", params=filters).content,
+            features="html.parser",
+        )
+        for row in soup.find(id="request_table").find_all("tr"):
+            if row.td is None:
+                continue
+            if len(row.find_all("td")[0].find_all("a")) < 3:
+                imdb_link = "https://imdb.com/title/tt0"
+            else:
+                imdb_link = (
+                    row.find_all("td")[0]
+                    .find_all("a")[2]["href"]
+                    .replace("http://", "https://")
+                )
+            data = {
+                "Title": row.td.a.text,
+                "RequestLink": os.path.join(
+                    config.get("Main", "baseURL"), row.td.a["href"]
+                ),
+                "RequestBounty": int(row.find_all("td")[1].span.text),
+                "RequestCriteria": row.find_all("td")[0].div.text,
+                "RequestBountyHuman": row.find_all("td")[2].text,
+                "Year": re.search(r"\[(\d{4})\]", row.td.text.strip()).group(1),
+                "ImdbLink": imdb_link,
+            }
+            request_list.append(data)
+        return request_list
+
     def need_for_seed(self, filters=None):
         """List torrents that need seeding"""
         if filters is None:

@@ -337,6 +337,20 @@ def do_archive(api, args):
                     params={"ArchiveID": data["ArchiveID"]}
                 )
 
+def do_requests(api, args):
+    filters = {}
+    for f in args.search_terms:
+        if "=" not in f:
+            filters["search"] = f
+        else:
+            filters[f.split("=")[0]] = f.partition("=")[2]
+    for r in api.requests(filters):
+        print(
+            "{Title} [{Year}] / {RequestCriteria} / {ImdbLink} / {RequestBountyHuman}".format(
+                **r
+            )
+        )
+
 
 def add_verbosity_args(parser):
     """Helper function to improve DRY"""
@@ -488,6 +502,7 @@ def main():
     )
     inbox_parser.set_defaults(func=do_inbox)
 
+    # Raw
     raw_parser = subparsers.add_parser("raw", help="Fetch the raw HTML of pages")
     add_verbosity_args(raw_parser)
     raw_parser.add_argument("url", help="A list of urls to download", nargs="+")
@@ -524,6 +539,7 @@ def main():
     add_verbosity_args(search_field_parser)
     search_field_parser.set_defaults(func=do_search_fields)
 
+    # Log
     log_parser = subparsers.add_parser("log", help="Show the log of recent events")
     add_verbosity_args(log_parser)
     log_parser.add_argument(
@@ -533,6 +549,18 @@ def main():
         "-f", "--follow", help="Print new entries as they appear", action="store_true"
     )
     log_parser.set_defaults(func=do_log)
+
+    # Requests
+    requests_parser = subparsers.add_parser("requests", help="Search requests")
+    add_verbosity_args(requests_parser)
+    requests_parser.add_argument(
+        "search_terms",
+        help="""A list of terms in [field]=[text] format.
+        If the '=' is omitted, the field is assumed to be 'name'.""",
+        nargs="*",
+        metavar="term",
+    )
+    requests_parser.set_defaults(func=do_requests)
 
     args = parser.parse_args()
 
