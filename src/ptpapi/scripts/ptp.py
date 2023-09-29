@@ -347,7 +347,7 @@ def do_requests(api, args):
             filters[f.split("=")[0]] = f.partition("=")[2]
     for r in api.requests(filters):
         print(
-            "{Title} [{Year}] / {RequestCriteria} / {ImdbLink} / {RequestBountyHuman}".format(
+            "{Title} [{Year}] / {RequestCriteria} / {ImdbLink} / {RequestLink} / {RequestBountyHuman}".format(
                 **r
             )
         )
