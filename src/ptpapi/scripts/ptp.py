@@ -181,7 +181,7 @@ def search_page(api, args, target, movies, torrents, terms):
             movies = movies[: args.limit]
 
     if args.download:
-        downloaded=0
+        downloaded = 0
         for movie in movies:
             if movie_template:
                 print(movie_template.substitute(movie))
@@ -193,7 +193,7 @@ def search_page(api, args, target, movies, torrents, terms):
                     match.download_to_dir(args.output_directory)
                 else:
                     logger.info("Dry-run, not downloading %s", match)
-                downloaded =+ 1
+                downloaded = +1
                 if downloaded >= args.limit:
                     break
             else:
@@ -336,6 +336,7 @@ def do_archive(api, args):
                 ptpapi.Torrent(ID=i_data["TorrentID"]).download_to_dir(
                     params={"ArchiveID": data["ArchiveID"]}
                 )
+
 
 def do_requests(api, args):
     filters = {}

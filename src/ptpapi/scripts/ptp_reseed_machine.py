@@ -2,11 +2,11 @@
 """The reseed machine runs a scan against prowlarr to find potential
 reseeds."""
 import argparse
-import logging
 import json
+import logging
+
 from datetime import datetime
 from pathlib import Path
-
 from urllib.parse import parse_qs, urljoin, urlparse
 
 import requests
