@@ -286,6 +286,7 @@ def do_search_fields(api, args):
             or e["name"].startswith("tags_type")
             or e["name"].startswith("country_type")
             or e["name"] == "action"
+            or e["name"] == "noredirect"
         ):
             continue
         name = e["name"]
@@ -294,6 +295,7 @@ def do_search_fields(api, args):
         if "title" in e.attrs.keys():
             name += " - " + e["title"]
         print(name)
+    print("seeders - The number of seeders. You can use ranges too. E.g.: -5 or 1- or 1-5")
 
 
 def do_userstats(api, args):
