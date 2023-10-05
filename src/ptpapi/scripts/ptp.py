@@ -117,6 +117,15 @@ def get_pages(target, terms):
     return None
 
 
+def do_subscriptions(api, args):
+    sub_data = api.subscriptions()
+    for section, data in sub_data.items():
+        if data:
+            print(section.title())
+            for d in data:
+                print(f"- {d}")
+
+
 def do_search(api, args):
     (target, movies, torrents, terms) = parse_terms(args.search_terms)
     if args.all:
@@ -295,7 +304,9 @@ def do_search_fields(api, args):
         if "title" in e.attrs.keys():
             name += " - " + e["title"]
         print(name)
-    print("seeders - The number of seeders. You can use ranges too. E.g.: -5 or 1- or 1-5")
+    print(
+        "seeders - The number of seeders. You can use ranges too. E.g.: -5 or 1- or 1-5"
+    )
 
 
 def do_userstats(api, args):
@@ -564,6 +575,13 @@ def main():
         metavar="term",
     )
     requests_parser.set_defaults(func=do_requests)
+
+    # Subscriptions
+    subscriptions_parser = subparsers.add_parser(
+        "subscriptions", help="List subscribed posts/comments/mentions"
+    )
+    add_verbosity_args(subscriptions_parser)
+    subscriptions_parser.set_defaults(func=do_subscriptions)
 
     args = parser.parse_args()
 

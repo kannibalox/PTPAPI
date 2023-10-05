@@ -372,6 +372,18 @@ class API:
             movies.append(Movie(data=movie))
         return movies
 
+    def subscriptions(self):
+        data = {"forum subscriptions": []}
+        req = session.base_get("userhistory.php", params={"action": "subscriptions"})
+        soup = bs4(req.content, "html.parser")
+        tabs = soup.find("div", class_="tabs__panels")
+        for sub in tabs.find(id="forum-subscriptions").find_all(
+            "div", class_="forum-post"
+        ):
+            title = sub.find_all("a")[0].text + " > " + sub.find_all("a")[1].text
+            data["forum subscriptions"].append(title)
+        return data
+
     def artist(self, art_id, search_terms=None):
         """Simplistic representation of an artist page, might be split out later"""
         if search_terms is None:
