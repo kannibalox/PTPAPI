@@ -1,4 +1,8 @@
 # Changelog
+## [Unreleased]
+### Added
+- `ptp inbox`: Add `--raw` flag to get HTML for conversations ([#24](https://github.com/kannibalox/PTPAPI/pull/24), [@bonswouar](https://github.com/bonswouar))
+
 ## [0.10.1] - 2023-09-28
 ### Fixed
 - `ptp-origin`: Fix writing output on newer python versions
