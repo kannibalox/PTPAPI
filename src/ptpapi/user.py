@@ -178,7 +178,7 @@ class CurrentUser(User):
                 "Unread": bool("inbox-message--unread" in row["class"]),
             }
 
-    def inbox_conv(self, conv_id):
+    def inbox_conv(self, conv_id, raw=False):
         """Get a specific conversation from the inbox"""
         soup = bs4(
             session.base_get(
@@ -189,7 +189,10 @@ class CurrentUser(User):
         messages = []
         for msg in soup.find_all("div", id=re.compile("^message"), class_="forum-post"):
             message = {}
-            message["Text"] = msg.find("div", class_="forum-post__body").text.strip()
+            if raw:
+                message["Text"] = msg.find("div", class_="forum-post__body")
+            else:
+                message["Text"] = msg.find("div", class_="forum-post__body").text.strip()
             username = msg.find("strong").find("a", class_="username")
             if username is None:
                 message["User"] = "System"
