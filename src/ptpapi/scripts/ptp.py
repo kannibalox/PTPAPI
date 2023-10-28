@@ -31,7 +31,7 @@ def do_inbox(api, args):
                 user.inbox_conv(msg["ID"])
             page += 1
     elif args.conversation:
-        conv = user.inbox_conv(args.conversation)
+        conv = user.inbox_conv(args.conversation, args.raw)
         print(conv["Subject"])
         for msg in conv["Message"]:
             print("{0} - {1}\n".format(msg["User"], msg["Time"]))
@@ -513,6 +513,9 @@ def main():
     )
     inbox_parser.add_argument(
         "-p", "--page", help="Start at a certain page", type=int, default=1
+    )
+    inbox_parser.add_argument(
+        "--raw", help="Combined with -c, fetch the raw HTML message",  action="store_true",
     )
     inbox_parser.set_defaults(func=do_inbox)
 
