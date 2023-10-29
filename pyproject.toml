@@ -43,6 +43,8 @@ origin = ["ruamel-yaml"]
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.1.1"
+black = "23.3.0"
+pylint = "2.17.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
