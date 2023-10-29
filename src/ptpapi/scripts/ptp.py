@@ -117,7 +117,7 @@ def get_pages(target, terms):
     return None
 
 
-def do_subscriptions(api, args):
+def do_subscriptions(api, _args):
     sub_data = api.subscriptions()
     for section, data in sub_data.items():
         if data:
@@ -172,9 +172,9 @@ def search_page(api, args, target, movies, torrents, terms):
         if target == "torrents":
             movies = api.search(terms)
             # Check to see if we should scrape the cover view data to save calls
-            wanted_fields = set(
-                [l[2].split("|")[0] for l in movie_template._parsed if l[0] == "expr"]
-            )
+            wanted_fields = {
+                l[2].split("|")[0] for l in movie_template._parsed if l[0] == "expr"
+            }
             if len(wanted_fields & set(api.search_coverview_fields)):
                 for movie in api.search_coverview(terms):
                     for ret_movie in movies:
@@ -230,7 +230,7 @@ def search_page(api, args, target, movies, torrents, terms):
                 print(torrent_template.substitute(torrent))
 
 
-def do_raw(_, args):
+def do_raw(_api, args):
     """Given a URL, download the raw HTML to the current directory"""
     for url_str in args.url:
         url = urlparse(url_str)
@@ -268,7 +268,7 @@ def do_log(api, args):
             break
 
 
-def do_fields(api, args):
+def do_fields(_api, _args):
     print("Movie:")
     m = ptpapi.Movie(ID=1)
     for values in m.key_finder.values():
@@ -281,7 +281,7 @@ def do_fields(api, args):
             print(f"- {val}")
 
 
-def do_search_fields(api, args):
+def do_search_fields(_api, _args):
     soup = bs4(
         ptpapi.session.session.base_get(
             "torrents.php", params={"action": "advanced", "json": "0"}
@@ -328,7 +328,7 @@ def do_userstats(api, args):
             print(stat + ": " + value)
 
 
-def do_archive(api, args):
+def do_archive(_api, args):
     r = ptpapi.session.session.base_get(
         "archive.php",
         params={
