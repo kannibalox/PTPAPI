@@ -205,6 +205,10 @@ def match_by_guessed_name(ptp, filepath, limit, name=None) -> Match:
     if not name:
         name = os.path.basename(filepath)
     guess = guessit.guessit(name)
+    if "title" not in guess:
+        return Match(
+            None, failure_reason=f"Could not find title from filename {name!r}"
+        )
     if "title" in guess and guess["title"]:
         search_params = {"searchstr": guess["title"]}
         if "year" in guess:
