@@ -172,9 +172,11 @@ def search_page(api, args, target, movies, torrents, terms):
         if target == "torrents":
             movies = api.search(terms)
             # Check to see if we should scrape the cover view data to save calls
-            wanted_fields = {
-                l[2].split("|")[0] for l in movie_template._parsed if l[0] == "expr"
-            }
+            wanted_fields = set()
+            if movie_template is not None:
+                 wanted_fields = {
+                     l[2].split("|")[0] for l in movie_template._parsed if l[0] == "expr"
+                 }
             if len(wanted_fields & set(api.search_coverview_fields)):
                 for movie in api.search_coverview(terms):
                     for ret_movie in movies:
