@@ -110,7 +110,6 @@ def main():
             for t in args.id:
                 if "://passthepopcorn.me" in t:
                     parsed_url = parse_qs(urlparse(t).query)
-                    # ptp_movie = ptpapi.Movie(ID=parsed_url["id"][0])
                     torrent_id = int(parsed_url.get("torrentid", ["0"])[0])
                     torrents.append(ptpapi.Torrent(ID=torrent_id))
         else:
