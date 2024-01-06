@@ -34,7 +34,7 @@ ApiKey=<ApiKey>
 
 Both values can be found in the "Security" section of your
 profile. This is only the minimum required configuration. See
-`ptpapi.conf.example` for a full-futured config file with comments.
+`ptpapi.conf.example` for a full-featured config file with comments.
 
 ## Usage
 
@@ -131,7 +131,7 @@ out of the file with guessit.
 
 This tool is meant to complement `ptp-reseed`, by taking using
 [Prowlarr](https://github.com/Prowlarr/Prowlarr) to find and download
-peotential reseeds from any supported site.
+potential reseeds from any supported site.
 
 To get it set up, first [install
 Prowlarr](https://wiki.servarr.com/prowlarr/installation). Be sure
