@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import json
 import logging
 import os.path
 
@@ -331,6 +332,7 @@ def do_userstats(api, args):
 
 
 def do_archive(_api, args):
+    logger = logging.getLogger(__name__)
     r = ptpapi.session.session.base_get(
         "archive.php",
         params={
@@ -341,7 +343,18 @@ def do_archive(_api, args):
         },
     )
     r.raise_for_status()
-    data = r.json()
+    try:
+        data = r.json()
+    except json.JSONDecodeError:
+        logger.fatal("Response could not be converted to JSON: %s", r.text)
+    if "TorrentID" not in data:
+        logger.fatal(
+            "Could not parse 'TorrentID' from JSON string %s", json.dumps(data)
+        )
+        return
+    if data.get("Status", "") == "Error":
+        logger.fatal("Received error in JSON response: %s", json.dumps(data))
+        return
     ptpapi.Torrent(ID=data["TorrentID"]).download_to_dir(
         params={"ArchiveID": data["ArchiveID"]}
     )
