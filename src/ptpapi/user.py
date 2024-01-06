@@ -192,7 +192,9 @@ class CurrentUser(User):
             if raw:
                 message["Text"] = msg.find("div", class_="forum-post__body")
             else:
-                message["Text"] = msg.find("div", class_="forum-post__body").text.strip()
+                message["Text"] = msg.find(
+                    "div", class_="forum-post__body"
+                ).text.strip()
             username = msg.find("strong").find("a", class_="username")
             if username is None:
                 message["User"] = "System"
