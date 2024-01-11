@@ -129,14 +129,14 @@ out of the file with guessit.
 
 ### `ptp-reseed-machine`
 
-This tool is meant to complement `ptp-reseed`, by taking using
+This tool is meant to complement `ptp-reseed`, by using
 [Prowlarr](https://github.com/Prowlarr/Prowlarr) to find and download
 potential reseeds from any supported site.
 
 To get it set up, first [install
 Prowlarr](https://wiki.servarr.com/prowlarr/installation). Be sure
 your instance (or any of the *arrs) isn't exposed to the internet!
-From, simply use the UI to add any trackers/indexers you'd like to
+From there, simply use the UI to add any trackers/indexers you'd like to
 search, as well as any downloaders. Then, add the following config to
 `~/.ptpapi.conf`:
 
@@ -153,7 +153,8 @@ different search targets.
 
 After a download has been triggered, you can then use `ptp-reseed`
 with your download client of choice to automatically reseed the path
-into a client. Here's a simple example of a post script for sabnzbd:
+into a client. Here's a simple example of a post script for
+[sabnzbd](https://sabnzbd.org/):
 
 ```bash
 #!/bin/bash
