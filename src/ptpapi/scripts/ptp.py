@@ -171,7 +171,14 @@ def search_page(api, args, target, movies, torrents, terms):
     if not movies and not torrents:
         logger.debug('Attempting to search target "%s" with terms %s', target, terms)
         if target == "torrents":
-            movies = api.search(terms)
+            if terms.get("type") == "snatched":
+                if "userid" in terms:
+                    user = ptpapi.User(terms["userid"])
+                else:
+                    user = api.current_user()
+                movies = user.snatched(terms)
+            else:
+                movies = api.search(terms)
             # Check to see if we should scrape the cover view data to save calls
             wanted_fields = set()
             if movie_template is not None:

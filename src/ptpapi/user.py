@@ -21,6 +21,14 @@ class User:
     def __str__(self):
         return "<ptpapi.User ID %s>" % self.ID
 
+    def snatched(self, filters=None):
+        if filters is None:
+            filters = {}
+        filters["type"] = "snatched"
+        filters["userid"] = str(self.ID)
+        req = session.base_get("torrents.php", params=filters)
+        return [Movie(data=m) for m in snarf_cover_view_data(req.content)]
+
     def bookmarks(self, search_terms=None):
         """Fetch a list of movies the user has bookmarked
 
