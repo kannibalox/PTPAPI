@@ -1,6 +1,8 @@
 # Changelog
 ## [Unreleased]
 
+## [0.10.3] - 2024-02-15
+
 ### Added
 - `ptp search`: Allow search users' snatched/leeching/uploaded/seeding
   torrents, e.g. `ptp search type=snatched`
@@ -70,7 +72,8 @@
 - Added a changelog
 - Created dockerfile
 
-[Unreleased]: https://github.com/kannibalox/PTPAPI/compare/v0.10.2...HEAD
+[Unreleased]: https://github.com/kannibalox/PTPAPI/compare/v0.10.3...HEAD
+[0.10.3]: https://github.com/kannibalox/PTPAPI/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/kannibalox/PTPAPI/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/kannibalox/pyrosimple/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/kannibalox/pyrosimple/compare/v0.9.3...v0.10.0
