@@ -1,6 +1,10 @@
 # Changelog
 ## [Unreleased]
 
+### Added
+- `ptp search`: Allow search users' snatched/leeching/uploaded/seeding
+  torrents, e.g. `ptp search type=snatched`
+
 ## [0.10.2] - 2023-10-30
 ### Added
 - `ptp inbox`: Add `--raw` flag to get HTML for conversations ([#24](https://github.com/kannibalox/PTPAPI/pull/24), [@bonswouar](https://github.com/bonswouar))
