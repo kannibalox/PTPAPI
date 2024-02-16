@@ -341,20 +341,20 @@ class API:
 
     def collage_add(self, coll_id, movieobj):
         """Adds a given movie to a collage, requires password login."""
-        search_terms = dict(id=coll_id)
+        search_terms = {"id": coll_id}
         req = session.base_get("collages.php", params=search_terms)
         soup = bs4(req.content, "html.parser")
         csrf_token = soup.find(id="add_film").find("input")["value"]
         movieobj.load_inferred_data()
         resp = session.base_post(
             "collages.php",
-            params=dict(action="add_torrent"),
-            data=dict(
-                AntiCsrfToken=csrf_token,
-                action="add_torrent",
-                collageid=coll_id,
-                url=movieobj.data["Link"],
-            ),
+            params={"action": "add_torrent"},
+            data={
+                "AntiCsrfToken": csrf_token,
+                "action": "add_torrent",
+                "collageid": coll_id,
+                "url": movieobj.data["Link"],
+            },
         )
         return resp
 
