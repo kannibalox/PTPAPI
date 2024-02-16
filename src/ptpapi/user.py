@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup as bs4  # pylint: disable=import-error
 
 from .movie import Movie
 from .session import session
-from .util import snarf_cover_view_data
+from .util import human_to_bytes, snarf_cover_view_data
 
 
 class User:
@@ -140,10 +140,10 @@ class CurrentUser(User):
         for row in soup.find(class_="table").find("tbody").find_all("tr"):
             cont = {
                 "name": row[0].text,
-                "link": r[0].find("a")["href"],
-                "size": ptpapi.util.human_to_bytes(r[1].text),
-                "max_size": ptpapi.util.human_to_bytes(r[2].text),
-                "last_fetch": r[3].text,  # TODO: convert this to actual time object
+                "link": row[0].find("a")["href"],
+                "size": human_to_bytes(row[1].text),
+                "max_size": human_to_bytes(row[2].text),
+                "last_fetch": row[3].text,  # TODO: convert this to actual time object
             }
             for field in row:
                 if field.find("label"):

@@ -3,7 +3,6 @@ import argparse
 import io
 import logging
 import re
-import sys
 import textwrap
 
 from pathlib import Path
