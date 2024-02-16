@@ -92,7 +92,7 @@ def human_to_bytes(s, case_sensitive=True):
     for _, sset in SYMBOLS.items():
         if letter in sset:
             break
-        elif not case_sensitive and letter.lower() in [s.lower() for s in sset]:
+        if not case_sensitive and letter.lower() in [s.lower() for s in sset]:
             break
     else:
         if letter == "k":
