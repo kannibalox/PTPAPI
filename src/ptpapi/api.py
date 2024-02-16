@@ -162,7 +162,7 @@ class API:
             self.current_user_id = re.search(r"user.php\?id=(\d+)", req.text).group(1)
         return CurrentUser(self.current_user_id)
 
-    def search(self, filters, add_coverview_data=False):
+    def search(self, filters):
         """Perform a movie search"""
         if "name" in filters:
             filters["searchstr"] = filters["name"]
