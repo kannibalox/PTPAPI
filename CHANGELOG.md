@@ -1,6 +1,10 @@
 # Changelog
 ## [Unreleased]
 
+### Removed
+- The CG/KG submodules have been removed. They have been supplanted by
+  Prowlarr support in the few places they were used.
+
 ## [0.10.3] - 2024-02-15
 
 ### Added
