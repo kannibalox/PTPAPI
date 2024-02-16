@@ -177,7 +177,7 @@ def match_by_torrent(torrent, filepath: str) -> Match:
 def match_by_movie(movie, filepath) -> Match:
     """Tries to match a torrent against a single movie"""
     logger = logging.getLogger(__name__)
-    logger.info("Attempting to match against movie %s (%r)", movie.ID, movie['Title'])
+    logger.info("Attempting to match against movie %s (%r)", movie.ID, movie["Title"])
 
     movie.load_html_data()
     for torrent in movie["Torrents"]:
