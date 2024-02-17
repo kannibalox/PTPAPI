@@ -101,7 +101,19 @@ paging will start from that page.
 
 #### `ptp fields`
 
-Simply list fields that can be used for the `ptp search` formatting.
+Simply lists fields that can be used for the `ptp search` formatting.
+
+#### `ptp origin <torrent files...>`
+
+This downloads PTP metadata for any given torrent files in YAML
+format. The data includes movie information, covers, torrent
+description information, and screenshots (use `--no-images` to skip
+downloading any images). By default it will output to a directory
+named after the torrent file, or you can change the target with `-d
+dir`. It will not overwrite already fetched data, unless the `--force`
+flag is passed.
+
+See `ptp origin --help` for more options.
 
 ### `ptp-reseed`
 

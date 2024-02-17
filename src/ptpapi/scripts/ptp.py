@@ -4,6 +4,7 @@ import json
 import logging
 import os.path
 
+from pathlib import Path
 from time import sleep
 from urllib.parse import parse_qs, urlparse
 
@@ -12,6 +13,7 @@ import tempita
 from bs4 import BeautifulSoup as bs4
 
 import ptpapi
+import ptpapi.scripts.ptp_origin
 
 
 def ellipsize(string, length):
@@ -388,6 +390,31 @@ def do_requests(api, args):
         )
 
 
+def do_origin(api, args):
+    logger = logging.getLogger(__name__)
+    for p in args.torrent:
+        p_path = Path(p)
+        if p_path.is_dir():
+            if args.recursive:
+                for t in p_path.rglob("*.torrent"):
+                    try:
+                        ptpapi.scripts.ptp_origin.write_origin(t, args)
+                    except Exception:
+                        logger.error("Error handling file %s", t)
+                        raise
+            else:
+                logger.warning(
+                    "Skipping directory %s, use --recursive to descend into directories",
+                    p,
+                )
+        if p_path.is_file():
+            try:
+                ptpapi.scripts.ptp_origin.write_origin(p, args)
+            except Exception:
+                logger.error("Error handling file %s", p)
+                raise
+
+
 def add_verbosity_args(parser):
     """Helper function to improve DRY"""
     parser.add_argument(
@@ -610,6 +637,34 @@ def main():
     add_verbosity_args(subscriptions_parser)
     subscriptions_parser.set_defaults(func=do_subscriptions)
 
+    # Origin
+    origin_parser = subparsers.add_parser(
+        "origin", help="Download metadata from PTP for archival purposes"
+    )
+    origin_parser.add_argument(
+        "torrent", nargs="+", help="Torrent file to use for scraping information"
+    )
+    origin_parser.add_argument(
+        "-r", "--recursive", help="Recursively walk directory", action="store_true"
+    )
+    origin_parser.add_argument(
+        "--overwrite",
+        help="Re-download files even if they already exist",
+        action="store_true",
+    )
+    origin_parser.add_argument(
+        "-d",
+        "--output-directory",
+        help="Directory to write files to (defaults to torrent name without extension)",
+        metavar="DIR",
+    )
+    origin_parser.add_argument(
+        "--no-images", help="Skip downloading images", action="store_true"
+    )
+    add_verbosity_args(origin_parser)
+    origin_parser.set_defaults(func=do_origin)
+
+    # Main function
     args = parser.parse_args()
 
     logging.basicConfig(level=args.loglevel)
