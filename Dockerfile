@@ -20,7 +20,7 @@ WORKDIR /app
 
 COPY poetry.lock pyproject.toml ./
 
-RUN poetry install -n --no-ansi --no-root
+RUN poetry install -n --no-ansi --no-root -E origin
 
 COPY . ./
 
