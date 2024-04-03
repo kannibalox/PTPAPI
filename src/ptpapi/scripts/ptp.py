@@ -13,7 +13,6 @@ import tempita
 from bs4 import BeautifulSoup as bs4
 
 import ptpapi
-import ptpapi.scripts.ptp_origin
 
 
 def ellipsize(string, length):
@@ -391,6 +390,7 @@ def do_requests(api, args):
 
 
 def do_origin(api, args):
+    import ptpapi.scripts.ptp_origin
     logger = logging.getLogger(__name__)
     for p in args.torrent:
         p_path = Path(p)
