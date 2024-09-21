@@ -83,7 +83,10 @@ def parse_terms(termlist):
             terms = url_args
         elif url.path == "/torrents.php":
             if "torrentid" in url_args:
-                torrents.append(ptpapi.Torrent(url_args["torrentid"][0]))
+                if "id" in url_args:
+                    torrents.append(ptpapi.Torrent(data={"Id":url_args["torrentid"][0], "GroupId":url_args["id"][0]}))
+                else:
+                    torrents.append(ptpapi.Torrent(url_args["torrentid"][0]))
             elif "id" in url_args:
                 if "action" in url_args and url_args["action"][0] == "download":
                     torrents.append(ptpapi.Torrent(url_args["id"][0]))
