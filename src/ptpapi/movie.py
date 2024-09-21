@@ -110,10 +110,10 @@ class Movie:
             "html.parser",
         )
         self.data["Cover"] = soup.find("img", class_="sidebar-cover-image")["src"]
-        # Title and Year
+        # Title
         match = re.match(
-            rb"(.*)(:? \[(\d{4})\])?",
-            soup.find("h2", class_="page__title").encode_contents(),
+            r"(.*:?) \[(\d{4})\]",
+            soup.find("h2", class_="page__title").get_text(),
         )
         self.data["Title"] = match.group(1)
         # Genre tags
