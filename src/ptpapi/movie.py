@@ -38,7 +38,7 @@ class Movie:
                 "Tags",
                 "Directors",
                 "PtpRating",
-                "PtpVoteCount",
+                "PtpRatingCount",
                 "UserRating",
                 "Seen",
                 "Snatched",
