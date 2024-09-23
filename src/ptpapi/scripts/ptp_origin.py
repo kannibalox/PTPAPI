@@ -61,6 +61,7 @@ def write_origin(t, args):
         "Title": movie["Name"],
         "Year": int(movie["Year"]),
         "Directors": movie["Directors"],
+        "Type": movie["Type"],
         "ReleaseName": torrent["ReleaseName"],
         "RemasterTitle": torrent["RemasterTitle"],
         "IMDb": f'https://imdb.com/title/tt{movie["ImdbId"]}',

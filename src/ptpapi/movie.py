@@ -35,6 +35,7 @@ class Movie:
             "html": [
                 "Title",
                 "Cover",
+                "Type",
                 "Tags",
                 "Directors",
                 "PtpRating",
@@ -116,6 +117,8 @@ class Movie:
             soup.find("h2", class_="page__title").encode_contents(),
         )
         self.data["Title"] = match.group(1)
+        # Type
+        self.data["Type"] = str(soup.find("span", class_="basic-movie-list__torrent-edition__main").string)
         # Genre tags
         self.data["Tags"] = []
         for tagbox in soup.find_all("div", class_="box_tags"):
