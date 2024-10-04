@@ -1,9 +1,16 @@
 # Changelog
 ## [Unreleased]
 
+### Added
+- `Type` field for movie objects ([#32](https://github.com/kannibalox/PTPAPI/pull/32), [@yachtrock87](https://github.com/yachtrock87))
+
 ### Removed
 - The CG/KG submodules have been removed. They have been supplanted by
   Prowlarr support in the few places they were used.
+  
+### Fixed
+- Retain group ID when searching with direct URLs ([#32](https://github.com/kannibalox/PTPAPI/pull/34], [@yatchrock87](https://github.com/yachtrock87))
+- Avoid possible errors by pre-filling torrents from HTML ([#32](https://github.com/kannibalox/PTPAPI/pull/34], [@yatchrock87](https://github.com/yachtrock87))
 
 ## [0.10.3] - 2024-02-15
 
