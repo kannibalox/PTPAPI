@@ -39,7 +39,7 @@ class Movie:
                 "Tags",
                 "Directors",
                 "PtpRating",
-                "PtpVoteCount",
+                "PtpRatingCount",
                 "UserRating",
                 "Seen",
                 "Snatched",
@@ -111,10 +111,10 @@ class Movie:
             "html.parser",
         )
         self.data["Cover"] = soup.find("img", class_="sidebar-cover-image")["src"]
-        # Title and Year
+        # Title
         match = re.match(
-            rb"(.*)(:? \[(\d{4})\])?",
-            soup.find("h2", class_="page__title").encode_contents(),
+            r"(.*:?) \[(\d{4})\]",
+            soup.find("h2", class_="page__title").get_text(),
         )
         self.data["Title"] = match.group(1)
         # Type
@@ -154,6 +154,10 @@ class Movie:
             self.data["Snatched"] = True
 
         # File list & trumpability for torrents
+        # Populate torrent IDs if not already populated
+        if "Torrents" not in self.data.keys():
+            self.data["Torrents"] = [torrent.Torrent(
+                re.match(r"torrent_(\d*)", torr['id']).group(1)) for torr in soup.find_all("tr", class_="torrent_info_row")]
         for tor in self.data["Torrents"]:
             # Get file list
             filediv = soup.find("div", id="files_%s" % tor.ID)
