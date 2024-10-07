@@ -511,6 +511,8 @@ def process(cli_args):
                 match = match_by_torrent(
                     ptpapi.Torrent(ID=parsed_url["torrentid"][0]), filename.encode()
                 )
+                if match:
+                    match.path = filename
             elif "id" in parsed_url:
                 match = match_by_movie(
                     ptpapi.Movie(ID=parsed_url["id"][0]), filename.encode()
