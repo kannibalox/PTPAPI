@@ -366,7 +366,7 @@ def find_match(args, torrent):
         )
         r.raise_for_status()
     if args.history_file:
-        with args.history_file.open("ta") as fh:
+        with args.history_file.open("ta", encoding="utf-8") as fh:
             info_keys = ["title", "infoUrl", "indexer", "imdbId"]
             match_info = {}
             if download:
